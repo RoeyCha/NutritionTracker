@@ -1,0 +1,185 @@
+from fastapi.testclient import TestClient
+
+
+def test_register_without_email(empty_client: TestClient) -> None:
+    response = empty_client.post(
+        "/api/auth/register",
+        json={
+            "username": "no_email_user",
+            "password": "testpass",
+            "name": "No Email User",
+        },
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["user"]["username"] == "no_email_user"
+    assert payload["user"]["email"] is None
+    assert payload["access_token"]
+
+
+def test_register_with_email_and_profile(empty_client: TestClient) -> None:
+    response = empty_client.post(
+        "/api/auth/register",
+        json={
+            "username": "full_profile",
+            "password": "testpass",
+            "name": "Full Profile",
+            "email": "full@example.com",
+            "gender": "female",
+            "age": 28,
+            "weight_kg": 62.5,
+        },
+    )
+
+    assert response.status_code == 201
+    user = response.json()["user"]
+    assert user["email"] == "full@example.com"
+    assert user["gender"] == "female"
+    assert user["age"] == 28
+    assert user["weight_kg"] == 62.5
+
+
+def test_register_duplicate_username_returns_409(empty_client: TestClient) -> None:
+    payload = {
+        "username": "duplicate_user",
+        "password": "testpass",
+        "name": "First User",
+    }
+    assert empty_client.post("/api/auth/register", json=payload).status_code == 201
+
+    response = empty_client.post("/api/auth/register", json=payload)
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "Username already taken"
+
+
+def test_register_duplicate_email_returns_409(empty_client: TestClient) -> None:
+    email = "shared@example.com"
+    assert (
+        empty_client.post(
+            "/api/auth/register",
+            json={
+                "username": "user_one",
+                "password": "testpass",
+                "name": "User One",
+                "email": email,
+            },
+        ).status_code
+        == 201
+    )
+
+    response = empty_client.post(
+        "/api/auth/register",
+        json={
+            "username": "user_two",
+            "password": "testpass",
+            "name": "User Two",
+            "email": email,
+        },
+    )
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "Email already registered"
+
+
+def test_register_invalid_username_returns_422(empty_client: TestClient) -> None:
+    response = empty_client.post(
+        "/api/auth/register",
+        json={
+            "username": "bad user!",
+            "password": "testpass",
+            "name": "Bad Username",
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_register_short_password_returns_422(empty_client: TestClient) -> None:
+    response = empty_client.post(
+        "/api/auth/register",
+        json={
+            "username": "shortpw",
+            "password": "abc",
+            "name": "Short Password",
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_login_success(empty_client: TestClient) -> None:
+    empty_client.post(
+        "/api/auth/register",
+        json={
+            "username": "login_user",
+            "password": "secret1234",
+            "name": "Login User",
+        },
+    )
+
+    response = empty_client.post(
+        "/api/auth/login",
+        json={"username": "login_user", "password": "secret1234"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["user"]["username"] == "login_user"
+    assert payload["access_token"]
+
+
+def test_login_invalid_password_returns_401(empty_client: TestClient) -> None:
+    empty_client.post(
+        "/api/auth/register",
+        json={
+            "username": "wrong_pw_user",
+            "password": "correctpass",
+            "name": "Wrong Password",
+        },
+    )
+
+    response = empty_client.post(
+        "/api/auth/login",
+        json={"username": "wrong_pw_user", "password": "wrongpass"},
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid username or password"
+
+
+def test_auth_me_requires_token(empty_client: TestClient) -> None:
+    response = empty_client.get("/api/auth/me")
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Not authenticated"
+
+
+def test_profile_update_clears_email(empty_client: TestClient) -> None:
+    register_response = empty_client.post(
+        "/api/auth/register",
+        json={
+            "username": "profile_user",
+            "password": "testpass",
+            "name": "Profile User",
+            "email": "profile@example.com",
+        },
+    )
+    token = register_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    response = empty_client.put(
+        "/api/profile",
+        headers=headers,
+        json={
+            "name": "Profile User",
+            "email": None,
+            "gender": None,
+            "age": None,
+            "weight_kg": None,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["email"] is None

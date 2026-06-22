@@ -21,10 +21,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from gemini_insight import generate_daily_insight
-from ai_calories import estimate_meal_calories, estimate_workout_calories
+from ai_calories import CalorieEstimate, calories_from_macros, estimate_meal_calories, estimate_workout_calories
 from bmr_calculator import apply_bmr_to_user
 from auth import (
     create_access_token,
@@ -116,6 +117,9 @@ class ProfileUpdate(BaseModel):
 class MealCreate(BaseModel):
     food_name: str = Field(..., min_length=1, max_length=200)
     logged_at: datetime | None = None
+    protein: float | None = Field(default=None, ge=0)
+    carbohydrates: float | None = Field(default=None, ge=0)
+    fats: float | None = Field(default=None, ge=0)
 
 
 class WorkoutCreate(BaseModel):
@@ -127,6 +131,9 @@ class MealUpdate(BaseModel):
     food_name: str = Field(..., min_length=1, max_length=200)
     logged_at: datetime | None = None
     recalculate_calories: bool = False
+    protein: float | None = Field(default=None, ge=0)
+    carbohydrates: float | None = Field(default=None, ge=0)
+    fats: float | None = Field(default=None, ge=0)
 
 
 class WorkoutUpdate(BaseModel):
@@ -225,6 +232,58 @@ def _daily_steps_payload(record: DailySteps | None) -> dict | None:
     }
 
 
+def _macros_provided(protein: float | None, carbohydrates: float | None, fats: float | None) -> bool:
+    return protein is not None and carbohydrates is not None and fats is not None
+
+
+def _build_meal_nutrition(
+    food_name: str,
+    user: User,
+    protein: float | None = None,
+    carbohydrates: float | None = None,
+    fats: float | None = None,
+):
+    if _macros_provided(protein, carbohydrates, fats):
+        return CalorieEstimate(
+            calories=calories_from_macros(protein, carbohydrates, fats),
+            explanation="Calculated from provided macronutrients.",
+            ai_estimated=False,
+            protein=round(protein, 1),
+            carbohydrates=round(carbohydrates, 1),
+            fats=round(fats, 1),
+        )
+    return estimate_meal_calories(food_name, user)
+
+
+def _meal_to_dict(meal: Meal) -> dict:
+    return {
+        "id": meal.id,
+        "food_name": meal.food_name,
+        "calories": meal.calories,
+        "protein": meal.protein,
+        "carbohydrates": meal.carbohydrates,
+        "fats": meal.fats,
+        "logged_at": meal.logged_at.isoformat(),
+    }
+
+
+def _apply_meal_nutrition(meal: Meal, estimate) -> None:
+    meal.calories = estimate.calories
+    meal.protein = estimate.protein
+    meal.carbohydrates = estimate.carbohydrates
+    meal.fats = estimate.fats
+
+
+def _meal_response(meal: Meal, ai_estimated: bool, explanation: str, **extra) -> dict:
+    return {
+        **_meal_to_dict(meal),
+        "entry_type": "meal",
+        "ai_estimated": ai_estimated,
+        "ai_explanation": explanation,
+        **extra,
+    }
+
+
 @app.on_event("startup")
 def on_startup():
     logger.info("Starting Nutrition Tracker")
@@ -235,6 +294,20 @@ def on_startup():
     finally:
         db.close()
     logger.info("Database ready")
+
+
+@app.get("/api/capabilities")
+def get_capabilities():
+    return {
+        "capabilities": {
+            "meal_edit": True,
+            "meal_delete": True,
+            "workout_edit": True,
+            "workout_delete": True,
+            "steps": True,
+            "ai_insight": True,
+        }
+    }
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -265,7 +338,15 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         weight_kg=payload.weight_kg,
     )
     db.add(user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        logger.warning("Registration failed for username %s: %s", username, exc)
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username or email already taken",
+        ) from exc
     db.refresh(user)
     apply_bmr_to_user(user)
     db.commit()
@@ -339,6 +420,36 @@ def get_daily_summary(
         .scalar()
     )
 
+    total_protein = (
+        db.query(func.coalesce(func.sum(Meal.protein), 0.0))
+        .filter(
+            Meal.user_id == current_user.id,
+            Meal.logged_at >= day_start,
+            Meal.logged_at <= day_end,
+        )
+        .scalar()
+    )
+
+    total_carbohydrates = (
+        db.query(func.coalesce(func.sum(Meal.carbohydrates), 0.0))
+        .filter(
+            Meal.user_id == current_user.id,
+            Meal.logged_at >= day_start,
+            Meal.logged_at <= day_end,
+        )
+        .scalar()
+    )
+
+    total_fats = (
+        db.query(func.coalesce(func.sum(Meal.fats), 0.0))
+        .filter(
+            Meal.user_id == current_user.id,
+            Meal.logged_at >= day_start,
+            Meal.logged_at <= day_end,
+        )
+        .scalar()
+    )
+
     calories_burned = (
         db.query(func.coalesce(func.sum(Workout.calories_burned), 0.0))
         .filter(
@@ -388,6 +499,9 @@ def get_daily_summary(
     return {
         "date": target_date.isoformat(),
         "calories_consumed": float(calories_consumed),
+        "total_protein": float(total_protein),
+        "total_carbohydrates": float(total_carbohydrates),
+        "total_fats": float(total_fats),
         "calories_burned": float(calories_burned),
         "steps_calories_burned": steps_calories,
         "activity_calories_burned": activity_calories_burned,
@@ -397,15 +511,7 @@ def get_daily_summary(
         "calorie_balance": calorie_balance,
         "bmr_explanation": current_user.bmr_explanation,
         "daily_steps": _daily_steps_payload(steps_record),
-        "meals": [
-            {
-                "id": meal.id,
-                "food_name": meal.food_name,
-                "calories": meal.calories,
-                "logged_at": meal.logged_at.isoformat(),
-            }
-            for meal in meals
-        ],
+        "meals": [_meal_to_dict(meal) for meal in meals],
         "workouts": [
             {
                 "id": workout.id,
@@ -515,25 +621,26 @@ def add_meal(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    estimate = estimate_meal_calories(payload.food_name.strip(), current_user)
+    estimate = _build_meal_nutrition(
+        payload.food_name.strip(),
+        current_user,
+        payload.protein,
+        payload.carbohydrates,
+        payload.fats,
+    )
     meal = Meal(
         user_id=current_user.id,
         food_name=payload.food_name.strip(),
         calories=estimate.calories,
+        protein=estimate.protein,
+        carbohydrates=estimate.carbohydrates,
+        fats=estimate.fats,
         logged_at=_ensure_not_future_logged_at(payload.logged_at),
     )
     db.add(meal)
     db.commit()
     db.refresh(meal)
-    return {
-        "id": meal.id,
-        "food_name": meal.food_name,
-        "calories": meal.calories,
-        "logged_at": meal.logged_at.isoformat(),
-        "entry_type": "meal",
-        "ai_estimated": estimate.ai_estimated,
-        "ai_explanation": estimate.explanation,
-    }
+    return _meal_response(meal, estimate.ai_estimated, estimate.explanation)
 
 
 @app.post("/api/workouts", status_code=201)
@@ -583,23 +690,30 @@ def update_meal(
     ai_estimated = False
     explanation = ""
     if payload.recalculate_calories or name_changed:
-        estimate = estimate_meal_calories(new_name, current_user)
-        meal.calories = estimate.calories
+        estimate = _build_meal_nutrition(new_name, current_user)
+        _apply_meal_nutrition(meal, estimate)
+        ai_estimated = estimate.ai_estimated
+        explanation = estimate.explanation
+    elif _macros_provided(payload.protein, payload.carbohydrates, payload.fats):
+        estimate = _build_meal_nutrition(
+            new_name,
+            current_user,
+            payload.protein,
+            payload.carbohydrates,
+            payload.fats,
+        )
+        _apply_meal_nutrition(meal, estimate)
         ai_estimated = estimate.ai_estimated
         explanation = estimate.explanation
 
     db.commit()
     db.refresh(meal)
-    return {
-        "id": meal.id,
-        "food_name": meal.food_name,
-        "calories": meal.calories,
-        "logged_at": meal.logged_at.isoformat(),
-        "entry_type": "meal",
-        "ai_estimated": ai_estimated,
-        "ai_explanation": explanation,
-        "calories_recalculated": payload.recalculate_calories or name_changed,
-    }
+    return _meal_response(
+        meal,
+        ai_estimated,
+        explanation,
+        calories_recalculated=payload.recalculate_calories or name_changed,
+    )
 
 
 @app.delete("/api/meals/{meal_id}")
@@ -655,3 +769,19 @@ def update_workout(
         "ai_explanation": explanation,
         "calories_recalculated": payload.recalculate_calories or activity_changed,
     }
+
+
+@app.delete("/api/workouts/{workout_id}")
+def delete_workout(
+    workout_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    workout = _get_user_workout(workout_id, current_user, db)
+    workout_date = workout.logged_at.date()
+    db.delete(workout)
+    db.commit()
+    _refresh_daily_steps_calories(db, current_user, workout_date)
+    db.commit()
+    logger.info("Deleted workout %s for user %s", workout_id, current_user.username)
+    return {"id": workout_id, "deleted": True}

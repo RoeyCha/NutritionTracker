@@ -1,82 +1,10 @@
-from collections.abc import Generator
-from datetime import date, datetime
+from datetime import date
 from unittest.mock import patch
 
-import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.pool import StaticPool
 
 from ai_calories import CalorieEstimate
-from auth import create_access_token, get_db, hash_password
-from main import app
-from models import Base, Meal, User, Workout
-
-
-@pytest.fixture()
-def client(monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient, None, None]:
-    engine = create_engine(
-        "sqlite://",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    testing_session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-    Base.metadata.create_all(bind=engine)
-
-    def override_get_db() -> Generator[Session, None, None]:
-        db = testing_session_local()
-        try:
-            yield db
-        finally:
-            db.close()
-
-    monkeypatch.setattr("main.init_db", lambda: None)
-    monkeypatch.setattr("main.seed_test_user", lambda db: None)
-
-    app.dependency_overrides[get_db] = override_get_db
-
-    db = testing_session_local()
-    user = User(
-        username="pytest_user",
-        password_hash=hash_password("testpass"),
-        name="Pytest User",
-        gender="male",
-        age=30,
-        weight_kg=75.0,
-        bmr=1700.0,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-
-    today = datetime.utcnow()
-    db.add(
-        Meal(
-            user_id=user.id,
-            food_name="Test oatmeal",
-            calories=350.0,
-            logged_at=today,
-        )
-    )
-    db.add(
-        Workout(
-            user_id=user.id,
-            activity_type="Test walk",
-            calories_burned=150.0,
-            logged_at=today,
-        )
-    )
-    db.commit()
-
-    auth_header = {"Authorization": f"Bearer {create_access_token(user)}"}
-
-    with TestClient(app) as test_client:
-        test_client.auth_headers = auth_header
-        yield test_client
-
-    app.dependency_overrides.clear()
-    Base.metadata.drop_all(bind=engine)
+from steps_calories import StepsCalorieEstimate
 
 
 def test_home_page_loads(client: TestClient) -> None:
@@ -85,6 +13,23 @@ def test_home_page_loads(client: TestClient) -> None:
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
     assert "Nutrition Tracker" in response.text
+
+
+def test_capabilities_endpoint_lists_features(empty_client: TestClient) -> None:
+    response = empty_client.get("/api/capabilities")
+
+    assert response.status_code == 200
+    caps = response.json()["capabilities"]
+    assert caps["meal_edit"] is True
+    assert caps["meal_delete"] is True
+    assert caps["workout_edit"] is True
+    assert caps["workout_delete"] is True
+
+
+def test_summary_requires_auth(empty_client: TestClient) -> None:
+    response = empty_client.get(f"/api/summary?date={date.today().isoformat()}")
+
+    assert response.status_code == 401
 
 
 def test_nutrition_summary_endpoint_returns_ok(client: TestClient) -> None:
@@ -96,9 +41,71 @@ def test_nutrition_summary_endpoint_returns_ok(client: TestClient) -> None:
     assert response.status_code == 200
     payload = response.json()
     assert "calories_consumed" in payload
+    assert "total_protein" in payload
+    assert "total_carbohydrates" in payload
+    assert "total_fats" in payload
     assert "meals" in payload
     assert isinstance(payload["meals"], list)
     assert payload["calories_consumed"] >= 0
+    assert payload["total_protein"] >= 0
+    assert payload["total_carbohydrates"] >= 0
+    assert payload["total_fats"] >= 0
+
+
+def test_log_meal_with_explicit_macros(client: TestClient) -> None:
+    response = client.post(
+        "/api/meals",
+        headers=client.auth_headers,
+        json={
+            "food_name": "Macro meal",
+            "protein": 30.0,
+            "carbohydrates": 40.0,
+            "fats": 10.0,
+        },
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["protein"] == 30.0
+    assert body["carbohydrates"] == 40.0
+    assert body["fats"] == 10.0
+    assert body["calories"] == 370.0
+    assert body["ai_estimated"] is False
+
+
+def test_summary_includes_macro_totals(client: TestClient) -> None:
+    first = client.post(
+        "/api/meals",
+        headers=client.auth_headers,
+        json={
+            "food_name": "Breakfast",
+            "protein": 20.0,
+            "carbohydrates": 30.0,
+            "fats": 5.0,
+        },
+    )
+    second = client.post(
+        "/api/meals",
+        headers=client.auth_headers,
+        json={
+            "food_name": "Lunch",
+            "protein": 10.0,
+            "carbohydrates": 15.0,
+            "fats": 8.0,
+        },
+    )
+    assert first.status_code == 201
+    assert second.status_code == 201
+
+    summary = client.get(
+        f"/api/summary?date={date.today().isoformat()}",
+        headers=client.auth_headers,
+    )
+    assert summary.status_code == 200
+    payload = summary.json()
+    assert payload["total_protein"] == 30.0
+    assert payload["total_carbohydrates"] == 45.0
+    assert payload["total_fats"] == 13.0
 
 
 def test_activity_summary_endpoint_returns_ok(client: TestClient) -> None:
@@ -167,7 +174,6 @@ def test_delete_meal_endpoint_returns_success(mock_estimate, client: TestClient)
 
     assert delete_response.status_code == 200
     assert delete_response.json()["deleted"] is True
-    assert delete_response.json()["id"] == meal_id
 
     summary_response = client.get(
         f"/api/summary?date={date.today().isoformat()}",
@@ -175,3 +181,73 @@ def test_delete_meal_endpoint_returns_success(mock_estimate, client: TestClient)
     )
     meal_ids = [meal["id"] for meal in summary_response.json()["meals"]]
     assert meal_id not in meal_ids
+
+
+def test_delete_meal_not_found_returns_404(client: TestClient) -> None:
+    response = client.delete("/api/meals/999999", headers=client.auth_headers)
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Meal not found"
+
+
+@patch(
+    "main.estimate_workout_calories",
+    return_value=CalorieEstimate(calories=200.0, explanation="test", ai_estimated=False),
+)
+def test_delete_workout_endpoint_returns_success(mock_estimate, client: TestClient) -> None:
+    create_response = client.post(
+        "/api/workouts",
+        headers=client.auth_headers,
+        json={"activity_type": "Workout to delete"},
+    )
+    assert create_response.status_code == 201
+    workout_id = create_response.json()["id"]
+
+    delete_response = client.delete(
+        f"/api/workouts/{workout_id}",
+        headers=client.auth_headers,
+    )
+
+    assert delete_response.status_code == 200
+    assert delete_response.json()["deleted"] is True
+
+    summary_response = client.get(
+        f"/api/summary?date={date.today().isoformat()}",
+        headers=client.auth_headers,
+    )
+    workout_ids = [workout["id"] for workout in summary_response.json()["workouts"]]
+    assert workout_id not in workout_ids
+
+
+def test_delete_workout_not_found_returns_404(client: TestClient) -> None:
+    response = client.delete("/api/workouts/999999", headers=client.auth_headers)
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Workout not found"
+
+
+@patch(
+    "main.estimate_steps_calories",
+    return_value=StepsCalorieEstimate(
+        calories_burned=120.0,
+        explanation="test",
+        ai_estimated=False,
+    ),
+)
+def test_steps_upsert_updates_existing_record(mock_estimate, client: TestClient) -> None:
+    target_date = date.today().isoformat()
+    first = client.put(
+        f"/api/steps?date={target_date}",
+        headers=client.auth_headers,
+        json={"steps_count": 5000},
+    )
+    second = client.put(
+        f"/api/steps?date={target_date}",
+        headers=client.auth_headers,
+        json={"steps_count": 8000},
+    )
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert second.json()["daily_steps"]["steps_count"] == 8000
+    assert mock_estimate.call_count == 2

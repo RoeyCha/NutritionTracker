@@ -39,6 +39,24 @@ foreach ($listenPort in $PortsToClear) {
 
 Start-Sleep -Seconds 2
 
+$stillListening = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+if ($stillListening) {
+    Write-Host "Port $Port still in use - force-killing listeners..."
+    foreach ($conn in $stillListening) {
+        $procId = $conn.OwningProcess
+        if ($procId -gt 0) {
+            cmd /c "taskkill /F /PID $procId /T" 2>$null | Out-Null
+        }
+    }
+    Start-Sleep -Seconds 2
+}
+
+$uvicorn = Join-Path $Root "venv\Scripts\uvicorn.exe"
+if (-not (Test-Path $uvicorn)) {
+    Write-Error "venv not found. Run: python -m venv venv; .\venv\Scripts\pip install -r requirements.txt"
+    exit 1
+}
+
 Write-Host "Starting http://127.0.0.1:$Port (auto-reload on code changes)..."
 Set-Location $Root
-& "$Root\venv\Scripts\uvicorn.exe" main:app --host 127.0.0.1 --port $Port --reload
+& $uvicorn main:app --host 127.0.0.1 --port $Port --reload

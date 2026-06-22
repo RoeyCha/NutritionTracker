@@ -27,7 +27,7 @@
     }
 
     .container {
-      max-width: 960px;
+      max-width: 1200px;
       margin: 0 auto;
       padding: 2rem 1rem 3rem;
     }
@@ -147,6 +147,88 @@
       font-size: 0.85rem;
     }
 
+    .logged-at-input {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .logged-at-combo {
+      position: relative;
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: white;
+      margin-bottom: 0.85rem;
+    }
+
+    .logged-at-combo:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+    }
+
+    .logged-at-combo .logged-at-input {
+      flex: 1;
+      min-width: 0;
+      margin-bottom: 0;
+      border: none;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .logged-at-combo .logged-at-input:focus {
+      outline: none;
+      box-shadow: none;
+    }
+
+    .logged-at-picker-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: auto;
+      padding: 0.45rem 0.65rem;
+      margin: 0;
+      border: none;
+      border-inline-start: 1px solid var(--border);
+      border-radius: 0 8px 8px 0;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      line-height: 0;
+    }
+
+    [dir="rtl"] .logged-at-picker-btn {
+      border-radius: 8px 0 0 8px;
+    }
+
+    .logged-at-picker-btn:hover {
+      color: var(--accent);
+      background: #edf2f7;
+    }
+
+    .logged-at-picker-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    .logged-at-datetime-picker {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      border: 0;
+      clip: rect(0, 0, 0, 0);
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .list-item-time {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-inline-start: 0.35rem;
+    }
+
     .summary-stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -238,7 +320,9 @@
 
     .toolbar button { width: auto; }
 
-    .date-nav { margin-bottom: 1rem; }
+    .dashboard-panel {
+      margin-bottom: 1rem;
+    }
 
     .date-nav-top {
       display: flex;
@@ -246,7 +330,27 @@
       align-items: center;
       gap: 0.75rem;
       flex-wrap: wrap;
-      margin-bottom: 0.75rem;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 1fr 3fr;
+      gap: 0;
+      align-items: start;
+    }
+
+    .calendar-pane {
+      min-width: 0;
+      padding-inline-end: 1rem;
+      border-inline-end: 1px solid var(--border);
+    }
+
+    .summary-pane {
+      min-width: 0;
+      padding-inline-start: 1rem;
     }
 
     .date-nav-controls {
@@ -258,53 +362,66 @@
 
     .date-nav-controls button {
       width: auto;
-      min-width: 110px;
+      min-width: 88px;
+    }
+
+    .calendar-pane .date-nav-controls button {
+      min-width: auto;
+      padding: 0.4rem 0.55rem;
+      font-size: 0.82rem;
     }
 
     .selected-date-label {
       font-weight: 700;
-      min-width: 120px;
+      min-width: 0;
       text-align: center;
+      font-size: 0.9rem;
     }
 
     .calendar-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.35rem;
+      gap: 0.25rem;
     }
 
     .calendar-header button {
       width: auto;
-      padding: 0.35rem 0.75rem;
+      padding: 0.2rem 0.45rem;
+      font-size: 0.85rem;
+      line-height: 1.2;
     }
 
     .calendar-month-label {
       font-weight: 700;
+      font-size: 0.82rem;
+      text-align: center;
     }
 
     .calendar-weekdays,
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 0.35rem;
+      gap: 0.2rem;
     }
 
     .calendar-weekdays {
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.25rem;
       color: var(--muted);
-      font-size: 0.8rem;
+      font-size: 0.68rem;
       text-align: center;
     }
 
     .cal-day {
       aspect-ratio: 1;
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 6px;
       background: white;
-      font-size: 0.9rem;
+      font-size: 0.72rem;
       cursor: pointer;
       padding: 0;
+      min-height: 0;
     }
 
     .cal-day.empty-cell {
@@ -334,15 +451,56 @@
     }
 
     .calendar-legend {
-      margin-top: 0.65rem;
+      margin-top: 0.5rem;
       color: var(--muted);
-      font-size: 0.8rem;
+      font-size: 0.68rem;
+      line-height: 1.35;
     }
 
     .no-dates-message {
       color: var(--muted);
       font-style: italic;
-      margin: 0.5rem 0 0;
+      margin: 0.35rem 0 0;
+      font-size: 0.75rem;
+    }
+
+    .summary-pane .summary-stats {
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.6rem;
+    }
+
+    .summary-pane .stat {
+      padding: 0.65rem;
+    }
+
+    .summary-pane .stat-value {
+      font-size: 1.25rem;
+    }
+
+    .summary-pane .stat-label {
+      font-size: 0.78rem;
+    }
+
+    @media (max-width: 860px) {
+      .dashboard-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .calendar-pane {
+        padding-inline-end: 0;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+        border-inline-end: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .summary-pane {
+        padding-inline-start: 0;
+      }
+
+      .cal-day {
+        font-size: 0.8rem;
+      }
     }
 
     .message {
@@ -353,6 +511,18 @@
     }
 
     .message.error { color: var(--danger); }
+
+    .message.success { color: var(--accent); }
+
+    @keyframes refreshFlash {
+      0% { background-color: rgba(49, 130, 206, 0.14); }
+      100% { background-color: transparent; }
+    }
+
+    .card.refresh-flash,
+    .summary-pane.refresh-flash {
+      animation: refreshFlash 0.7s ease-out;
+    }
 
     .server-warning {
       background: #fff3cd;
@@ -532,7 +702,7 @@
 
     button:disabled {
       opacity: 0.7;
-      cursor: wait;
+      cursor: not-allowed;
     }
 
     .insight-card {
@@ -743,7 +913,7 @@
         </div>
       </section>
 
-      <section class="card date-nav">
+      <section class="card dashboard-panel">
         <div class="date-nav-top">
           <label data-i18n="summaryDate">Summary date</label>
           <div class="date-nav-controls">
@@ -753,79 +923,96 @@
             <button type="button" class="btn-primary" id="refresh-summary" data-i18n="refreshSummary">Refresh summary</button>
           </div>
         </div>
+        <p class="message" id="refresh-summary-message" aria-live="polite"></p>
 
-        <div class="calendar-header">
-          <button type="button" class="btn-secondary" id="cal-prev-month" aria-label="Previous month">‹</button>
-          <span class="calendar-month-label" id="calendar-month-label"></span>
-          <button type="button" class="btn-secondary" id="cal-next-month" aria-label="Next month">›</button>
-        </div>
-
-        <div class="calendar-weekdays" id="calendar-weekdays"></div>
-        <div class="calendar-grid" id="calendar-grid"></div>
-        <p class="calendar-legend" data-i18n="calendarLegend">Only dates with logged meals, workouts, or steps can be selected. Future dates are disabled.</p>
-        <p class="no-dates-message hidden" id="no-dates-message" data-i18n="noDatesAvailable">No logged data yet. Add a meal or workout to get started.</p>
-        <input type="hidden" id="summary-date">
-      </section>
-
-      <section class="card" style="margin-bottom: 1rem;">
-        <h2 data-i18n="dailySummary">Daily Summary</h2>
-        <div class="summary-stats">
-          <div class="stat">
-            <span class="stat-value" id="bmr-value">—</span>
-            <span class="stat-label" data-i18n="bmrLabel">BMR (daily baseline)</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value" id="calories-consumed">0</span>
-            <span class="stat-label" data-i18n="caloriesConsumed">Calories consumed</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value" id="calories-burned">0</span>
-            <span class="stat-label" data-i18n="caloriesBurned">Exercise burned</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value" id="steps-calories-value">—</span>
-            <span class="stat-label" data-i18n="stepsCaloriesLabel">Steps burned (net)</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value" id="daily-balance">—</span>
-            <span class="stat-label" data-i18n="dailyBalance">Daily balance</span>
-          </div>
-        </div>
-
-        <div class="balance-summary empty" id="balance-summary">
-          <p class="balance-headline" id="balance-headline" data-i18n="balanceIncomplete">Complete your profile (age & weight) to calculate BMR and daily balance.</p>
-          <p class="balance-detail hidden" id="balance-detail"></p>
-        </div>
-
-        <div class="grid">
-          <div>
-            <h3 data-i18n="mealsToday">Meals today</h3>
-            <ul id="meals-list"></ul>
-          </div>
-          <div>
-            <h3 data-i18n="workoutsToday">Workouts today</h3>
-            <ul id="workouts-list"></ul>
-          </div>
-          <div>
-            <h3 data-i18n="stepsToday">Daily steps</h3>
-            <div id="steps-summary-panel" class="steps-summary-panel">
-              <p id="steps-count-display" class="steps-count-display">—</p>
-              <p id="steps-calories-display" class="steps-calories-display"></p>
+        <div class="dashboard-layout">
+          <aside class="calendar-pane" aria-label="Calendar">
+            <div class="calendar-header">
+              <button type="button" class="btn-secondary" id="cal-prev-month" aria-label="Previous month">‹</button>
+              <span class="calendar-month-label" id="calendar-month-label"></span>
+              <button type="button" class="btn-secondary" id="cal-next-month" aria-label="Next month">›</button>
             </div>
-            <button type="button" class="btn-secondary" id="edit-steps-btn" data-i18n="addStepsBtn">Add steps</button>
-            <p class="message" id="steps-message"></p>
-          </div>
-        </div>
 
-        <div class="insight-card">
-          <div class="insight-header">
-            <h3 data-i18n="aiInsightTitle">AI Daily Insight</h3>
-            <button type="button" class="btn-primary" id="get-ai-insight" data-i18n="getAiInsight">Get AI Insight</button>
+            <div class="calendar-weekdays" id="calendar-weekdays"></div>
+            <div class="calendar-grid" id="calendar-grid"></div>
+            <p class="calendar-legend" data-i18n="calendarLegend">Only dates with logged meals, workouts, or steps can be selected. Future dates are disabled.</p>
+            <p class="no-dates-message hidden" id="no-dates-message" data-i18n="noDatesAvailable">No logged data yet. Add a meal or workout to get started.</p>
+            <input type="hidden" id="summary-date">
+          </aside>
+
+          <div class="summary-pane" id="daily-summary-card">
+            <h2 data-i18n="dailySummary">Daily Summary</h2>
+            <div class="summary-stats">
+              <div class="stat">
+                <span class="stat-value" id="bmr-value">—</span>
+                <span class="stat-label" data-i18n="bmrLabel">BMR (daily baseline)</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value" id="calories-consumed">0</span>
+                <span class="stat-label" data-i18n="caloriesConsumed">Calories consumed</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value" id="total-protein">0</span>
+                <span class="stat-label" data-i18n="proteinLabel">Protein (g)</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value" id="total-carbohydrates">0</span>
+                <span class="stat-label" data-i18n="carbsLabel">Carbs (g)</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value" id="total-fats">0</span>
+                <span class="stat-label" data-i18n="fatsLabel">Fats (g)</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value" id="calories-burned">0</span>
+                <span class="stat-label" data-i18n="caloriesBurned">Exercise burned</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value" id="steps-calories-value">—</span>
+                <span class="stat-label" data-i18n="stepsCaloriesLabel">Steps burned (net)</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value" id="daily-balance">—</span>
+                <span class="stat-label" data-i18n="dailyBalance">Daily balance</span>
+              </div>
+            </div>
+
+            <div class="balance-summary empty" id="balance-summary">
+              <p class="balance-headline" id="balance-headline" data-i18n="balanceIncomplete">Complete your profile (age & weight) to calculate BMR and daily balance.</p>
+              <p class="balance-detail hidden" id="balance-detail"></p>
+            </div>
+
+            <div class="grid">
+              <div>
+                <h3 data-i18n="mealsToday">Meals today</h3>
+                <ul id="meals-list"></ul>
+              </div>
+              <div>
+                <h3 data-i18n="workoutsToday">Workouts today</h3>
+                <ul id="workouts-list"></ul>
+              </div>
+              <div>
+                <h3 data-i18n="stepsToday">Daily steps</h3>
+                <div id="steps-summary-panel" class="steps-summary-panel">
+                  <p id="steps-count-display" class="steps-count-display">—</p>
+                  <p id="steps-calories-display" class="steps-calories-display"></p>
+                </div>
+                <button type="button" class="btn-secondary" id="edit-steps-btn" data-i18n="addStepsBtn">Add steps</button>
+                <p class="message" id="steps-message"></p>
+              </div>
+            </div>
+
+            <div class="insight-card">
+              <div class="insight-header">
+                <h3 data-i18n="aiInsightTitle">AI Daily Insight</h3>
+                <button type="button" class="btn-primary" id="get-ai-insight" data-i18n="getAiInsight">Get AI Insight</button>
+              </div>
+              <div class="insight-body empty" id="ai-insight-body">
+                <p data-i18n="aiInsightEmpty">Tap the button to get personalized feedback for this day.</p>
+              </div>
+              <p class="message" id="ai-insight-message"></p>
+            </div>
           </div>
-          <div class="insight-body empty" id="ai-insight-body">
-            <p data-i18n="aiInsightEmpty">Tap the button to get personalized feedback for this day.</p>
-          </div>
-          <p class="message" id="ai-insight-message"></p>
         </div>
       </section>
 
@@ -837,8 +1024,40 @@
             <input id="meal-food" name="food_name" type="text" data-i18n-placeholder="foodPlaceholder" required>
             <p class="ai-hint" data-i18n="aiMealHint">Calories will be estimated automatically by AI.</p>
 
-            <label for="meal-time" data-i18n="dateTime">Date &amp; time</label>
-            <input id="meal-time" name="logged_at" type="datetime-local">
+            <label for="meal-logged-at" data-i18n="dateTime">Date &amp; time</label>
+            <div class="logged-at-combo">
+              <input
+                id="meal-logged-at"
+                class="logged-at-input"
+                name="logged_at_display"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                data-i18n-placeholder="dateTimePlaceholder"
+                placeholder="dd/mm/yyyy hh:mm"
+              >
+              <button
+                type="button"
+                class="logged-at-picker-btn"
+                id="meal-logged-at-picker-btn"
+                data-i18n-aria-label="openDateTimePicker"
+                aria-label="Open date and time picker"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </button>
+              <input
+                type="datetime-local"
+                id="meal-logged-at-picker"
+                class="logged-at-datetime-picker"
+                step="60"
+                lang="en-GB"
+                tabindex="-1"
+                aria-hidden="true"
+              >
+            </div>
 
             <button type="submit" class="btn-primary" id="meal-submit" data-i18n="addMealBtn">Add meal</button>
           </form>
@@ -852,8 +1071,40 @@
             <input id="workout-activity" name="activity_type" type="text" data-i18n-placeholder="activityPlaceholder" required>
             <p class="ai-hint" data-i18n="aiWorkoutHint">Calories burned will be estimated automatically by AI.</p>
 
-            <label for="workout-time" data-i18n="dateTime">Date &amp; time</label>
-            <input id="workout-time" name="logged_at" type="datetime-local">
+            <label for="workout-logged-at" data-i18n="dateTime">Date &amp; time</label>
+            <div class="logged-at-combo">
+              <input
+                id="workout-logged-at"
+                class="logged-at-input"
+                name="logged_at_display"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                data-i18n-placeholder="dateTimePlaceholder"
+                placeholder="dd/mm/yyyy hh:mm"
+              >
+              <button
+                type="button"
+                class="logged-at-picker-btn"
+                id="workout-logged-at-picker-btn"
+                data-i18n-aria-label="openDateTimePicker"
+                aria-label="Open date and time picker"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+              </button>
+              <input
+                type="datetime-local"
+                id="workout-logged-at-picker"
+                class="logged-at-datetime-picker"
+                step="60"
+                lang="en-GB"
+                tabindex="-1"
+                aria-hidden="true"
+              >
+            </div>
 
             <button type="submit" class="btn-primary" id="workout-submit" data-i18n="addWorkoutBtn">Add workout</button>
           </form>
@@ -902,8 +1153,17 @@
         <label for="meal-edit-food" data-i18n="foodName">Food name</label>
         <input id="meal-edit-food" name="food_name" type="text" data-i18n-placeholder="foodPlaceholder" required>
 
-        <label for="meal-edit-time" data-i18n="dateTime">Date &amp; time</label>
-        <input id="meal-edit-time" name="logged_at" type="datetime-local">
+        <label for="meal-edit-logged-at" data-i18n="dateTime">Date &amp; time</label>
+        <input
+          id="meal-edit-logged-at"
+          class="logged-at-input"
+          name="logged_at_display"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          data-i18n-placeholder="dateTimePlaceholder"
+          placeholder="dd/mm/yyyy hh:mm"
+        >
 
         <div class="recalculate-row">
           <input type="checkbox" id="meal-edit-recalculate" name="recalculate_calories">
@@ -926,8 +1186,17 @@
         <label for="workout-edit-activity" data-i18n="activityType">Activity type</label>
         <input id="workout-edit-activity" name="activity_type" type="text" data-i18n-placeholder="activityPlaceholder" required>
 
-        <label for="workout-edit-time" data-i18n="dateTime">Date &amp; time</label>
-        <input id="workout-edit-time" name="logged_at" type="datetime-local">
+        <label for="workout-edit-logged-at" data-i18n="dateTime">Date &amp; time</label>
+        <input
+          id="workout-edit-logged-at"
+          class="logged-at-input"
+          name="logged_at_display"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          data-i18n-placeholder="dateTimePlaceholder"
+          placeholder="dd/mm/yyyy hh:mm"
+        >
 
         <div class="recalculate-row">
           <input type="checkbox" id="workout-edit-recalculate" name="recalculate_calories">
@@ -937,6 +1206,7 @@
       <p class="message" id="workout-edit-message"></p>
       <div class="form-actions modal-form-actions">
         <button type="submit" form="workout-edit-form" class="btn-primary" id="workout-edit-submit" data-i18n="saveWorkoutBtn">Save workout</button>
+        <button type="button" class="btn-danger" id="workout-edit-delete" data-i18n="deleteWorkoutBtn">Delete workout</button>
         <button type="button" class="btn-secondary" id="workout-edit-cancel" data-i18n="cancelEdit">Cancel</button>
       </div>
     </div>
@@ -1010,10 +1280,16 @@
         prevDay: "Previous day",
         nextDay: "Next day",
         refreshSummary: "Refresh summary",
+        refreshSummaryLoading: "Refreshing...",
+        refreshSummarySuccess: "Summary updated.",
         calendarLegend: "Only dates with logged meals, workouts, or steps can be selected. Future dates are disabled.",
         noDatesAvailable: "No logged data yet. Add a meal or workout to get started.",
         dailySummary: "Daily Summary",
         caloriesConsumed: "Calories consumed",
+        proteinLabel: "Protein (g)",
+        carbsLabel: "Carbs (g)",
+        fatsLabel: "Fats (g)",
+        gramsUnit: "g",
         caloriesBurned: "Exercise burned",
         bmrLabel: "BMR (daily baseline)",
         stepsCaloriesLabel: "Steps burned (net)",
@@ -1044,6 +1320,11 @@
         foodPlaceholder: "e.g. Grilled chicken salad",
         calories: "Calories",
         dateTime: "Date & time",
+        dateTimePlaceholder: "dd/mm/yyyy hh:mm",
+        openDateTimePicker: "Open date and time picker",
+        invalidDateTimeFormat: "Use format dd/mm/yyyy hh:mm (24-hour).",
+        dateLabel: "Date",
+        timeLabel: "Time",
         addMealBtn: "Add meal",
         addWorkout: "Add Workout",
         activityType: "Activity type",
@@ -1086,6 +1367,8 @@
         editMeal: "Edit Meal",
         deleteMealBtn: "Delete meal",
         deleteMealConfirm: "Delete this meal? This cannot be undone.",
+        deleteWorkoutBtn: "Delete workout",
+        deleteWorkoutConfirm: "Delete this workout? This cannot be undone.",
         deleteSuccess: "Deleted successfully.",
         editWorkout: "Edit Workout",
         saveMealBtn: "Save meal",
@@ -1130,10 +1413,16 @@
         prevDay: "יום קודם",
         nextDay: "יום הבא",
         refreshSummary: "רענן סיכום",
+        refreshSummaryLoading: "מרענן...",
+        refreshSummarySuccess: "הסיכום עודכן.",
         calendarLegend: "ניתן לבחור רק תאריכים עם ארוחות, אימונים או צעדים. תאריכים עתידיים חסומים.",
         noDatesAvailable: "אין נתונים עדיין. הוסף ארוחה או אימון כדי להתחיל.",
         dailySummary: "סיכום יומי",
         caloriesConsumed: "קלוריות שנצרכו",
+        proteinLabel: "חלבון (גרם)",
+        carbsLabel: "פחמימות (גרם)",
+        fatsLabel: "שומנים (גרם)",
+        gramsUnit: "גרם",
         caloriesBurned: "קלוריות מפעילות גוף",
         bmrLabel: "BMR (קצב חילוף בסיסי)",
         dailyBalance: "מאזן יומי",
@@ -1164,6 +1453,11 @@
         foodPlaceholder: "לדוגמה: סלט עוף על האש",
         calories: "קלוריות",
         dateTime: "תאריך ושעה",
+        dateTimePlaceholder: "dd/mm/yyyy hh:mm",
+        openDateTimePicker: "פתח בוחר תאריך ושעה",
+        invalidDateTimeFormat: "השתמש בפורמט dd/mm/yyyy hh:mm (24 שעות).",
+        dateLabel: "תאריך",
+        timeLabel: "שעה",
         addMealBtn: "הוסף ארוחה",
         addWorkout: "הוספת אימון",
         activityType: "סוג פעילות",
@@ -1206,6 +1500,8 @@
         editMeal: "עריכת ארוחה",
         deleteMealBtn: "מחק ארוחה",
         deleteMealConfirm: "למחוק את הארוחה? לא ניתן לבטל.",
+        deleteWorkoutBtn: "מחק אימון",
+        deleteWorkoutConfirm: "למחוק את האימון? לא ניתן לבטל.",
         deleteSuccess: "נמחק בהצלחה.",
         editWorkout: "עריכת אימון",
         saveMealBtn: "שמור ארוחה",
@@ -1258,6 +1554,8 @@
     const calNextMonthButton = document.getElementById("cal-next-month");
     const noDatesMessage = document.getElementById("no-dates-message");
     const refreshButton = document.getElementById("refresh-summary");
+    const refreshSummaryMessage = document.getElementById("refresh-summary-message");
+    const dailySummaryCard = document.getElementById("daily-summary-card");
     const mealForm = document.getElementById("meal-form");
     const workoutForm = document.getElementById("workout-form");
     const mealMessage = document.getElementById("meal-message");
@@ -1304,8 +1602,10 @@
     }
 
     function localeTag() {
-      return currentLang === "he" ? "he-IL" : "en-US";
+      return currentLang === "he" ? "he-IL" : "en-GB";
     }
+
+    const LOGGED_AT_DISPLAY_PATTERN = /^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})$/;
 
     function applyLanguage(lang) {
       currentLang = lang === "he" ? "he" : "en";
@@ -1321,6 +1621,10 @@
 
       document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
         el.placeholder = t(el.dataset.i18nPlaceholder);
+      });
+
+      document.querySelectorAll("[data-i18n-aria-label]").forEach((el) => {
+        el.setAttribute("aria-label", t(el.dataset.i18nAriaLabel));
       });
 
       document.querySelectorAll("[data-i18n-option]").forEach((el) => {
@@ -1680,16 +1984,34 @@
     }
 
     async function checkServerCapabilities() {
+      const required = ["meal_edit", "meal_delete", "workout_edit", "workout_delete"];
+
       try {
-        const response = await fetch("/openapi.json");
+        const response = await fetch(`/api/capabilities?t=${Date.now()}`, { cache: "no-store" });
+        if (response.ok) {
+          const data = await response.json();
+          const caps = data.capabilities || {};
+          setServerWarning(required.some((key) => !caps[key]));
+          return;
+        }
+      } catch {
+        // Fall back to OpenAPI inspection below.
+      }
+
+      try {
+        const response = await fetch(`/openapi.json?t=${Date.now()}`, { cache: "no-store" });
         if (!response.ok) {
           setServerWarning(true);
           return;
         }
         const openapi = await response.json();
-        const hasEditApi = Boolean(openapi.paths?.["/api/meals/{meal_id}"]?.put);
-        const hasDeleteApi = Boolean(openapi.paths?.["/api/meals/{meal_id}"]?.delete);
-        setServerWarning(!hasEditApi || !hasDeleteApi);
+        const hasMealEditApi = Boolean(openapi.paths?.["/api/meals/{meal_id}"]?.put);
+        const hasMealDeleteApi = Boolean(openapi.paths?.["/api/meals/{meal_id}"]?.delete);
+        const hasWorkoutEditApi = Boolean(openapi.paths?.["/api/workouts/{workout_id}"]?.put);
+        const hasWorkoutDeleteApi = Boolean(openapi.paths?.["/api/workouts/{workout_id}"]?.delete);
+        setServerWarning(
+          !hasMealEditApi || !hasMealDeleteApi || !hasWorkoutEditApi || !hasWorkoutDeleteApi
+        );
       } catch {
         setServerWarning(true);
       }
@@ -1728,6 +2050,145 @@
       return adjusted.toISOString().slice(0, 10);
     }
 
+    function formatLoggedAtDisplay(value) {
+      const date = value instanceof Date ? value : new Date(value);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
+    }
+
+    function dateTimeToPickerValue(value) {
+      const date = value instanceof Date ? value : new Date(value);
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      return `${date.getFullYear()}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    function nowDateTimeLocalMax() {
+      return dateTimeToPickerValue(new Date());
+    }
+
+    function loggedAtDateTimePicker(textInputId) {
+      return document.getElementById(`${textInputId}-picker`);
+    }
+
+    function syncLoggedAtPickerFromDisplay(textInputId) {
+      const textInput = document.getElementById(textInputId);
+      const picker = loggedAtDateTimePicker(textInputId);
+      if (!picker) {
+        return;
+      }
+
+      try {
+        const parsed = parseLoggedAtDisplay(textInput.value);
+        if (!parsed) {
+          picker.value = "";
+          return;
+        }
+        picker.value = dateTimeToPickerValue(parsed);
+      } catch {
+        picker.value = "";
+      }
+    }
+
+    function syncLoggedAtDisplayFromPicker(textInputId) {
+      const textInput = document.getElementById(textInputId);
+      const picker = loggedAtDateTimePicker(textInputId);
+      if (!picker || !picker.value) {
+        return;
+      }
+
+      const [datePart, timePart] = picker.value.split("T");
+      const [year, month, day] = datePart.split("-").map(Number);
+      const [hours, minutes] = timePart.split(":").map(Number);
+      textInput.value = formatLoggedAtDisplay(new Date(year, month - 1, day, hours, minutes, 0, 0));
+    }
+
+    function openLoggedAtPicker(textInputId) {
+      const picker = loggedAtDateTimePicker(textInputId);
+      if (!picker) {
+        return;
+      }
+
+      syncLoggedAtPickerFromDisplay(textInputId);
+      picker.max = nowDateTimeLocalMax();
+
+      if (typeof picker.showPicker === "function") {
+        try {
+          picker.showPicker();
+          return;
+        } catch {
+          // Fall back to click when showPicker is blocked.
+        }
+      }
+
+      picker.click();
+    }
+
+    function setupLoggedAtPicker(textInputId) {
+      const textInput = document.getElementById(textInputId);
+      const picker = loggedAtDateTimePicker(textInputId);
+      const pickerButton = document.getElementById(`${textInputId}-picker-btn`);
+      if (!picker || !pickerButton) {
+        return;
+      }
+
+      pickerButton.addEventListener("click", () => openLoggedAtPicker(textInputId));
+      picker.addEventListener("change", () => syncLoggedAtDisplayFromPicker(textInputId));
+      textInput.addEventListener("blur", () => syncLoggedAtPickerFromDisplay(textInputId));
+    }
+
+    function parseLoggedAtDisplay(value) {
+      const trimmed = String(value || "").trim();
+      if (!trimmed) {
+        return null;
+      }
+
+      const match = trimmed.match(LOGGED_AT_DISPLAY_PATTERN);
+      if (!match) {
+        throw new Error(t("invalidDateTimeFormat"));
+      }
+
+      const day = Number(match[1]);
+      const month = Number(match[2]);
+      const year = Number(match[3]);
+      const hours = Number(match[4]);
+      const minutes = Number(match[5]);
+
+      if (
+        month < 1 ||
+        month > 12 ||
+        day < 1 ||
+        day > 31 ||
+        hours > 23 ||
+        minutes > 59
+      ) {
+        throw new Error(t("invalidDateTimeFormat"));
+      }
+
+      const parsed = new Date(year, month - 1, day, hours, minutes, 0, 0);
+      if (
+        parsed.getFullYear() !== year ||
+        parsed.getMonth() !== month - 1 ||
+        parsed.getDate() !== day ||
+        parsed.getHours() !== hours ||
+        parsed.getMinutes() !== minutes
+      ) {
+        throw new Error(t("invalidDateTimeFormat"));
+      }
+
+      return parsed;
+    }
+
+    function formatLocalTime(isoString) {
+      return formatLoggedAtDisplay(new Date(isoString));
+    }
+
     function formatDisplayDate(iso) {
       const [year, month, day] = iso.split("-").map(Number);
       const dateObj = new Date(year, month - 1, day);
@@ -1741,6 +2202,75 @@
 
     function getSortedAvailableDates() {
       return [...availableDates].sort();
+    }
+
+    let refreshSummaryMessageTimer = null;
+
+    async function reloadCurrentUserProfile() {
+      if (!authToken) {
+        return;
+      }
+
+      const response = await apiFetch("/api/auth/me");
+      if (!response.ok) {
+        return;
+      }
+
+      currentUser = await response.json();
+      document.getElementById("profile-details").textContent = formatProfileDetails(currentUser);
+    }
+
+    function flashDailySummaryCard() {
+      dailySummaryCard.classList.remove("refresh-flash");
+      void dailySummaryCard.offsetWidth;
+      dailySummaryCard.classList.add("refresh-flash");
+      dailySummaryCard.addEventListener(
+        "animationend",
+        () => dailySummaryCard.classList.remove("refresh-flash"),
+        { once: true },
+      );
+    }
+
+    function showRefreshSummaryMessage(text, isError = false) {
+      refreshSummaryMessage.textContent = text;
+      refreshSummaryMessage.classList.toggle("error", isError);
+      refreshSummaryMessage.classList.toggle("success", !isError && Boolean(text));
+
+      if (refreshSummaryMessageTimer) {
+        clearTimeout(refreshSummaryMessageTimer);
+        refreshSummaryMessageTimer = null;
+      }
+
+      if (text && !isError) {
+        refreshSummaryMessageTimer = setTimeout(() => {
+          refreshSummaryMessage.textContent = "";
+          refreshSummaryMessage.classList.remove("success");
+          refreshSummaryMessageTimer = null;
+        }, 2500);
+      }
+    }
+
+    async function refreshDashboard() {
+      if (!summaryDateInput.value) {
+        return;
+      }
+
+      refreshButton.disabled = true;
+      refreshButton.textContent = t("refreshSummaryLoading");
+      showRefreshSummaryMessage("");
+
+      try {
+        await reloadCurrentUserProfile();
+        await refreshCalendarAndSummary();
+        resetAiInsightDisplay();
+        flashDailySummaryCard();
+        showRefreshSummaryMessage(t("refreshSummarySuccess"));
+      } catch (error) {
+        showRefreshSummaryMessage(error.message || t("loadSummaryError"), true);
+      } finally {
+        refreshButton.disabled = false;
+        refreshButton.textContent = t("refreshSummary");
+      }
     }
 
     async function loadAvailableDates() {
@@ -1787,7 +2317,6 @@
     }
 
     async function initializeDashboard() {
-      updateDatetimeMaxInputs();
       await loadAvailableDates();
       pickInitialDate();
       if (summaryDateInput.value) {
@@ -1943,21 +2472,14 @@
       }
     }
 
-    function nowForDatetimeLocal() {
-      const now = new Date();
-      const offset = now.getTimezoneOffset();
-      const local = new Date(now.getTime() - offset * 60 * 1000);
-      return local.toISOString().slice(0, 16);
+    function setLoggedAtField(inputId, isoString) {
+      document.getElementById(inputId).value = formatLoggedAtDisplay(new Date(isoString));
+      syncLoggedAtPickerFromDisplay(inputId);
     }
 
-    function updateDatetimeMaxInputs() {
-      const maxValue = nowForDatetimeLocal();
-      ["meal-time", "workout-time", "meal-edit-time", "workout-edit-time"].forEach((id) => {
-        const input = document.getElementById(id);
-        if (input) {
-          input.max = maxValue;
-        }
-      });
+    function initLoggedAtField(inputId) {
+      document.getElementById(inputId).value = formatLoggedAtDisplay(new Date());
+      syncLoggedAtPickerFromDisplay(inputId);
     }
 
     function assertLoggedAtNotFuture(loggedAt) {
@@ -2002,11 +2524,10 @@
       editingMealId = item.id;
       editingMealOriginalName = item.food_name;
       document.getElementById("meal-edit-food").value = item.food_name;
-      document.getElementById("meal-edit-time").value = isoToDatetimeLocal(item.logged_at);
+      setLoggedAtField("meal-edit-logged-at", item.logged_at);
       document.getElementById("meal-edit-recalculate").checked = false;
       mealEditMessage.textContent = "";
       mealEditMessage.classList.remove("error");
-      updateDatetimeMaxInputs();
       mealEditModal.classList.remove("hidden");
     }
 
@@ -2042,15 +2563,37 @@
       await refreshCalendarAndSummary();
     }
 
+    async function deleteWorkout(workoutId) {
+      if (!window.confirm(t("deleteWorkoutConfirm"))) {
+        return;
+      }
+
+      const response = await apiFetch(`/api/workouts/${workoutId}`, { method: "DELETE" });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        let detail = error.detail || t("requestFailed");
+        if (response.status === 404 && detail === "Not Found") {
+          detail = t("staleServerEditError");
+          setServerWarning(true);
+        }
+        throw new Error(Array.isArray(detail) ? detail.map((item) => item.msg).join(", ") : detail);
+      }
+
+      if (editingWorkoutId === workoutId) {
+        closeWorkoutEditModal();
+      }
+
+      await refreshCalendarAndSummary();
+    }
+
     function openWorkoutEditModal(item) {
       editingWorkoutId = item.id;
       editingWorkoutOriginalName = item.activity_type;
       document.getElementById("workout-edit-activity").value = item.activity_type;
-      document.getElementById("workout-edit-time").value = isoToDatetimeLocal(item.logged_at);
+      setLoggedAtField("workout-edit-logged-at", item.logged_at);
       document.getElementById("workout-edit-recalculate").checked = false;
       workoutEditMessage.textContent = "";
       workoutEditMessage.classList.remove("error");
-      updateDatetimeMaxInputs();
       workoutEditModal.classList.remove("hidden");
     }
 
@@ -2063,17 +2606,9 @@
       workoutEditModal.classList.add("hidden");
     }
 
-    function resetAddForm(form, timeInputId) {
+    function resetAddForm(form, loggedAtInputId) {
       form.reset();
-      document.getElementById(timeInputId).value = nowForDatetimeLocal();
-      updateDatetimeMaxInputs();
-    }
-
-    function isoToDatetimeLocal(isoString) {
-      const date = new Date(isoString);
-      const offset = date.getTimezoneOffset();
-      const local = new Date(date.getTime() - offset * 60 * 1000);
-      return local.toISOString().slice(0, 16);
+      initLoggedAtField(loggedAtInputId);
     }
 
     function renderList(containerId, items, emptyText, nameKey, valueKey, entryType) {
@@ -2094,6 +2629,12 @@
         const nameSpan = document.createElement("span");
         nameSpan.className = "list-item-name";
         nameSpan.textContent = item[nameKey];
+        if (item.logged_at) {
+          const timeSpan = document.createElement("span");
+          timeSpan.className = "list-item-time";
+          timeSpan.textContent = ` · ${formatLocalTime(item.logged_at)}`;
+          nameSpan.appendChild(timeSpan);
+        }
 
         const actions = document.createElement("div");
         actions.className = "list-item-actions";
@@ -2117,16 +2658,15 @@
         actions.appendChild(valueSpan);
         actions.appendChild(editButton);
 
-        if (entryType === "meal") {
-          const deleteButton = document.createElement("button");
-          deleteButton.type = "button";
-          deleteButton.className = "btn-danger list-delete-btn";
-          deleteButton.textContent = t("deleteBtn");
-          deleteButton.addEventListener("click", () => {
-            deleteMeal(item.id).catch((error) => alert(error.message));
-          });
-          actions.appendChild(deleteButton);
-        }
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "btn-danger list-delete-btn";
+        deleteButton.textContent = t("deleteBtn");
+        deleteButton.addEventListener("click", () => {
+          const deleteFn = entryType === "meal" ? deleteMeal : deleteWorkout;
+          deleteFn(item.id).catch((error) => alert(error.message));
+        });
+        actions.appendChild(deleteButton);
 
         li.appendChild(nameSpan);
         li.appendChild(actions);
@@ -2148,6 +2688,9 @@
       const data = await response.json();
 
       document.getElementById("calories-consumed").textContent = formatNumber(data.calories_consumed);
+      document.getElementById("total-protein").textContent = formatNumber(data.total_protein);
+      document.getElementById("total-carbohydrates").textContent = formatNumber(data.total_carbohydrates);
+      document.getElementById("total-fats").textContent = formatNumber(data.total_fats);
       document.getElementById("calories-burned").textContent = formatNumber(data.calories_burned);
       currentDailySteps = data.daily_steps;
       renderStepsSummary(data);
@@ -2255,16 +2798,22 @@
         activity_type: formData.get("activity_type"),
       };
 
-      const loggedAt = formData.get("logged_at");
-      if (loggedAt) {
+      const loggedAtValue = formData.get("logged_at_display");
+      if (loggedAtValue) {
+        let loggedAt;
         try {
-          assertLoggedAtNotFuture(loggedAt);
+          loggedAt = parseLoggedAtDisplay(loggedAtValue);
+          if (loggedAt) {
+            assertLoggedAtNotFuture(loggedAt);
+          }
         } catch (error) {
           messageEl.textContent = error.message;
           messageEl.classList.add("error");
           return;
         }
-        payload.logged_at = new Date(loggedAt).toISOString();
+        if (loggedAt) {
+          payload.logged_at = loggedAt.toISOString();
+        }
       }
 
       if (editingId) {
@@ -2321,9 +2870,9 @@
         } else {
           messageEl.textContent = t("savedSuccess");
           if (entryType === "meal") {
-            resetAddForm(form, "meal-time");
+            resetAddForm(form, "meal-logged-at");
           } else {
-            resetAddForm(form, "workout-time");
+            resetAddForm(form, "workout-logged-at");
           }
         }
 
@@ -2476,10 +3025,7 @@
     applyLanguage(currentLang);
 
     refreshButton.addEventListener("click", () => {
-      if (!summaryDateInput.value) {
-        return;
-      }
-      loadSummary().catch((error) => alert(error.message));
+      refreshDashboard().catch((error) => alert(error.message));
     });
 
     datePrevButton.addEventListener("click", () => navigateDay(-1));
@@ -2487,9 +3033,10 @@
     calPrevMonthButton.addEventListener("click", () => changeCalendarMonth(-1));
     calNextMonthButton.addEventListener("click", () => changeCalendarMonth(1));
 
-    document.getElementById("meal-time").value = nowForDatetimeLocal();
-    document.getElementById("workout-time").value = nowForDatetimeLocal();
-    updateDatetimeMaxInputs();
+    initLoggedAtField("meal-logged-at");
+    initLoggedAtField("workout-logged-at");
+    setupLoggedAtPicker("meal-logged-at");
+    setupLoggedAtPicker("workout-logged-at");
 
     getAiInsightButton.addEventListener("click", () => {
       loadAiInsight().catch((error) => alert(error.message));
@@ -2541,6 +3088,16 @@
         editingWorkoutId,
         closeWorkoutEditModal
       );
+    });
+
+    document.getElementById("workout-edit-delete").addEventListener("click", () => {
+      if (!editingWorkoutId) {
+        return;
+      }
+      deleteWorkout(editingWorkoutId).catch((error) => {
+        workoutEditMessage.textContent = error.message;
+        workoutEditMessage.classList.add("error");
+      });
     });
 
     calorieModalClose.addEventListener("click", hideCalorieModal);
