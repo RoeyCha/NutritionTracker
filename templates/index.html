@@ -131,6 +131,22 @@
 
     button.btn-secondary:hover { background: #edf2f7; }
 
+    button.btn-danger {
+      background: white;
+      color: var(--danger, #c53030);
+      border: 1px solid #feb2b2;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button.btn-danger:hover { background: #fff5f5; }
+
+    .list-delete-btn {
+      width: auto;
+      padding: 0.35rem 0.65rem;
+      font-size: 0.85rem;
+    }
+
     .summary-stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -149,6 +165,55 @@
     .stat-label { color: var(--muted); font-size: 0.85rem; }
     .positive { color: var(--accent); }
     .negative { color: var(--danger); }
+
+    .balance-summary {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin: 0 0 1rem;
+      padding: 0.85rem 1rem;
+      text-align: start;
+    }
+
+    .balance-summary.empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .balance-headline {
+      font-size: 1rem;
+      font-weight: 700;
+      margin: 0 0 0.35rem;
+    }
+
+    .balance-detail {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin: 0;
+    }
+
+    .steps-summary-panel {
+      background: #edf2f7;
+      border-radius: 10px;
+      margin-bottom: 0.75rem;
+      padding: 0.85rem;
+    }
+
+    .steps-count-display {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin: 0 0 0.35rem;
+    }
+
+    .steps-calories-display {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin: 0;
+    }
+
+    #edit-steps-btn {
+      width: 100%;
+    }
 
     ul { list-style: none; padding: 0; margin: 0; }
 
@@ -171,8 +236,114 @@
       flex-wrap: wrap;
     }
 
-    .toolbar input[type="date"] { width: auto; margin: 0; }
     .toolbar button { width: auto; }
+
+    .date-nav { margin-bottom: 1rem; }
+
+    .date-nav-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    .date-nav-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .date-nav-controls button {
+      width: auto;
+      min-width: 110px;
+    }
+
+    .selected-date-label {
+      font-weight: 700;
+      min-width: 120px;
+      text-align: center;
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .calendar-header button {
+      width: auto;
+      padding: 0.35rem 0.75rem;
+    }
+
+    .calendar-month-label {
+      font-weight: 700;
+    }
+
+    .calendar-weekdays,
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.35rem;
+    }
+
+    .calendar-weekdays {
+      margin-bottom: 0.35rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-align: center;
+    }
+
+    .cal-day {
+      aspect-ratio: 1;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: white;
+      font-size: 0.9rem;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .cal-day.empty-cell {
+      border: none;
+      background: transparent;
+      cursor: default;
+    }
+
+    .cal-day.has-data:hover { background: #edf2f7; }
+
+    .cal-day.has-data.selected {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .cal-day.no-data,
+    .cal-day.future {
+      background: #f1f5f9;
+      color: #a0aec0;
+      cursor: not-allowed;
+    }
+
+    .cal-day.today:not(.selected) {
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+
+    .calendar-legend {
+      margin-top: 0.65rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .no-dates-message {
+      color: var(--muted);
+      font-style: italic;
+      margin: 0.5rem 0 0;
+    }
 
     .message {
       margin-top: 0.75rem;
@@ -182,6 +353,15 @@
     }
 
     .message.error { color: var(--danger); }
+
+    .server-warning {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      color: #664d03;
+      margin-bottom: 1rem;
+      padding: 0.75rem 1rem;
+    }
 
     .hidden { display: none !important; }
 
@@ -242,6 +422,44 @@
     [dir="rtl"] .list-item-name { text-align: right; }
     [dir="rtl"] .list-item-value { text-align: left; white-space: nowrap; }
 
+    .list-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      flex-shrink: 0;
+    }
+
+    .list-edit-btn {
+      width: auto;
+      padding: 0.35rem 0.65rem;
+      font-size: 0.85rem;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .form-actions button { flex: 1; min-width: 120px; }
+
+    .recalculate-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .recalculate-row input[type="checkbox"] {
+      width: auto;
+      margin: 0;
+    }
+
+    .recalculate-row label {
+      margin: 0;
+      font-weight: 500;
+    }
+
     .ai-hint {
       color: var(--muted);
       font-size: 0.85rem;
@@ -290,6 +508,26 @@
       color: var(--muted);
       font-size: 0.9rem;
       margin: 0.75rem 0 1rem;
+    }
+
+    .modal-card-form {
+      max-width: 480px;
+      text-align: start;
+    }
+
+    .modal-card-form h3 {
+      text-align: center;
+    }
+
+    .modal-form-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .modal-form-actions button {
+      flex: 1;
+      min-width: 120px;
     }
 
     button:disabled {
@@ -347,6 +585,77 @@
     .insight-tip {
       margin: 0;
       color: var(--text);
+    }
+
+    .ai-loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 2000;
+    }
+
+    .ai-loading-panel {
+      background: var(--card);
+      border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(15, 23, 42, 0.2);
+      padding: 1.75rem 2rem;
+      text-align: center;
+      min-width: 240px;
+    }
+
+    .ai-spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #e2e8f0;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: ai-spin 0.85s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes ai-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .ai-loading-text {
+      margin: 0;
+      color: var(--text);
+      font-weight: 600;
+      animation: ai-pulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes ai-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.55; }
+    }
+
+    .insight-body.loading {
+      position: relative;
+      min-height: 88px;
+      overflow: hidden;
+    }
+
+    .insight-body.loading > * {
+      visibility: hidden;
+    }
+
+    .insight-body.loading::after {
+      animation: ai-shimmer 1.2s ease-in-out infinite;
+      background: linear-gradient(90deg, #edf2f7 0%, #dbeafe 50%, #edf2f7 100%);
+      background-size: 200% 100%;
+      border-radius: 10px;
+      content: "";
+      inset: 0;
+      position: absolute;
+    }
+
+    @keyframes ai-shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
     }
   </style>
 </head>
@@ -419,6 +728,8 @@
     </section>
 
     <div id="app-section" class="hidden">
+      <div id="server-warning" class="server-warning hidden" role="alert"></div>
+
       <section class="card profile-bar">
         <div class="profile-meta">
           <span data-i18n="signedInAs">Signed in as</span>
@@ -432,55 +743,58 @@
         </div>
       </section>
 
-      <section id="profile-edit-section" class="card hidden" style="margin-bottom: 1rem;">
-        <h2 data-i18n="editProfile">Edit profile</h2>
-        <form id="profile-form">
-          <label for="profile-name" data-i18n="displayName">Display name</label>
-          <input id="profile-name" name="name" type="text" required>
+      <section class="card date-nav">
+        <div class="date-nav-top">
+          <label data-i18n="summaryDate">Summary date</label>
+          <div class="date-nav-controls">
+            <button type="button" class="btn-secondary" id="date-prev" data-i18n="prevDay">Previous day</button>
+            <span class="selected-date-label" id="selected-date-label">-</span>
+            <button type="button" class="btn-secondary" id="date-next" data-i18n="nextDay">Next day</button>
+            <button type="button" class="btn-primary" id="refresh-summary" data-i18n="refreshSummary">Refresh summary</button>
+          </div>
+        </div>
 
-          <label for="profile-email" data-i18n="emailOptional">Email (optional)</label>
-          <input id="profile-email" name="email" type="email">
+        <div class="calendar-header">
+          <button type="button" class="btn-secondary" id="cal-prev-month" aria-label="Previous month">‹</button>
+          <span class="calendar-month-label" id="calendar-month-label"></span>
+          <button type="button" class="btn-secondary" id="cal-next-month" aria-label="Next month">›</button>
+        </div>
 
-          <label for="profile-gender" data-i18n="gender">Gender</label>
-          <select id="profile-gender" name="gender">
-            <option value="" data-i18n-option="genderUnset">Prefer not to say</option>
-            <option value="male" data-i18n-option="genderMale">Male</option>
-            <option value="female" data-i18n-option="genderFemale">Female</option>
-            <option value="other" data-i18n-option="genderOther">Other</option>
-          </select>
-
-          <label for="profile-age" data-i18n="age">Age</label>
-          <input id="profile-age" name="age" type="number" min="1" max="120" step="1">
-
-          <label for="profile-weight" data-i18n="weightKg">Weight (kg)</label>
-          <input id="profile-weight" name="weight_kg" type="number" min="1" max="500" step="0.1">
-
-          <button type="submit" class="btn-primary" data-i18n="saveProfile">Save profile</button>
-        </form>
-        <p class="message" id="profile-message"></p>
+        <div class="calendar-weekdays" id="calendar-weekdays"></div>
+        <div class="calendar-grid" id="calendar-grid"></div>
+        <p class="calendar-legend" data-i18n="calendarLegend">Only dates with logged meals, workouts, or steps can be selected. Future dates are disabled.</p>
+        <p class="no-dates-message hidden" id="no-dates-message" data-i18n="noDatesAvailable">No logged data yet. Add a meal or workout to get started.</p>
+        <input type="hidden" id="summary-date">
       </section>
-
-      <div class="toolbar card">
-        <label for="summary-date" data-i18n="summaryDate">Summary date</label>
-        <input type="date" id="summary-date">
-        <button type="button" class="btn-primary" id="refresh-summary" data-i18n="refreshSummary">Refresh summary</button>
-      </div>
 
       <section class="card" style="margin-bottom: 1rem;">
         <h2 data-i18n="dailySummary">Daily Summary</h2>
         <div class="summary-stats">
+          <div class="stat">
+            <span class="stat-value" id="bmr-value">—</span>
+            <span class="stat-label" data-i18n="bmrLabel">BMR (daily baseline)</span>
+          </div>
           <div class="stat">
             <span class="stat-value" id="calories-consumed">0</span>
             <span class="stat-label" data-i18n="caloriesConsumed">Calories consumed</span>
           </div>
           <div class="stat">
             <span class="stat-value" id="calories-burned">0</span>
-            <span class="stat-label" data-i18n="caloriesBurned">Calories burned</span>
+            <span class="stat-label" data-i18n="caloriesBurned">Exercise burned</span>
           </div>
           <div class="stat">
-            <span class="stat-value" id="net-calories">0</span>
-            <span class="stat-label" data-i18n="netCalories">Net calories</span>
+            <span class="stat-value" id="steps-calories-value">—</span>
+            <span class="stat-label" data-i18n="stepsCaloriesLabel">Steps burned (net)</span>
           </div>
+          <div class="stat">
+            <span class="stat-value" id="daily-balance">—</span>
+            <span class="stat-label" data-i18n="dailyBalance">Daily balance</span>
+          </div>
+        </div>
+
+        <div class="balance-summary empty" id="balance-summary">
+          <p class="balance-headline" id="balance-headline" data-i18n="balanceIncomplete">Complete your profile (age & weight) to calculate BMR and daily balance.</p>
+          <p class="balance-detail hidden" id="balance-detail"></p>
         </div>
 
         <div class="grid">
@@ -491,6 +805,15 @@
           <div>
             <h3 data-i18n="workoutsToday">Workouts today</h3>
             <ul id="workouts-list"></ul>
+          </div>
+          <div>
+            <h3 data-i18n="stepsToday">Daily steps</h3>
+            <div id="steps-summary-panel" class="steps-summary-panel">
+              <p id="steps-count-display" class="steps-count-display">—</p>
+              <p id="steps-calories-display" class="steps-calories-display"></p>
+            </div>
+            <button type="button" class="btn-secondary" id="edit-steps-btn" data-i18n="addStepsBtn">Add steps</button>
+            <p class="message" id="steps-message"></p>
           </div>
         </div>
 
@@ -540,6 +863,102 @@
     </div>
   </div>
 
+  <div id="profile-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
+    <div class="modal-card modal-card-form">
+      <h3 id="profile-modal-title" data-i18n="editProfile">Edit profile</h3>
+      <form id="profile-form">
+        <label for="profile-name" data-i18n="displayName">Display name</label>
+        <input id="profile-name" name="name" type="text" required>
+
+        <label for="profile-email" data-i18n="emailOptional">Email (optional)</label>
+        <input id="profile-email" name="email" type="email">
+
+        <label for="profile-gender" data-i18n="gender">Gender</label>
+        <select id="profile-gender" name="gender">
+          <option value="" data-i18n-option="genderUnset">Prefer not to say</option>
+          <option value="male" data-i18n-option="genderMale">Male</option>
+          <option value="female" data-i18n-option="genderFemale">Female</option>
+          <option value="other" data-i18n-option="genderOther">Other</option>
+        </select>
+
+        <label for="profile-age" data-i18n="age">Age</label>
+        <input id="profile-age" name="age" type="number" min="1" max="120" step="1">
+
+        <label for="profile-weight" data-i18n="weightKg">Weight (kg)</label>
+        <input id="profile-weight" name="weight_kg" type="number" min="1" max="500" step="0.1">
+      </form>
+      <p class="message" id="profile-message"></p>
+      <div class="form-actions modal-form-actions">
+        <button type="submit" form="profile-form" class="btn-primary" data-i18n="saveProfile">Save profile</button>
+        <button type="button" class="btn-secondary" id="profile-modal-cancel" data-i18n="cancelEdit">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="meal-edit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="meal-edit-modal-title">
+    <div class="modal-card modal-card-form">
+      <h3 id="meal-edit-modal-title" data-i18n="editMeal">Edit Meal</h3>
+      <form id="meal-edit-form">
+        <label for="meal-edit-food" data-i18n="foodName">Food name</label>
+        <input id="meal-edit-food" name="food_name" type="text" data-i18n-placeholder="foodPlaceholder" required>
+
+        <label for="meal-edit-time" data-i18n="dateTime">Date &amp; time</label>
+        <input id="meal-edit-time" name="logged_at" type="datetime-local">
+
+        <div class="recalculate-row">
+          <input type="checkbox" id="meal-edit-recalculate" name="recalculate_calories">
+          <label for="meal-edit-recalculate" data-i18n="recalculateCalories">Recalculate calories with AI</label>
+        </div>
+      </form>
+      <p class="message" id="meal-edit-message"></p>
+      <div class="form-actions modal-form-actions">
+        <button type="submit" form="meal-edit-form" class="btn-primary" id="meal-edit-submit" data-i18n="saveMealBtn">Save meal</button>
+        <button type="button" class="btn-danger" id="meal-edit-delete" data-i18n="deleteMealBtn">Delete meal</button>
+        <button type="button" class="btn-secondary" id="meal-edit-cancel" data-i18n="cancelEdit">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="workout-edit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="workout-edit-modal-title">
+    <div class="modal-card modal-card-form">
+      <h3 id="workout-edit-modal-title" data-i18n="editWorkout">Edit Workout</h3>
+      <form id="workout-edit-form">
+        <label for="workout-edit-activity" data-i18n="activityType">Activity type</label>
+        <input id="workout-edit-activity" name="activity_type" type="text" data-i18n-placeholder="activityPlaceholder" required>
+
+        <label for="workout-edit-time" data-i18n="dateTime">Date &amp; time</label>
+        <input id="workout-edit-time" name="logged_at" type="datetime-local">
+
+        <div class="recalculate-row">
+          <input type="checkbox" id="workout-edit-recalculate" name="recalculate_calories">
+          <label for="workout-edit-recalculate" data-i18n="recalculateCalories">Recalculate calories with AI</label>
+        </div>
+      </form>
+      <p class="message" id="workout-edit-message"></p>
+      <div class="form-actions modal-form-actions">
+        <button type="submit" form="workout-edit-form" class="btn-primary" id="workout-edit-submit" data-i18n="saveWorkoutBtn">Save workout</button>
+        <button type="button" class="btn-secondary" id="workout-edit-cancel" data-i18n="cancelEdit">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="steps-edit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="steps-edit-modal-title">
+    <div class="modal-card modal-card-form">
+      <h3 id="steps-edit-modal-title" data-i18n="editSteps">Daily steps</h3>
+      <p id="steps-modal-date" class="ai-hint"></p>
+      <form id="steps-form">
+        <label for="steps-count" data-i18n="stepsCount">Step count</label>
+        <input id="steps-count" name="steps_count" type="number" min="0" max="100000" step="1" required>
+        <p class="ai-hint" data-i18n="stepsHint">Total steps for the day (includes workouts). AI excludes overlap with logged exercise.</p>
+      </form>
+      <p class="message" id="steps-modal-message"></p>
+      <div class="form-actions modal-form-actions">
+        <button type="submit" form="steps-form" class="btn-primary" id="steps-submit" data-i18n="saveStepsBtn">Save steps</button>
+        <button type="button" class="btn-secondary" id="steps-edit-cancel" data-i18n="cancelEdit">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div id="calorie-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="calorie-modal-title">
     <div class="modal-card">
       <h3 id="calorie-modal-title" data-i18n="caloriePopupTitle">Calories calculated</h3>
@@ -547,6 +966,13 @@
       <p class="modal-calories" id="calorie-modal-value"></p>
       <p class="modal-note" id="calorie-modal-note"></p>
       <button type="button" class="btn-primary" id="calorie-modal-close" data-i18n="caloriePopupOk">OK</button>
+    </div>
+  </div>
+
+  <div id="ai-loading-overlay" class="ai-loading-overlay hidden" role="status" aria-live="polite" aria-busy="true">
+    <div class="ai-loading-panel">
+      <div class="ai-spinner" aria-hidden="true"></div>
+      <p id="ai-loading-text" class="ai-loading-text"></p>
     </div>
   </div>
 
@@ -581,10 +1007,35 @@
         logout: "Logout",
         saveProfile: "Save profile",
         summaryDate: "Summary date",
+        prevDay: "Previous day",
+        nextDay: "Next day",
         refreshSummary: "Refresh summary",
+        calendarLegend: "Only dates with logged meals, workouts, or steps can be selected. Future dates are disabled.",
+        noDatesAvailable: "No logged data yet. Add a meal or workout to get started.",
         dailySummary: "Daily Summary",
         caloriesConsumed: "Calories consumed",
-        caloriesBurned: "Calories burned",
+        caloriesBurned: "Exercise burned",
+        bmrLabel: "BMR (daily baseline)",
+        stepsCaloriesLabel: "Steps burned (net)",
+        dailyBalance: "Daily balance",
+        balanceIncomplete: "Complete your profile (age & weight) to calculate BMR and daily balance.",
+        balanceFormula: "Daily balance = consumed − BMR − exercise − steps (net of workouts)",
+        stepsToday: "Daily steps",
+        stepsCount: "Step count",
+        stepsHint: "Total steps for the day (includes workouts). AI excludes calories already counted from logged exercise.",
+        addStepsBtn: "Add steps",
+        editStepsBtn: "Edit steps",
+        editSteps: "Daily steps",
+        saveStepsBtn: "Save steps",
+        stepsCalculating: "Calculating step calories...",
+        noSteps: "No steps logged for this day.",
+        stepsUnit: "steps",
+        stepsCaloriesNet: "Net from steps: {amount} cal",
+        stepsSaved: "Steps saved.",
+        balanceSurplus: "Calorie surplus of {amount} cal for this day.",
+        balanceDeficit: "Calorie deficit of {amount} cal for this day.",
+        balanceMaintenance: "Even with your BMR and exercise for this day.",
+        bmrCalculating: "Calculating BMR...",
         netCalories: "Net calories",
         mealsToday: "Meals today",
         workoutsToday: "Workouts today",
@@ -607,24 +1058,45 @@
         registerSuccess: "Account created.",
         loadSummaryError: "Could not load daily summary.",
         requestFailed: "Request failed.",
+        futureDateError: "Date and time cannot be in the future.",
         authRequired: "Please sign in to continue.",
         calUnit: "cal",
         langGroupLabel: "Language",
         aiMealHint: "Calories will be estimated automatically by AI.",
         aiWorkoutHint: "Calories burned will be estimated automatically by AI.",
         aiCalculating: "Calculating calories...",
+        aiWorking: "AI is working...",
+        aiRetrying: "Retrying... ({attempt}/{max})",
+        aiTimeoutError: "Request timed out after 30 seconds.",
+        aiFailedAfterRetries: "Could not complete after 3 attempts. Please try again.",
         caloriePopupTitle: "Calories calculated",
         caloriePopupOk: "OK",
         mealCaloriePopup: "consumed",
         workoutCaloriePopup: "burned",
         aiPoweredNote: "Estimated by AI based on your entry and profile.",
-        localEstimateNote: "Estimated locally. Add OPENAI_API_KEY for AI estimates.",
+        localEstimateNote: "Estimated locally. Add GEMINI_API_KEY for AI estimates.",
         aiInsightTitle: "AI Daily Insight",
         getAiInsight: "Get AI Insight",
         aiInsightEmpty: "Tap the button to get personalized feedback for this day.",
         aiInsightLoading: "Generating insight...",
         aiInsightTipLabel: "Health tip",
         aiInsightError: "Could not load AI insight.",
+        editBtn: "Edit",
+        deleteBtn: "Delete",
+        editMeal: "Edit Meal",
+        deleteMealBtn: "Delete meal",
+        deleteMealConfirm: "Delete this meal? This cannot be undone.",
+        deleteSuccess: "Deleted successfully.",
+        editWorkout: "Edit Workout",
+        saveMealBtn: "Save meal",
+        saveWorkoutBtn: "Save workout",
+        cancelEdit: "Cancel",
+        recalculateCalories: "Recalculate calories with AI",
+        updatedSuccess: "Updated successfully.",
+        staleServerWarning:
+          "This server is outdated. Close the tab, run .\\start.ps1 in the project folder, then open http://127.0.0.1:8000",
+        staleServerEditError:
+          "Update failed — old server still running. Run .\\start.ps1 and reload http://127.0.0.1:8000",
       },
       he: {
         appTitle: "מעקב תזונה",
@@ -655,10 +1127,35 @@
         logout: "התנתק",
         saveProfile: "שמור פרופיל",
         summaryDate: "תאריך סיכום",
+        prevDay: "יום קודם",
+        nextDay: "יום הבא",
         refreshSummary: "רענן סיכום",
+        calendarLegend: "ניתן לבחור רק תאריכים עם ארוחות, אימונים או צעדים. תאריכים עתידיים חסומים.",
+        noDatesAvailable: "אין נתונים עדיין. הוסף ארוחה או אימון כדי להתחיל.",
         dailySummary: "סיכום יומי",
         caloriesConsumed: "קלוריות שנצרכו",
-        caloriesBurned: "קלוריות שנשרפו",
+        caloriesBurned: "קלוריות מפעילות גוף",
+        bmrLabel: "BMR (קצב חילוף בסיסי)",
+        dailyBalance: "מאזן יומי",
+        stepsCaloriesLabel: "צעדים (נטו)",
+        balanceIncomplete: "השלם את הפרופיל (גיל ומשקל) כדי לחשב BMR ומאזן יומי.",
+        balanceFormula: "מאזן יומי = נצרך − BMR − פעילות − צעדים (נטו מפעילות גופנית)",
+        stepsToday: "צעדים יומיים",
+        stepsCount: "מספר צעדים",
+        stepsHint: "סך הצעדים ליום (כולל אימונים). AI מפחית קלוריות שכבר נספרו בפעילות גופנית.",
+        addStepsBtn: "הוסף צעדים",
+        editStepsBtn: "ערוך צעדים",
+        editSteps: "צעדים יומיים",
+        saveStepsBtn: "שמור צעדים",
+        stepsCalculating: "מחשב קלוריות מצעדים...",
+        noSteps: "לא נרשמו צעדים ליום זה.",
+        stepsUnit: "צעדים",
+        stepsCaloriesNet: "נטו מצעדים: {amount} קלוריות",
+        stepsSaved: "הצעדים נשמרו.",
+        balanceSurplus: "עודף קלורי של {amount} קלוריות ליום זה.",
+        balanceDeficit: "גירעון קלורי של {amount} קלוריות ליום זה.",
+        balanceMaintenance: "מאוזן ביחס ל-BMR ולפעילות הגופנית ליום זה.",
+        bmrCalculating: "מחשב BMR...",
         netCalories: "קלוריות נטו",
         mealsToday: "ארוחות היום",
         workoutsToday: "אימונים היום",
@@ -681,24 +1178,45 @@
         registerSuccess: "החשבון נוצר.",
         loadSummaryError: "לא ניתן לטעון את הסיכום היומי.",
         requestFailed: "הבקשה נכשלה.",
+        futureDateError: "לא ניתן לבחור תאריך או שעה עתידיים.",
         authRequired: "יש להתחבר כדי להמשיך.",
         calUnit: "קל'",
         langGroupLabel: "שפה",
         aiMealHint: "הקלוריות יחושבו אוטומטית על ידי AI.",
         aiWorkoutHint: "קלוריות שנשרפו יחושבו אוטומטית על ידי AI.",
         aiCalculating: "מחשב קלוריות...",
+        aiWorking: "ה-AI עובד...",
+        aiRetrying: "מנסה שוב... ({attempt}/{max})",
+        aiTimeoutError: "הבקשה נכשלה לאחר 30 שניות.",
+        aiFailedAfterRetries: "לא הצליח לאחר 3 ניסיונות. נסה שוב.",
         caloriePopupTitle: "קלוריות חושבו",
         caloriePopupOk: "אישור",
         mealCaloriePopup: "נצרכו",
         workoutCaloriePopup: "נשרפו",
         aiPoweredNote: "הערכה של AI על בסיס הפריט והפרופיל שלך.",
-        localEstimateNote: "הערכה מקומית. הוסף OPENAI_API_KEY להערכת AI.",
+        localEstimateNote: "הערכה מקומית. הוסף GEMINI_API_KEY להערכת AI.",
         aiInsightTitle: "תובנת AI יומית",
         getAiInsight: "קבל תובנת AI",
         aiInsightEmpty: "לחץ על הכפתור לקבלת משוב מותאם אישית ליום זה.",
         aiInsightLoading: "מייצר תובנה...",
         aiInsightTipLabel: "טיפ לבריאות",
         aiInsightError: "לא ניתן לטעון תובנת AI.",
+        editBtn: "ערוך",
+        deleteBtn: "מחק",
+        editMeal: "עריכת ארוחה",
+        deleteMealBtn: "מחק ארוחה",
+        deleteMealConfirm: "למחוק את הארוחה? לא ניתן לבטל.",
+        deleteSuccess: "נמחק בהצלחה.",
+        editWorkout: "עריכת אימון",
+        saveMealBtn: "שמור ארוחה",
+        saveWorkoutBtn: "שמור אימון",
+        cancelEdit: "ביטול",
+        recalculateCalories: "חשב מחדש קלוריות עם AI",
+        updatedSuccess: "עודכן בהצלחה.",
+        staleServerWarning:
+          "השרת מיושן. סגור את הלשונית, הרץ .\\start.ps1 בתיקיית הפרויקט, ופתח http://127.0.0.1:8000",
+        staleServerEditError:
+          "העדכון נכשל — שרת ישן עדיין פעיל. הרץ .\\start.ps1 ורענן את http://127.0.0.1:8000",
       },
     };
 
@@ -707,16 +1225,38 @@
     let currentLang = localStorage.getItem(LANG_STORAGE_KEY) || "en";
     let authToken = localStorage.getItem(TOKEN_STORAGE_KEY) || "";
     let currentUser = null;
+    const AI_TIMEOUT_MS = 30000;
+    const AI_MAX_ATTEMPTS = 3;
+
+    let editingMealId = null;
+    let editingWorkoutId = null;
+    let editingMealOriginalName = "";
+    let editingWorkoutOriginalName = "";
+    let currentDailySteps = null;
+    let aiLoadingDepth = 0;
+    let availableDates = new Set();
+    let calendarView = new Date();
+    let weekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
     const authSection = document.getElementById("auth-section");
     const appSection = document.getElementById("app-section");
+    const serverWarning = document.getElementById("server-warning");
     const authMessage = document.getElementById("auth-message");
     const loginForm = document.getElementById("login-form");
     const registerForm = document.getElementById("register-form");
     const profileForm = document.getElementById("profile-form");
-    const profileEditSection = document.getElementById("profile-edit-section");
+    const profileModal = document.getElementById("profile-modal");
     const profileMessage = document.getElementById("profile-message");
     const summaryDateInput = document.getElementById("summary-date");
+    const selectedDateLabel = document.getElementById("selected-date-label");
+    const calendarGrid = document.getElementById("calendar-grid");
+    const calendarWeekdays = document.getElementById("calendar-weekdays");
+    const calendarMonthLabel = document.getElementById("calendar-month-label");
+    const datePrevButton = document.getElementById("date-prev");
+    const dateNextButton = document.getElementById("date-next");
+    const calPrevMonthButton = document.getElementById("cal-prev-month");
+    const calNextMonthButton = document.getElementById("cal-next-month");
+    const noDatesMessage = document.getElementById("no-dates-message");
     const refreshButton = document.getElementById("refresh-summary");
     const mealForm = document.getElementById("meal-form");
     const workoutForm = document.getElementById("workout-form");
@@ -724,6 +1264,20 @@
     const workoutMessage = document.getElementById("workout-message");
     const mealSubmitButton = document.getElementById("meal-submit");
     const workoutSubmitButton = document.getElementById("workout-submit");
+    const mealEditModal = document.getElementById("meal-edit-modal");
+    const mealEditForm = document.getElementById("meal-edit-form");
+    const mealEditMessage = document.getElementById("meal-edit-message");
+    const mealEditSubmitButton = document.getElementById("meal-edit-submit");
+    const workoutEditModal = document.getElementById("workout-edit-modal");
+    const workoutEditForm = document.getElementById("workout-edit-form");
+    const workoutEditMessage = document.getElementById("workout-edit-message");
+    const workoutEditSubmitButton = document.getElementById("workout-edit-submit");
+    const stepsEditModal = document.getElementById("steps-edit-modal");
+    const stepsForm = document.getElementById("steps-form");
+    const stepsModalMessage = document.getElementById("steps-modal-message");
+    const stepsSubmitButton = document.getElementById("steps-submit");
+    const stepsMessage = document.getElementById("steps-message");
+    const editStepsButton = document.getElementById("edit-steps-btn");
     const calorieModal = document.getElementById("calorie-modal");
     const calorieModalItem = document.getElementById("calorie-modal-item");
     const calorieModalValue = document.getElementById("calorie-modal-value");
@@ -732,11 +1286,21 @@
     const getAiInsightButton = document.getElementById("get-ai-insight");
     const aiInsightBody = document.getElementById("ai-insight-body");
     const aiInsightMessage = document.getElementById("ai-insight-message");
+    const aiLoadingOverlay = document.getElementById("ai-loading-overlay");
+    const aiLoadingText = document.getElementById("ai-loading-text");
     const langButtons = document.querySelectorAll(".lang-btn");
     const authTabs = document.querySelectorAll(".auth-tab");
 
     function t(key) {
       return TRANSLATIONS[currentLang][key] || TRANSLATIONS.en[key] || key;
+    }
+
+    function tf(key, params) {
+      let text = t(key);
+      Object.entries(params).forEach(([name, value]) => {
+        text = text.replace(`{${name}}`, value);
+      });
+      return text;
     }
 
     function localeTag() {
@@ -773,6 +1337,15 @@
         document.getElementById("profile-details").textContent = formatProfileDetails(currentUser);
       }
 
+      weekdayLabels = currentLang === "he"
+        ? ["א", "ב", "ג", "ד", "ה", "ו", "ש"]
+        : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+      if (summaryDateInput.value) {
+        selectedDateLabel.textContent = formatDisplayDate(summaryDateInput.value);
+      }
+      renderCalendar();
+
       resetAiInsightDisplay();
     }
 
@@ -796,7 +1369,135 @@
       if (user.gender) {
         parts.push(formatGender(user.gender));
       }
+      if (user.bmr != null) {
+        parts.push(`${t("bmrLabel")}: ${formatNumber(user.bmr)} ${t("calUnit")}`);
+      }
       return parts.length ? parts.join(" · ") : t("profileIncomplete");
+    }
+
+    function renderDailyBalance(data) {
+      const balanceSummary = document.getElementById("balance-summary");
+      const balanceHeadline = document.getElementById("balance-headline");
+      const balanceDetail = document.getElementById("balance-detail");
+      const bmrEl = document.getElementById("bmr-value");
+      const balanceEl = document.getElementById("daily-balance");
+
+      if (data.bmr == null || data.calorie_balance == null) {
+        bmrEl.textContent = "—";
+        balanceEl.textContent = "—";
+        balanceEl.classList.remove("positive", "negative");
+        balanceSummary.classList.add("empty");
+        balanceHeadline.textContent = t("balanceIncomplete");
+        balanceDetail.classList.add("hidden");
+        balanceDetail.textContent = "";
+        return;
+      }
+
+      bmrEl.textContent = formatNumber(data.bmr);
+      const balance = data.calorie_balance;
+      const formattedBalance = formatNumber(Math.abs(balance));
+      balanceEl.textContent = `${balance >= 0 ? "+" : "−"}${formattedBalance}`;
+      balanceEl.classList.remove("positive", "negative");
+      balanceEl.classList.add(balance >= 0 ? "positive" : "negative");
+
+      balanceSummary.classList.remove("empty");
+      if (balance > 0) {
+        balanceHeadline.textContent = tf("balanceSurplus", { amount: formattedBalance });
+      } else if (balance < 0) {
+        balanceHeadline.textContent = tf("balanceDeficit", { amount: formattedBalance });
+      } else {
+        balanceHeadline.textContent = t("balanceMaintenance");
+      }
+
+      balanceDetail.textContent = [
+        t("balanceFormula"),
+        data.bmr_explanation || "",
+        data.daily_steps?.ai_explanation || "",
+      ].filter(Boolean).join(" ").trim();
+      balanceDetail.classList.remove("hidden");
+    }
+
+    function renderStepsSummary(data) {
+      const steps = data.daily_steps;
+      const countEl = document.getElementById("steps-count-display");
+      const calEl = document.getElementById("steps-calories-display");
+      const stepsCaloriesStat = document.getElementById("steps-calories-value");
+
+      if (!steps) {
+        countEl.textContent = t("noSteps");
+        calEl.textContent = "";
+        stepsCaloriesStat.textContent = "—";
+        editStepsButton.textContent = t("addStepsBtn");
+        return;
+      }
+
+      countEl.textContent = `${formatNumber(steps.steps_count)} ${t("stepsUnit")}`;
+      calEl.textContent = tf("stepsCaloriesNet", { amount: formatNumber(steps.calories_burned) });
+      stepsCaloriesStat.textContent = formatNumber(steps.calories_burned);
+      editStepsButton.textContent = t("editStepsBtn");
+    }
+
+    function openStepsEditModal() {
+      const selectedDate = summaryDateInput.value;
+      if (!selectedDate || selectedDate > todayIsoDate()) {
+        stepsMessage.textContent = t("futureDateError");
+        stepsMessage.classList.add("error");
+        return;
+      }
+
+      stepsMessage.textContent = "";
+      stepsMessage.classList.remove("error");
+      stepsModalMessage.textContent = "";
+      stepsModalMessage.classList.remove("error");
+      document.getElementById("steps-modal-date").textContent = formatDisplayDate(selectedDate);
+      document.getElementById("steps-count").value = currentDailySteps?.steps_count ?? "";
+      stepsEditModal.classList.remove("hidden");
+    }
+
+    function closeStepsEditModal() {
+      stepsForm.reset();
+      stepsModalMessage.textContent = "";
+      stepsModalMessage.classList.remove("error");
+      stepsEditModal.classList.add("hidden");
+    }
+
+    async function saveDailySteps(event) {
+      event.preventDefault();
+      const selectedDate = summaryDateInput.value;
+      if (!selectedDate) {
+        return;
+      }
+
+      stepsModalMessage.textContent = "";
+      stepsModalMessage.classList.remove("error");
+      const formData = new FormData(stepsForm);
+      const stepsCount = Number(formData.get("steps_count"));
+
+      stepsSubmitButton.disabled = true;
+      stepsSubmitButton.textContent = t("stepsCalculating");
+
+      try {
+        const response = await apiFetchWithRetry(`/api/steps?date=${selectedDate}`, {
+          method: "PUT",
+          body: JSON.stringify({ steps_count: stepsCount }),
+        }, { loadingMessage: t("stepsCalculating") });
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          const detail = error.detail || t("requestFailed");
+          throw new Error(Array.isArray(detail) ? detail.map((item) => item.msg).join(", ") : detail);
+        }
+
+        closeStepsEditModal();
+        stepsMessage.textContent = t("stepsSaved");
+        await refreshCalendarAndSummary();
+      } catch (error) {
+        stepsModalMessage.textContent = error.message;
+        stepsModalMessage.classList.add("error");
+      } finally {
+        stepsSubmitButton.disabled = false;
+        stepsSubmitButton.textContent = t("saveStepsBtn");
+      }
     }
 
     function fillProfileForm(user) {
@@ -831,7 +1532,10 @@
     function showAuthView() {
       authSection.classList.remove("hidden");
       appSection.classList.add("hidden");
-      profileEditSection.classList.add("hidden");
+      closeProfileModal();
+      closeMealEditModal();
+      closeWorkoutEditModal();
+      closeStepsEditModal();
       currentUser = null;
     }
 
@@ -871,6 +1575,126 @@
       return response;
     }
 
+    function setAiLoadingMessage(message) {
+      aiLoadingText.textContent = message;
+    }
+
+    function showAiLoading(message) {
+      if (aiLoadingDepth === 0) {
+        aiLoadingOverlay.classList.remove("hidden");
+      }
+      aiLoadingDepth += 1;
+      setAiLoadingMessage(message || t("aiWorking"));
+    }
+
+    function hideAiLoading() {
+      aiLoadingDepth = Math.max(0, aiLoadingDepth - 1);
+      if (aiLoadingDepth === 0) {
+        aiLoadingOverlay.classList.add("hidden");
+      }
+    }
+
+    function isRetryableStatus(status) {
+      return status === 408 || status === 429 || status === 502 || status === 503 || status === 504;
+    }
+
+    function wait(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    async function apiFetchWithRetry(url, options = {}, config = {}) {
+      const timeoutMs = config.timeoutMs ?? AI_TIMEOUT_MS;
+      const maxAttempts = config.maxAttempts ?? AI_MAX_ATTEMPTS;
+      const loadingMessage = config.loadingMessage ?? t("aiWorking");
+      let lastError = null;
+
+      showAiLoading(loadingMessage);
+
+      try {
+        for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+          if (attempt > 1) {
+            setAiLoadingMessage(tf("aiRetrying", { attempt, max: maxAttempts }));
+            await wait(400 * attempt);
+          }
+
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+          try {
+            const response = await apiFetch(url, { ...options, signal: controller.signal });
+            clearTimeout(timeoutId);
+
+            if (response.ok || !isRetryableStatus(response.status) || attempt === maxAttempts) {
+              return response;
+            }
+
+            lastError = new Error(t("requestFailed"));
+          } catch (error) {
+            clearTimeout(timeoutId);
+
+            if (error.message === t("authRequired")) {
+              throw error;
+            }
+
+            if (error.name === "AbortError") {
+              lastError = new Error(t("aiTimeoutError"));
+            } else {
+              lastError = error;
+            }
+
+            if (attempt === maxAttempts) {
+              break;
+            }
+          }
+        }
+
+        throw lastError || new Error(t("aiFailedAfterRetries"));
+      } finally {
+        hideAiLoading();
+      }
+    }
+
+    function entryUsesAiEstimate(form, entryType, editingId) {
+      if (!editingId) {
+        return true;
+      }
+
+      const formData = new FormData(form);
+      if (formData.get("recalculate_calories") === "on") {
+        return true;
+      }
+
+      if (entryType === "meal") {
+        return formData.get("food_name") !== editingMealOriginalName;
+      }
+
+      return formData.get("activity_type") !== editingWorkoutOriginalName;
+    }
+
+    function setServerWarning(visible) {
+      if (!serverWarning) {
+        return;
+      }
+      serverWarning.textContent = visible ? t("staleServerWarning") : "";
+      serverWarning.classList.toggle("hidden", !visible);
+    }
+
+    async function checkServerCapabilities() {
+      try {
+        const response = await fetch("/openapi.json");
+        if (!response.ok) {
+          setServerWarning(true);
+          return;
+        }
+        const openapi = await response.json();
+        const hasEditApi = Boolean(openapi.paths?.["/api/meals/{meal_id}"]?.put);
+        const hasDeleteApi = Boolean(openapi.paths?.["/api/meals/{meal_id}"]?.delete);
+        setServerWarning(!hasEditApi || !hasDeleteApi);
+      } catch {
+        setServerWarning(true);
+      }
+    }
+
     async function loadCurrentUser() {
       if (!authToken) {
         showAuthView();
@@ -886,7 +1710,8 @@
 
       const user = await response.json();
       showAppView(user);
-      await loadSummary();
+      await checkServerCapabilities();
+      await initializeDashboard();
     }
 
     function todayIsoDate() {
@@ -896,6 +1721,228 @@
       return local.toISOString().slice(0, 10);
     }
 
+    function isoFromParts(year, monthIndex, day) {
+      const local = new Date(year, monthIndex, day);
+      const offset = local.getTimezoneOffset();
+      const adjusted = new Date(local.getTime() - offset * 60 * 1000);
+      return adjusted.toISOString().slice(0, 10);
+    }
+
+    function formatDisplayDate(iso) {
+      const [year, month, day] = iso.split("-").map(Number);
+      const dateObj = new Date(year, month - 1, day);
+      return dateObj.toLocaleDateString(localeTag(), {
+        weekday: "short",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    }
+
+    function getSortedAvailableDates() {
+      return [...availableDates].sort();
+    }
+
+    async function loadAvailableDates() {
+      const response = await apiFetch("/api/dates-with-data");
+      if (response.ok) {
+        const data = await response.json();
+        availableDates = new Set(data.dates || []);
+      } else {
+        availableDates = await discoverDatesFallback();
+      }
+
+      updateNoDatesMessage();
+      updateDayNavButtons();
+      renderCalendar();
+    }
+
+    async function discoverDatesFallback() {
+      const discovered = new Set();
+      const today = new Date();
+
+      for (let offset = 0; offset < 60; offset += 1) {
+        const probe = new Date(today.getFullYear(), today.getMonth(), today.getDate() - offset);
+        const iso = isoFromParts(probe.getFullYear(), probe.getMonth(), probe.getDate());
+        if (iso > todayIsoDate()) {
+          continue;
+        }
+
+        const response = await apiFetch(`/api/summary?date=${iso}`);
+        if (!response.ok) {
+          break;
+        }
+
+        const summary = await response.json();
+        if (summary.meals.length || summary.workouts.length || summary.daily_steps) {
+          discovered.add(iso);
+        }
+      }
+
+      if (!discovered.size) {
+        discovered.add(todayIsoDate());
+      }
+
+      return discovered;
+    }
+
+    async function initializeDashboard() {
+      updateDatetimeMaxInputs();
+      await loadAvailableDates();
+      pickInitialDate();
+      if (summaryDateInput.value) {
+        await loadSummary();
+      }
+    }
+
+    function updateNoDatesMessage() {
+      const hasDates = availableDates.size > 0;
+      noDatesMessage.classList.toggle("hidden", hasDates);
+    }
+
+    function pickInitialDate() {
+      const today = todayIsoDate();
+      const sorted = getSortedAvailableDates();
+      if (!sorted.length) {
+        summaryDateInput.value = today;
+        selectedDateLabel.textContent = formatDisplayDate(today);
+        updateDayNavButtons();
+        renderCalendar();
+        return today;
+      }
+
+      const initial = sorted.includes(today) ? today : sorted[sorted.length - 1];
+      setSelectedDate(initial, false);
+      return initial;
+    }
+
+    function setSelectedDate(iso, reload = true) {
+      if (!availableDates.has(iso) || iso > todayIsoDate()) {
+        return;
+      }
+
+      summaryDateInput.value = iso;
+      selectedDateLabel.textContent = formatDisplayDate(iso);
+
+      const [year, month] = iso.split("-").map(Number);
+      calendarView = new Date(year, month - 1, 1);
+
+      renderCalendar();
+      updateDayNavButtons();
+      resetAiInsightDisplay();
+
+      if (reload) {
+        loadSummary().catch((error) => alert(error.message));
+      }
+    }
+
+    function updateDayNavButtons() {
+      const sorted = getSortedAvailableDates();
+      const current = summaryDateInput.value;
+      const idx = sorted.indexOf(current);
+      datePrevButton.disabled = idx <= 0;
+      dateNextButton.disabled = idx < 0 || idx >= sorted.length - 1;
+    }
+
+    function renderCalendar() {
+      calendarWeekdays.innerHTML = "";
+      weekdayLabels.forEach((label) => {
+        const span = document.createElement("span");
+        span.textContent = label;
+        calendarWeekdays.appendChild(span);
+      });
+
+      calendarGrid.innerHTML = "";
+      const year = calendarView.getFullYear();
+      const month = calendarView.getMonth();
+      calendarMonthLabel.textContent = calendarView.toLocaleDateString(localeTag(), {
+        month: "long",
+        year: "numeric",
+      });
+
+      const today = todayIsoDate();
+      const now = new Date();
+      const isCurrentMonth =
+        year === now.getFullYear() && month === now.getMonth();
+      calNextMonthButton.disabled = isCurrentMonth || availableDates.size === 0;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < firstDay; i += 1) {
+        const empty = document.createElement("span");
+        empty.className = "cal-day empty-cell";
+        calendarGrid.appendChild(empty);
+      }
+
+      for (let day = 1; day <= daysInMonth; day += 1) {
+        const iso = isoFromParts(year, month, day);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = String(day);
+
+        const isFuture = iso > today;
+        const hasData = availableDates.has(iso);
+        button.disabled = isFuture || !hasData;
+
+        if (isFuture) {
+          button.className = "cal-day future disabled";
+        } else if (!hasData) {
+          button.className = "cal-day no-data disabled";
+        } else {
+          button.className = "cal-day has-data";
+          if (iso === summaryDateInput.value) {
+            button.classList.add("selected");
+          }
+          if (iso === today) {
+            button.classList.add("today");
+          }
+          button.addEventListener("click", () => setSelectedDate(iso));
+        }
+
+        calendarGrid.appendChild(button);
+      }
+    }
+
+    function navigateDay(direction) {
+      const sorted = getSortedAvailableDates();
+      const idx = sorted.indexOf(summaryDateInput.value);
+      if (idx < 0) {
+        return;
+      }
+      const nextIdx = idx + direction;
+      if (nextIdx >= 0 && nextIdx < sorted.length) {
+        setSelectedDate(sorted[nextIdx]);
+      }
+    }
+
+    function changeCalendarMonth(direction) {
+      const now = new Date();
+      const next = new Date(calendarView.getFullYear(), calendarView.getMonth() + direction, 1);
+      if (
+        direction > 0 &&
+        (next.getFullYear() > now.getFullYear() ||
+          (next.getFullYear() === now.getFullYear() && next.getMonth() > now.getMonth()))
+      ) {
+        return;
+      }
+      calendarView = next;
+      renderCalendar();
+    }
+
+    async function refreshCalendarAndSummary() {
+      const previous = summaryDateInput.value;
+      await loadAvailableDates();
+      if (previous && availableDates.has(previous)) {
+        setSelectedDate(previous, false);
+      } else {
+        pickInitialDate();
+      }
+      if (summaryDateInput.value) {
+        await loadSummary();
+      }
+    }
+
     function nowForDatetimeLocal() {
       const now = new Date();
       const offset = now.getTimezoneOffset();
@@ -903,11 +1950,133 @@
       return local.toISOString().slice(0, 16);
     }
 
+    function updateDatetimeMaxInputs() {
+      const maxValue = nowForDatetimeLocal();
+      ["meal-time", "workout-time", "meal-edit-time", "workout-edit-time"].forEach((id) => {
+        const input = document.getElementById(id);
+        if (input) {
+          input.max = maxValue;
+        }
+      });
+    }
+
+    function assertLoggedAtNotFuture(loggedAt) {
+      if (!loggedAt) {
+        return;
+      }
+      if (new Date(loggedAt).getTime() > Date.now()) {
+        throw new Error(t("futureDateError"));
+      }
+    }
+
     function formatNumber(value) {
       return Number(value).toLocaleString(localeTag(), { maximumFractionDigits: 0 });
     }
 
-    function renderList(containerId, items, emptyText, nameKey, valueKey) {
+    function setupModalDismiss(modalEl, closeFn, cancelButtonId) {
+      document.getElementById(cancelButtonId).addEventListener("click", closeFn);
+      modalEl.addEventListener("click", (event) => {
+        if (event.target === modalEl) {
+          closeFn();
+        }
+      });
+    }
+
+    function openProfileModal() {
+      if (!currentUser) {
+        return;
+      }
+      fillProfileForm(currentUser);
+      profileMessage.textContent = "";
+      profileMessage.classList.remove("error");
+      profileModal.classList.remove("hidden");
+    }
+
+    function closeProfileModal() {
+      profileModal.classList.add("hidden");
+      profileMessage.textContent = "";
+      profileMessage.classList.remove("error");
+    }
+
+    function openMealEditModal(item) {
+      editingMealId = item.id;
+      editingMealOriginalName = item.food_name;
+      document.getElementById("meal-edit-food").value = item.food_name;
+      document.getElementById("meal-edit-time").value = isoToDatetimeLocal(item.logged_at);
+      document.getElementById("meal-edit-recalculate").checked = false;
+      mealEditMessage.textContent = "";
+      mealEditMessage.classList.remove("error");
+      updateDatetimeMaxInputs();
+      mealEditModal.classList.remove("hidden");
+    }
+
+    function closeMealEditModal() {
+      editingMealId = null;
+      editingMealOriginalName = "";
+      mealEditForm.reset();
+      mealEditMessage.textContent = "";
+      mealEditMessage.classList.remove("error");
+      mealEditModal.classList.add("hidden");
+    }
+
+    async function deleteMeal(mealId) {
+      if (!window.confirm(t("deleteMealConfirm"))) {
+        return;
+      }
+
+      const response = await apiFetch(`/api/meals/${mealId}`, { method: "DELETE" });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        let detail = error.detail || t("requestFailed");
+        if (response.status === 404 && detail === "Not Found") {
+          detail = t("staleServerEditError");
+          setServerWarning(true);
+        }
+        throw new Error(Array.isArray(detail) ? detail.map((item) => item.msg).join(", ") : detail);
+      }
+
+      if (editingMealId === mealId) {
+        closeMealEditModal();
+      }
+
+      await refreshCalendarAndSummary();
+    }
+
+    function openWorkoutEditModal(item) {
+      editingWorkoutId = item.id;
+      editingWorkoutOriginalName = item.activity_type;
+      document.getElementById("workout-edit-activity").value = item.activity_type;
+      document.getElementById("workout-edit-time").value = isoToDatetimeLocal(item.logged_at);
+      document.getElementById("workout-edit-recalculate").checked = false;
+      workoutEditMessage.textContent = "";
+      workoutEditMessage.classList.remove("error");
+      updateDatetimeMaxInputs();
+      workoutEditModal.classList.remove("hidden");
+    }
+
+    function closeWorkoutEditModal() {
+      editingWorkoutId = null;
+      editingWorkoutOriginalName = "";
+      workoutEditForm.reset();
+      workoutEditMessage.textContent = "";
+      workoutEditMessage.classList.remove("error");
+      workoutEditModal.classList.add("hidden");
+    }
+
+    function resetAddForm(form, timeInputId) {
+      form.reset();
+      document.getElementById(timeInputId).value = nowForDatetimeLocal();
+      updateDatetimeMaxInputs();
+    }
+
+    function isoToDatetimeLocal(isoString) {
+      const date = new Date(isoString);
+      const offset = date.getTimezoneOffset();
+      const local = new Date(date.getTime() - offset * 60 * 1000);
+      return local.toISOString().slice(0, 16);
+    }
+
+    function renderList(containerId, items, emptyText, nameKey, valueKey, entryType) {
       const list = document.getElementById(containerId);
       list.innerHTML = "";
 
@@ -926,18 +2095,50 @@
         nameSpan.className = "list-item-name";
         nameSpan.textContent = item[nameKey];
 
+        const actions = document.createElement("div");
+        actions.className = "list-item-actions";
+
         const valueSpan = document.createElement("span");
         valueSpan.className = "list-item-value";
         valueSpan.textContent = `${formatNumber(item[valueKey])} ${t("calUnit")}`;
 
+        const editButton = document.createElement("button");
+        editButton.type = "button";
+        editButton.className = "btn-secondary list-edit-btn";
+        editButton.textContent = t("editBtn");
+        editButton.addEventListener("click", () => {
+          if (entryType === "meal") {
+            openMealEditModal(item);
+          } else {
+            openWorkoutEditModal(item);
+          }
+        });
+
+        actions.appendChild(valueSpan);
+        actions.appendChild(editButton);
+
+        if (entryType === "meal") {
+          const deleteButton = document.createElement("button");
+          deleteButton.type = "button";
+          deleteButton.className = "btn-danger list-delete-btn";
+          deleteButton.textContent = t("deleteBtn");
+          deleteButton.addEventListener("click", () => {
+            deleteMeal(item.id).catch((error) => alert(error.message));
+          });
+          actions.appendChild(deleteButton);
+        }
+
         li.appendChild(nameSpan);
-        li.appendChild(valueSpan);
+        li.appendChild(actions);
         list.appendChild(li);
       });
     }
 
     async function loadSummary() {
-      const selectedDate = summaryDateInput.value || todayIsoDate();
+      const selectedDate = summaryDateInput.value;
+      if (!selectedDate) {
+        return;
+      }
       const response = await apiFetch(`/api/summary?date=${selectedDate}`);
 
       if (!response.ok) {
@@ -948,14 +2149,12 @@
 
       document.getElementById("calories-consumed").textContent = formatNumber(data.calories_consumed);
       document.getElementById("calories-burned").textContent = formatNumber(data.calories_burned);
+      currentDailySteps = data.daily_steps;
+      renderStepsSummary(data);
+      renderDailyBalance(data);
 
-      const netEl = document.getElementById("net-calories");
-      netEl.textContent = formatNumber(data.net_calories);
-      netEl.classList.remove("positive", "negative");
-      netEl.classList.add(data.net_calories >= 0 ? "positive" : "negative");
-
-      renderList("meals-list", data.meals, t("noMeals"), "food_name", "calories");
-      renderList("workouts-list", data.workouts, t("noWorkouts"), "activity_type", "calories_burned");
+      renderList("meals-list", data.meals, t("noMeals"), "food_name", "calories", "meal");
+      renderList("workouts-list", data.workouts, t("noWorkouts"), "activity_type", "calories_burned", "workout");
     }
 
     function resetAiInsightDisplay() {
@@ -991,17 +2190,18 @@
       aiInsightMessage.classList.remove("error");
       getAiInsightButton.disabled = true;
       getAiInsightButton.textContent = t("aiInsightLoading");
+      aiInsightBody.classList.add("loading");
 
       const selectedDate = summaryDateInput.value || todayIsoDate();
 
       try {
-        const response = await apiFetch("/api/ai-insight", {
+        const response = await apiFetchWithRetry("/api/ai-insight", {
           method: "POST",
           body: JSON.stringify({
             date: selectedDate,
             language: currentLang,
           }),
-        });
+        }, { loadingMessage: t("aiInsightLoading") });
 
         if (!response.ok) {
           const error = await response.json().catch(() => ({}));
@@ -1015,6 +2215,7 @@
         aiInsightMessage.textContent = error.message;
         aiInsightMessage.classList.add("error");
       } finally {
+        aiInsightBody.classList.remove("loading");
         getAiInsightButton.disabled = false;
         getAiInsightButton.textContent = t("getAiInsight");
       }
@@ -1039,12 +2240,12 @@
       calorieModal.classList.add("hidden");
     }
 
-    function setSubmitLoading(button, isLoading, defaultLabelKey) {
+    function setSubmitLoading(button, isLoading, defaultLabelKey, loadingLabelKey = null) {
       button.disabled = isLoading;
-      button.textContent = isLoading ? t("aiCalculating") : t(defaultLabelKey);
+      button.textContent = isLoading ? t(loadingLabelKey || defaultLabelKey) : t(defaultLabelKey);
     }
 
-    async function submitEntry(form, endpoint, messageEl, submitButton, entryType, defaultLabelKey) {
+    async function submitEntry(form, endpoint, messageEl, submitButton, entryType, defaultLabelKey, editingId = null, onEditSuccess = null) {
       messageEl.textContent = "";
       messageEl.classList.remove("error");
 
@@ -1056,39 +2257,86 @@
 
       const loggedAt = formData.get("logged_at");
       if (loggedAt) {
+        try {
+          assertLoggedAtNotFuture(loggedAt);
+        } catch (error) {
+          messageEl.textContent = error.message;
+          messageEl.classList.add("error");
+          return;
+        }
         payload.logged_at = new Date(loggedAt).toISOString();
+      }
+
+      if (editingId) {
+        payload.recalculate_calories = formData.get("recalculate_calories") === "on";
       }
 
       const cleanedPayload = Object.fromEntries(
         Object.entries(payload).filter(([, value]) => value !== undefined && value !== null && value !== "")
       );
 
-      setSubmitLoading(submitButton, true, defaultLabelKey);
+      const isEdit = Boolean(editingId);
+      const url = isEdit ? `${endpoint}/${editingId}` : endpoint;
+      const method = isEdit ? "PUT" : "POST";
+      const saveLabelKey = entryType === "meal" ? "saveMealBtn" : "saveWorkoutBtn";
+      const usesAi = entryUsesAiEstimate(form, entryType, editingId);
+
+      setSubmitLoading(
+        submitButton,
+        true,
+        isEdit ? saveLabelKey : defaultLabelKey,
+        usesAi ? "aiCalculating" : null
+      );
 
       try {
-        const response = await apiFetch(endpoint, {
-          method: "POST",
-          body: JSON.stringify(cleanedPayload),
-        });
+        const response = usesAi
+          ? await apiFetchWithRetry(url, {
+              method,
+              body: JSON.stringify(cleanedPayload),
+            }, { loadingMessage: t("aiCalculating") })
+          : await apiFetch(url, {
+              method,
+              body: JSON.stringify(cleanedPayload),
+            });
 
         if (!response.ok) {
           const error = await response.json().catch(() => ({}));
-          const detail = error.detail || t("requestFailed");
+          let detail = error.detail || t("requestFailed");
+          if (detail === "Cannot log meals or workouts in the future") {
+            detail = t("futureDateError");
+          }
+          if (isEdit && response.status === 404 && detail === "Not Found") {
+            detail = t("staleServerEditError");
+            setServerWarning(true);
+          }
           throw new Error(Array.isArray(detail) ? detail.map((item) => item.msg).join(", ") : detail);
         }
 
         const data = await response.json();
-        form.reset();
-        document.getElementById("meal-time").value = nowForDatetimeLocal();
-        document.getElementById("workout-time").value = nowForDatetimeLocal();
-        messageEl.textContent = t("savedSuccess");
-        showCalorieModal(data, entryType);
-        await loadSummary();
+
+        if (isEdit) {
+          if (onEditSuccess) {
+            onEditSuccess();
+          }
+        } else {
+          messageEl.textContent = t("savedSuccess");
+          if (entryType === "meal") {
+            resetAddForm(form, "meal-time");
+          } else {
+            resetAddForm(form, "workout-time");
+          }
+        }
+
+        if (data.calories_recalculated || !isEdit) {
+          showCalorieModal(data, entryType);
+        }
+
+        await refreshCalendarAndSummary();
       } catch (error) {
         messageEl.textContent = error.message;
         messageEl.classList.add("error");
       } finally {
-        setSubmitLoading(submitButton, false, defaultLabelKey);
+        setSubmitLoading(submitButton, false, isEdit ? saveLabelKey : defaultLabelKey);
       }
     }
 
@@ -1131,7 +2379,8 @@
         setAuthToken(data.access_token);
         authMessage.textContent = successMessage;
         showAppView(data.user);
-        await loadSummary();
+        await checkServerCapabilities();
+        await initializeDashboard();
       } catch (error) {
         authMessage.textContent = error.message;
         authMessage.classList.add("error");
@@ -1152,7 +2401,7 @@
     langButtons.forEach((button) => {
       button.addEventListener("click", () => {
         applyLanguage(button.dataset.lang);
-        if (currentUser) {
+        if (currentUser && summaryDateInput.value) {
           loadSummary().catch((error) => alert(error.message));
         }
       });
@@ -1175,12 +2424,18 @@
 
       const formData = new FormData(profileForm);
       const payload = buildProfilePayload(formData);
+      const usesAi = payload.age != null && payload.weight_kg != null;
 
       try {
-        const response = await apiFetch("/api/profile", {
-          method: "PUT",
-          body: JSON.stringify(payload),
-        });
+        const response = usesAi
+          ? await apiFetchWithRetry("/api/profile", {
+              method: "PUT",
+              body: JSON.stringify(payload),
+            }, { loadingMessage: t("bmrCalculating") })
+          : await apiFetch("/api/profile", {
+              method: "PUT",
+              body: JSON.stringify(payload),
+            });
 
         if (!response.ok) {
           const error = await response.json().catch(() => ({}));
@@ -1190,7 +2445,10 @@
 
         const user = await response.json();
         showAppView(user);
-        profileMessage.textContent = t("profileSaved");
+        closeProfileModal();
+        if (summaryDateInput.value) {
+          await loadSummary();
+        }
       } catch (error) {
         profileMessage.textContent = error.message;
         profileMessage.classList.add("error");
@@ -1203,25 +2461,35 @@
       authMessage.textContent = "";
     });
 
-    document.getElementById("edit-profile-btn").addEventListener("click", () => {
-      profileEditSection.classList.toggle("hidden");
-      profileMessage.textContent = "";
-    });
+    document.getElementById("edit-profile-btn").addEventListener("click", openProfileModal);
 
-    summaryDateInput.value = todayIsoDate();
-    document.getElementById("meal-time").value = nowForDatetimeLocal();
-    document.getElementById("workout-time").value = nowForDatetimeLocal();
+    setupModalDismiss(profileModal, closeProfileModal, "profile-modal-cancel");
+    setupModalDismiss(mealEditModal, closeMealEditModal, "meal-edit-cancel");
+    setupModalDismiss(workoutEditModal, closeWorkoutEditModal, "workout-edit-cancel");
+
+    setupModalDismiss(stepsEditModal, closeStepsEditModal, "steps-edit-cancel");
+    editStepsButton.addEventListener("click", openStepsEditModal);
+    stepsForm.addEventListener("submit", saveDailySteps);
+
+    calendarView = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
     applyLanguage(currentLang);
 
     refreshButton.addEventListener("click", () => {
+      if (!summaryDateInput.value) {
+        return;
+      }
       loadSummary().catch((error) => alert(error.message));
     });
 
-    summaryDateInput.addEventListener("change", () => {
-      resetAiInsightDisplay();
-      loadSummary().catch((error) => alert(error.message));
-    });
+    datePrevButton.addEventListener("click", () => navigateDay(-1));
+    dateNextButton.addEventListener("click", () => navigateDay(1));
+    calPrevMonthButton.addEventListener("click", () => changeCalendarMonth(-1));
+    calNextMonthButton.addEventListener("click", () => changeCalendarMonth(1));
+
+    document.getElementById("meal-time").value = nowForDatetimeLocal();
+    document.getElementById("workout-time").value = nowForDatetimeLocal();
+    updateDatetimeMaxInputs();
 
     getAiInsightButton.addEventListener("click", () => {
       loadAiInsight().catch((error) => alert(error.message));
@@ -1235,6 +2503,44 @@
     workoutForm.addEventListener("submit", (event) => {
       event.preventDefault();
       submitEntry(workoutForm, "/api/workouts", workoutMessage, workoutSubmitButton, "workout", "addWorkoutBtn");
+    });
+
+    mealEditForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      submitEntry(
+        mealEditForm,
+        "/api/meals",
+        mealEditMessage,
+        mealEditSubmitButton,
+        "meal",
+        "addMealBtn",
+        editingMealId,
+        closeMealEditModal
+      );
+    });
+
+    document.getElementById("meal-edit-delete").addEventListener("click", () => {
+      if (!editingMealId) {
+        return;
+      }
+      deleteMeal(editingMealId).catch((error) => {
+        mealEditMessage.textContent = error.message;
+        mealEditMessage.classList.add("error");
+      });
+    });
+
+    workoutEditForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      submitEntry(
+        workoutEditForm,
+        "/api/workouts",
+        workoutEditMessage,
+        workoutEditSubmitButton,
+        "workout",
+        "addWorkoutBtn",
+        editingWorkoutId,
+        closeWorkoutEditModal
+      );
     });
 
     calorieModalClose.addEventListener("click", hideCalorieModal);

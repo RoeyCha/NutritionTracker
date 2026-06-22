@@ -1,9 +1,11 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 
 from sqlalchemy.orm import Session
 
 from auth import hash_password
-from models import Meal, User, Workout
+from bmr_calculator import apply_bmr_to_user
+from models import DailySteps, Meal, User, Workout
+from steps_calories import estimate_steps_calories
 
 
 def seed_test_user(db: Session) -> User:
@@ -13,6 +15,11 @@ def seed_test_user(db: Session) -> User:
             user.gender = "male"
             user.age = 30
             user.weight_kg = 75.0
+            apply_bmr_to_user(user)
+            db.commit()
+            db.refresh(user)
+        elif user.bmr is None and user.age is not None and user.weight_kg is not None:
+            apply_bmr_to_user(user)
             db.commit()
             db.refresh(user)
         return user
@@ -53,6 +60,42 @@ def seed_test_user(db: Session) -> User:
     ]
 
     db.add_all(dummy_meals + dummy_workouts)
+    db.add(
+        DailySteps(
+            user_id=user.id,
+            entry_date=now.date(),
+            steps_count=8500,
+            calories_burned=0.0,
+        )
+    )
+    apply_bmr_to_user(user)
     db.commit()
+    db.refresh(user)
+
+    steps_record = (
+        db.query(DailySteps)
+        .filter(DailySteps.user_id == user.id, DailySteps.entry_date == now.date())
+        .first()
+    )
+    if steps_record:
+        day_start = datetime.combine(now.date(), time.min)
+        day_end = datetime.combine(now.date(), time.max)
+        day_workouts = (
+            db.query(Workout)
+            .filter(
+                Workout.user_id == user.id,
+                Workout.logged_at >= day_start,
+                Workout.logged_at <= day_end,
+            )
+            .all()
+        )
+        workout_payload = [
+            {"activity_type": workout.activity_type, "calories_burned": workout.calories_burned}
+            for workout in day_workouts
+        ]
+        estimate = estimate_steps_calories(user, steps_record.steps_count, workout_payload)
+        steps_record.calories_burned = estimate.calories_burned
+        steps_record.ai_explanation = estimate.explanation
+        db.commit()
     db.refresh(user)
     return user

@@ -1,16 +1,18 @@
 import json
+import logging
 import os
 import re
 from datetime import date
 
 import google.generativeai as genai
-from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from models import Meal, User, Workout
 
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
-GEMINI_MODEL_FALLBACKS = ("gemini-2.0-flash", "gemini-1.5-flash-latest", "gemini-pro")
+logger = logging.getLogger(__name__)
+
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_MODEL_FALLBACKS = ("gemini-flash-latest", "gemini-2.5-flash-lite", "gemini-2.0-flash-lite")
 
 
 def fetch_daily_logs(db: Session, user: User, target_date: date) -> dict:
@@ -143,6 +145,50 @@ def _parse_gemini_json(text: str) -> dict:
     return {"feedback": feedback, "health_tip": health_tip}
 
 
+def _fallback_daily_insight(logs: dict, language: str) -> dict:
+    consumed = logs["calories_consumed"]
+    burned = logs["calories_burned"]
+    meal_count = len(logs["meals"])
+    workout_count = len(logs["workouts"])
+
+    if language == "he":
+        if meal_count == 0 and workout_count == 0:
+            feedback = "עדיין לא נרשמו ארוחות או אימונים ליום זה. התחלת רישום קטנה עוזרת לבנות הרגל בריא."
+            tip = "נסה לרשום את הארוחה או הפעילות הבאה מיד אחריה."
+        elif consumed > burned + 400:
+            feedback = f"רשמת {meal_count} ארוחות ו-{workout_count} אימונים. צריכת הקלוריות גבוהה מהפעילות — זה בסדר, העיקר עקביות."
+            tip = "שקול הליכה קצרה או ארוחה קלה יותר בערב."
+        elif burned > consumed:
+            feedback = f"יום פעיל! שרפת יותר קלוריות ({burned:.0f}) ממה שצרכת ({consumed:.0f})."
+            tip = "ודא שאתה מקבל מספיק חלבון ומים לאחר האימון."
+        else:
+            feedback = f"יום מאוזן עם {meal_count} ארוחות ו-{workout_count} אימונים. המשך לעקוב אחרי ההרגלים שלך."
+            tip = "שמור על שתייה מספקת לאורך היום."
+    else:
+        if meal_count == 0 and workout_count == 0:
+            feedback = "No meals or workouts logged yet for this day. Small consistent tracking builds healthy habits."
+            tip = "Try logging your next meal or activity right after it happens."
+        elif consumed > burned + 400:
+            feedback = (
+                f"You logged {meal_count} meals and {workout_count} workouts. "
+                "Calorie intake is higher than activity today — consistency matters more than perfection."
+            )
+            tip = "Consider a short walk or a lighter evening meal."
+        elif burned > consumed:
+            feedback = (
+                f"Active day! You burned more calories ({burned:.0f}) than you consumed ({consumed:.0f})."
+            )
+            tip = "Make sure you get enough protein and water after exercise."
+        else:
+            feedback = (
+                f"Balanced day with {meal_count} meals and {workout_count} workouts. "
+                "Keep building on your tracking habit."
+            )
+            tip = "Stay hydrated throughout the day."
+
+    return {"feedback": feedback, "health_tip": tip}
+
+
 def generate_daily_insight(
     user: User,
     db: Session,
@@ -150,16 +196,22 @@ def generate_daily_insight(
     language: str = "en",
     api_key: str | None = None,
 ) -> dict:
-    api_key = api_key or os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="GEMINI_API_KEY is not configured.",
-        )
-
     logs = fetch_daily_logs(db, user, target_date)
-    prompt = _build_prompt(user, logs, language)
+    api_key = api_key or os.getenv("GEMINI_API_KEY")
 
+    if not api_key:
+        logger.info("No GEMINI_API_KEY — returning local daily insight for %s", user.username)
+        parsed = _fallback_daily_insight(logs, language)
+        return {
+            "date": logs["date"],
+            "feedback": parsed["feedback"],
+            "health_tip": parsed["health_tip"],
+            "summary": logs,
+            "model": "local-fallback",
+            "ai_estimated": False,
+        }
+
+    prompt = _build_prompt(user, logs, language)
     preferred_model = os.getenv("GEMINI_MODEL", GEMINI_MODEL)
     model_names = []
     for name in (preferred_model, *GEMINI_MODEL_FALLBACKS):
@@ -174,21 +226,33 @@ def generate_daily_insight(
                 model = genai.GenerativeModel(model_name)
                 response = model.generate_content(prompt)
                 parsed = _parse_gemini_json(response.text or "")
+                logger.info("Gemini daily insight succeeded with model %s for %s", model_name, user.username)
                 return {
                     "date": logs["date"],
                     "feedback": parsed["feedback"],
                     "health_tip": parsed["health_tip"],
                     "summary": logs,
                     "model": model_name,
+                    "ai_estimated": True,
                 }
             except Exception as exc:
+                logger.warning("Gemini insight model %s failed: %s", model_name, exc)
                 last_error = exc
                 continue
         raise last_error or RuntimeError("No Gemini model available")
-    except HTTPException:
-        raise
     except Exception as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Could not generate AI insight. Please try again shortly.",
-        ) from exc
+        logger.warning(
+            "Daily insight AI failed for %s, using local fallback: %s",
+            user.username,
+            exc,
+            exc_info=True,
+        )
+        parsed = _fallback_daily_insight(logs, language)
+        return {
+            "date": logs["date"],
+            "feedback": parsed["feedback"],
+            "health_tip": parsed["health_tip"],
+            "summary": logs,
+            "model": "local-fallback",
+            "ai_estimated": False,
+        }

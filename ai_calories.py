@@ -1,13 +1,15 @@
 import json
+import logging
 import os
 import re
 from dataclasses import dataclass
 
-from fastapi import HTTPException, status
+import google.generativeai as genai
 
+from gemini_insight import GEMINI_MODEL, GEMINI_MODEL_FALLBACKS
 from models import User
 
-OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -36,43 +38,45 @@ def _extract_json(text: str) -> dict:
     return json.loads(text)
 
 
-def _openai_estimate(prompt: str) -> CalorieEstimate:
-    api_key = os.getenv("OPENAI_API_KEY")
+def _gemini_estimate(prompt: str) -> CalorieEstimate:
+    api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
-        raise RuntimeError("OPENAI_API_KEY is not configured")
+        raise RuntimeError("GEMINI_API_KEY is not configured")
 
-    try:
-        from openai import OpenAI
-    except ImportError as exc:
-        raise RuntimeError("openai package is not installed") from exc
+    full_prompt = (
+        "You estimate calories for nutrition tracking. "
+        "Respond with JSON only using keys: calories (number), explanation (string). "
+        "Calories must be a positive number with at most one decimal place.\n\n"
+        f"{prompt}"
+    )
 
-    client = OpenAI(api_key=api_key)
-    response = client.chat.completions.create(
-        model=OPENAI_MODEL,
-        temperature=0.2,
-        response_format={"type": "json_object"},
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You estimate calories for nutrition tracking. "
-                    "Respond with JSON only using keys: calories (number), explanation (string). "
-                    "Calories must be a positive number with at most one decimal place."
-                ),
-            },
-            {"role": "user", "content": prompt},
-        ],
-    )
-    content = response.choices[0].message.content or "{}"
-    data = _extract_json(content)
-    calories = float(data["calories"])
-    if calories <= 0:
-        raise ValueError("Calories must be positive")
-    return CalorieEstimate(
-        calories=round(calories, 1),
-        explanation=str(data.get("explanation", "")).strip(),
-        ai_estimated=True,
-    )
+    preferred_model = os.getenv("GEMINI_MODEL", GEMINI_MODEL)
+    model_names = []
+    for name in (preferred_model, *GEMINI_MODEL_FALLBACKS):
+        if name not in model_names:
+            model_names.append(name)
+
+    genai.configure(api_key=api_key)
+    last_error = None
+    for model_name in model_names:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(full_prompt)
+            data = _extract_json(response.text or "{}")
+            calories = float(data["calories"])
+            if calories <= 0:
+                raise ValueError("Calories must be positive")
+            logger.info("Gemini calorie estimate succeeded with model %s", model_name)
+            return CalorieEstimate(
+                calories=round(calories, 1),
+                explanation=str(data.get("explanation", "")).strip(),
+                ai_estimated=True,
+            )
+        except Exception as exc:
+            logger.warning("Gemini model %s failed: %s", model_name, exc)
+            last_error = exc
+            continue
+    raise last_error or RuntimeError("No Gemini model available")
 
 
 def _fallback_meal_estimate(food_name: str) -> CalorieEstimate:
@@ -146,13 +150,14 @@ def estimate_meal_calories(food_name: str, user: User) -> CalorieEstimate:
         "Assume a typical single serving unless the description specifies otherwise."
     )
     try:
-        return _openai_estimate(prompt)
-    except Exception:
-        if os.getenv("OPENAI_API_KEY"):
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="AI calorie estimation is temporarily unavailable. Try again shortly.",
-            )
+        return _gemini_estimate(prompt)
+    except Exception as exc:
+        logger.warning(
+            "Meal calorie AI failed for %r, using local fallback: %s",
+            food_name,
+            exc,
+            exc_info=True,
+        )
         return _fallback_meal_estimate(food_name)
 
 
@@ -163,11 +168,12 @@ def estimate_workout_calories(activity_type: str, user: User) -> CalorieEstimate
         "If duration is not specified, assume a moderate 30-minute session."
     )
     try:
-        return _openai_estimate(prompt)
-    except Exception:
-        if os.getenv("OPENAI_API_KEY"):
-            raise HTTPException(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="AI calorie estimation is temporarily unavailable. Try again shortly.",
-            )
+        return _gemini_estimate(prompt)
+    except Exception as exc:
+        logger.warning(
+            "Workout calorie AI failed for %r, using local fallback: %s",
+            activity_type,
+            exc,
+            exc_info=True,
+        )
         return _fallback_workout_estimate(activity_type, user)

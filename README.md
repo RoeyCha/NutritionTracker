@@ -16,33 +16,25 @@ MVP web app for logging meals and workouts and viewing your daily calorie balanc
 - Full UTF-8 support for Hebrew meal and workout names
 - **User accounts** with login, registration, and profile management
 - Each user has isolated meals, workouts, and daily summaries
-- **AI calorie estimation** for meals and workouts (OpenAI, with local fallback)
+- **AI calorie estimation** for meals and workouts (Google Gemini, with local fallback)
 
-## AI calorie estimation
+## AI features (Google Gemini)
 
-When you add a meal or workout, calories are calculated automatically. A popup shows how many calories were consumed or burned.
+One API key powers calorie estimates and daily insights.
 
 1. Copy `.env.example` to `.env`
-2. Add your OpenAI API key:
-
-```env
-OPENAI_API_KEY=your-openai-api-key-here
-```
-
-Without an API key, the app uses local fallback estimates so you can still test the flow.
-
-## Gemini daily insights
-
-The **Get AI Insight** button sends today's meals and workouts to Google Gemini and displays encouraging feedback plus a health tip.
-
-Add to `.env`:
+2. Add your Gemini API key:
 
 ```env
 GEMINI_API_KEY=your-gemini-api-key-here
-GEMINI_MODEL=gemini-2.0-flash
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
-Then restart the server. Insights respect the selected summary date and UI language (English/Hebrew).
+3. Restart with `.\start.ps1`
+
+When you add or edit a meal/workout, calories are estimated automatically and shown in a popup. Without an API key, the app uses local fallback estimates so you can still test the flow.
+
+The **Get AI Insight** button sends the selected day's meals and workouts to Gemini and displays encouraging feedback plus a health tip. Insights respect the selected summary date and UI language (English/Hebrew).
 
 ## Project structure
 
@@ -104,9 +96,13 @@ pip install -r requirements.txt
 
 ### 4. Start the server
 
+Always use the start script — it stops old runs and starts one fresh server on port 8000 (with auto-reload on code changes):
+
 ```powershell
-uvicorn main:app --reload
+.\start.ps1
 ```
+
+Do **not** run multiple `uvicorn` terminals; leftover processes cause "Not Found" and stale-server errors.
 
 ### 5. Open the app
 
