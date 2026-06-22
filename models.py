@@ -24,6 +24,7 @@ class User(Base):
     gender: Mapped[str | None] = mapped_column(String(20), nullable=True)
     age: Mapped[int | None] = mapped_column(Integer, nullable=True)
     weight_kg: Mapped[float | None] = mapped_column(Float, nullable=True)
+    initial_weight_kg: Mapped[float | None] = mapped_column(Float, nullable=True)
     bmr: Mapped[float | None] = mapped_column(Float, nullable=True)
     bmr_explanation: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
@@ -31,6 +32,9 @@ class User(Base):
     meals: Mapped[list["Meal"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     workouts: Mapped[list["Workout"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     daily_steps: Mapped[list["DailySteps"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    daily_weights: Mapped[list["DailyWeight"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
 
@@ -77,6 +81,19 @@ class DailySteps(Base):
     user: Mapped["User"] = relationship(back_populates="daily_steps")
 
 
+class DailyWeight(Base):
+    __tablename__ = "daily_weights"
+    __table_args__ = (UniqueConstraint("user_id", "entry_date", name="uq_user_weight_date"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    entry_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    weight_kg: Mapped[float] = mapped_column(Float, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user: Mapped["User"] = relationship(back_populates="daily_weights")
+
+
 def migrate_db() -> None:
     inspector = inspect(engine)
     if "users" not in inspector.get_table_names():
@@ -95,6 +112,8 @@ def migrate_db() -> None:
         statements.append("ALTER TABLE users ADD COLUMN age INTEGER")
     if "weight_kg" not in columns:
         statements.append("ALTER TABLE users ADD COLUMN weight_kg FLOAT")
+    if "initial_weight_kg" not in columns:
+        statements.append("ALTER TABLE users ADD COLUMN initial_weight_kg FLOAT")
     if "bmr" not in columns:
         statements.append("ALTER TABLE users ADD COLUMN bmr FLOAT")
     if "bmr_explanation" not in columns:
@@ -119,6 +138,13 @@ def migrate_db() -> None:
             if "password_hash" in updated_columns:
                 connection.execute(
                     text("UPDATE users SET password_hash = '' WHERE password_hash IS NULL")
+                )
+            if "initial_weight_kg" in updated_columns:
+                connection.execute(
+                    text(
+                        "UPDATE users SET initial_weight_kg = weight_kg "
+                        "WHERE initial_weight_kg IS NULL AND weight_kg IS NOT NULL"
+                    )
                 )
 
     if _users_email_not_nullable():
@@ -168,6 +194,7 @@ def _rebuild_users_table(connection) -> None:
                 gender VARCHAR(20),
                 age INTEGER,
                 weight_kg FLOAT,
+                initial_weight_kg FLOAT,
                 bmr FLOAT,
                 bmr_explanation VARCHAR(500),
                 created_at DATETIME NOT NULL
@@ -180,7 +207,7 @@ def _rebuild_users_table(connection) -> None:
             """
             INSERT INTO users__new (
                 id, username, password_hash, name, email, gender, age, weight_kg,
-                bmr, bmr_explanation, created_at
+                initial_weight_kg, bmr, bmr_explanation, created_at
             )
             SELECT
                 id,
@@ -191,6 +218,7 @@ def _rebuild_users_table(connection) -> None:
                 gender,
                 age,
                 weight_kg,
+                initial_weight_kg,
                 bmr,
                 bmr_explanation,
                 created_at

@@ -15,6 +15,7 @@ def seed_test_user(db: Session) -> User:
             user.gender = "male"
             user.age = 30
             user.weight_kg = 75.0
+            user.initial_weight_kg = 75.0
             apply_bmr_to_user(user)
             db.commit()
             db.refresh(user)
@@ -32,6 +33,7 @@ def seed_test_user(db: Session) -> User:
         gender="male",
         age=30,
         weight_kg=75.0,
+        initial_weight_kg=75.0,
     )
     db.add(user)
     db.flush()

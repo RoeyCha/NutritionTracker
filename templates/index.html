@@ -159,11 +159,12 @@
       border-radius: 8px;
       background: white;
       margin-bottom: 0.85rem;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     }
 
     .logged-at-combo:focus-within {
       border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
+      box-shadow: 0 0 0 2px rgba(47, 133, 90, 0.2);
     }
 
     .logged-at-combo .logged-at-input {
@@ -211,16 +212,112 @@
       outline-offset: -2px;
     }
 
-    .logged-at-datetime-picker {
+    .logged-at-picker-panel {
       position: absolute;
-      width: 1px;
-      height: 1px;
-      margin: -1px;
+      top: calc(100% + 6px);
+      inset-inline-end: 0;
+      z-index: 1100;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+      padding: 0.75rem;
+      width: min(100%, 280px);
+    }
+
+    .logged-at-picker-panel.hidden {
+      display: none;
+    }
+
+    .logged-at-picker-month {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.35rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .logged-at-picker-month button {
+      width: auto;
+      min-width: 0;
+      padding: 0.25rem 0.5rem;
+      margin: 0;
+      font-size: 0.85rem;
+    }
+
+    .logged-at-picker-month-label {
+      font-weight: 700;
+      font-size: 0.82rem;
+      text-align: center;
+      flex: 1;
+    }
+
+    .logged-at-picker-weekdays,
+    .logged-at-picker-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.2rem;
+    }
+
+    .logged-at-picker-weekdays {
+      margin-bottom: 0.25rem;
+      color: var(--muted);
+      font-size: 0.68rem;
+      text-align: center;
+    }
+
+    .logged-at-picker-day,
+    .logged-at-picker-time-option {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: white;
+      font-size: 0.72rem;
+      padding: 0.3rem 0;
+      cursor: pointer;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .logged-at-picker-day.empty-cell {
+      border: none;
+      background: transparent;
+      cursor: default;
       padding: 0;
-      border: 0;
-      clip: rect(0, 0, 0, 0);
-      overflow: hidden;
-      white-space: nowrap;
+    }
+
+    .logged-at-picker-day.selected,
+    .logged-at-picker-time-option.selected {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .logged-at-picker-day:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .logged-at-picker-time-label {
+      margin: 0.55rem 0 0.3rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .logged-at-picker-time {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.45rem;
+    }
+
+    .logged-at-picker-hours,
+    .logged-at-picker-minutes {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.2rem;
+      max-height: 108px;
+      overflow-y: auto;
+      padding-inline-end: 0.15rem;
     }
 
     .list-item-time {
@@ -244,7 +341,72 @@
     }
 
     .stat-value { display: block; font-size: 1.5rem; font-weight: 700; }
+
+    .stat-value-with-trend {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+    }
+
+    .weight-trend-arrow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 0;
+      flex-shrink: 0;
+    }
+
+    .weight-trend-arrow.hidden {
+      display: none;
+    }
+
+    .weight-trend-arrow svg {
+      width: 16px;
+      height: 16px;
+      transform-origin: center center;
+      transition: transform 0.2s ease;
+    }
+
+    .weight-trend-arrow.up { color: var(--danger); }
+    .weight-trend-arrow.down { color: var(--accent); }
+    .weight-trend-arrow.flat { color: var(--muted); }
+
     .stat-label { color: var(--muted); font-size: 0.85rem; }
+
+    .stat-label-with-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+    }
+
+    .stat-edit-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: auto;
+      min-width: 0;
+      padding: 0.15rem;
+      margin: 0;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      line-height: 0;
+      border-radius: 4px;
+    }
+
+    .stat-edit-btn:hover {
+      color: var(--accent);
+      background: rgba(47, 133, 90, 0.08);
+    }
+
+    .stat-edit-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
     .positive { color: var(--accent); }
     .negative { color: var(--danger); }
 
@@ -649,6 +811,7 @@
 
     .modal-card {
       background: var(--card);
+      border: 1px solid var(--border);
       border-radius: 14px;
       padding: 1.5rem;
       max-width: 420px;
@@ -770,6 +933,7 @@
 
     .ai-loading-panel {
       background: var(--card);
+      border: 1px solid var(--border);
       border-radius: 14px;
       box-shadow: 0 12px 40px rgba(15, 23, 42, 0.2);
       padding: 1.75rem 2rem;
@@ -972,17 +1136,47 @@
                 <span class="stat-label" data-i18n="stepsCaloriesLabel">Steps burned (net)</span>
               </div>
               <div class="stat">
+                <span class="stat-value stat-value-with-trend">
+                  <span id="weight-value">—</span>
+                  <span
+                    id="weight-trend-arrow"
+                    class="weight-trend-arrow hidden"
+                    aria-hidden="true"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <line x1="4" y1="12" x2="17" y2="12"></line>
+                      <polyline points="13,8 17,12 13,16"></polyline>
+                    </svg>
+                  </span>
+                </span>
+                <span class="stat-label stat-label-with-action">
+                  <span data-i18n="weightLabel">Weight (kg)</span>
+                  <button
+                    type="button"
+                    class="stat-edit-btn"
+                    id="edit-weight-btn"
+                    data-i18n-aria-label="editWeightLabel"
+                    aria-label="Log weight for this day"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 20h9"></path>
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                    </svg>
+                  </button>
+                </span>
+              </div>
+              <div class="stat">
                 <span class="stat-value" id="daily-balance">—</span>
                 <span class="stat-label" data-i18n="dailyBalance">Daily balance</span>
               </div>
             </div>
 
-            <div class="balance-summary empty" id="balance-summary">
-              <p class="balance-headline" id="balance-headline" data-i18n="balanceIncomplete">Complete your profile (age & weight) to calculate BMR and daily balance.</p>
-              <p class="balance-detail hidden" id="balance-detail"></p>
-            </div>
+        <div class="balance-summary empty" id="balance-summary">
+          <p class="balance-headline" id="balance-headline" data-i18n="balanceIncomplete">Complete your profile (age & weight) to calculate BMR and daily balance.</p>
+          <p class="balance-detail hidden" id="balance-detail"></p>
+        </div>
 
-            <div class="grid">
+        <div class="grid">
               <div>
                 <h3 data-i18n="mealsToday">Meals today</h3>
                 <ul id="meals-list"></ul>
@@ -1048,15 +1242,6 @@
                   <polyline points="12 6 12 12 16 14"></polyline>
                 </svg>
               </button>
-              <input
-                type="datetime-local"
-                id="meal-logged-at-picker"
-                class="logged-at-datetime-picker"
-                step="60"
-                lang="en-GB"
-                tabindex="-1"
-                aria-hidden="true"
-              >
             </div>
 
             <button type="submit" class="btn-primary" id="meal-submit" data-i18n="addMealBtn">Add meal</button>
@@ -1095,15 +1280,6 @@
                   <polyline points="12 6 12 12 16 14"></polyline>
                 </svg>
               </button>
-              <input
-                type="datetime-local"
-                id="workout-logged-at-picker"
-                class="logged-at-datetime-picker"
-                step="60"
-                lang="en-GB"
-                tabindex="-1"
-                aria-hidden="true"
-              >
             </div>
 
             <button type="submit" class="btn-primary" id="workout-submit" data-i18n="addWorkoutBtn">Add workout</button>
@@ -1154,16 +1330,30 @@
         <input id="meal-edit-food" name="food_name" type="text" data-i18n-placeholder="foodPlaceholder" required>
 
         <label for="meal-edit-logged-at" data-i18n="dateTime">Date &amp; time</label>
-        <input
-          id="meal-edit-logged-at"
-          class="logged-at-input"
-          name="logged_at_display"
-          type="text"
-          inputmode="numeric"
-          autocomplete="off"
-          data-i18n-placeholder="dateTimePlaceholder"
-          placeholder="dd/mm/yyyy hh:mm"
-        >
+        <div class="logged-at-combo">
+          <input
+            id="meal-edit-logged-at"
+            class="logged-at-input"
+            name="logged_at_display"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            data-i18n-placeholder="dateTimePlaceholder"
+            placeholder="dd/mm/yyyy hh:mm"
+          >
+          <button
+            type="button"
+            class="logged-at-picker-btn"
+            id="meal-edit-logged-at-picker-btn"
+            data-i18n-aria-label="openDateTimePicker"
+            aria-label="Open date and time picker"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </button>
+        </div>
 
         <div class="recalculate-row">
           <input type="checkbox" id="meal-edit-recalculate" name="recalculate_calories">
@@ -1187,16 +1377,30 @@
         <input id="workout-edit-activity" name="activity_type" type="text" data-i18n-placeholder="activityPlaceholder" required>
 
         <label for="workout-edit-logged-at" data-i18n="dateTime">Date &amp; time</label>
-        <input
-          id="workout-edit-logged-at"
-          class="logged-at-input"
-          name="logged_at_display"
-          type="text"
-          inputmode="numeric"
-          autocomplete="off"
-          data-i18n-placeholder="dateTimePlaceholder"
-          placeholder="dd/mm/yyyy hh:mm"
-        >
+        <div class="logged-at-combo">
+          <input
+            id="workout-edit-logged-at"
+            class="logged-at-input"
+            name="logged_at_display"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            data-i18n-placeholder="dateTimePlaceholder"
+            placeholder="dd/mm/yyyy hh:mm"
+          >
+          <button
+            type="button"
+            class="logged-at-picker-btn"
+            id="workout-edit-logged-at-picker-btn"
+            data-i18n-aria-label="openDateTimePicker"
+            aria-label="Open date and time picker"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </button>
+        </div>
 
         <div class="recalculate-row">
           <input type="checkbox" id="workout-edit-recalculate" name="recalculate_calories">
@@ -1225,6 +1429,23 @@
       <div class="form-actions modal-form-actions">
         <button type="submit" form="steps-form" class="btn-primary" id="steps-submit" data-i18n="saveStepsBtn">Save steps</button>
         <button type="button" class="btn-secondary" id="steps-edit-cancel" data-i18n="cancelEdit">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="weight-edit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="weight-edit-modal-title">
+    <div class="modal-card modal-card-form">
+      <h3 id="weight-edit-modal-title" data-i18n="updateWeight">Update weight</h3>
+      <p id="weight-modal-date" class="ai-hint"></p>
+      <form id="weight-form">
+        <label for="weight-value-input" data-i18n="weightKg">Weight (kg)</label>
+        <input id="weight-value-input" name="weight_kg" type="number" min="1" max="500" step="0.1" required>
+        <p class="ai-hint" data-i18n="weightHint">Log your weight for this day. Updating today's weight also refreshes your profile and BMR.</p>
+      </form>
+      <p class="message" id="weight-modal-message"></p>
+      <div class="form-actions modal-form-actions">
+        <button type="submit" form="weight-form" class="btn-primary" id="weight-submit" data-i18n="saveWeightBtn">Save weight</button>
+        <button type="button" class="btn-secondary" id="weight-edit-cancel" data-i18n="cancelEdit">Cancel</button>
       </div>
     </div>
   </div>
@@ -1308,6 +1529,18 @@
         stepsUnit: "steps",
         stepsCaloriesNet: "Net from steps: {amount} cal",
         stepsSaved: "Steps saved.",
+        weightToday: "Daily weight",
+        weightLabel: "Weight (kg)",
+        editWeightLabel: "Log weight for this day",
+        updateWeightBtn: "Update weight",
+        updateWeight: "Update weight",
+        saveWeightBtn: "Save weight",
+        weightSaved: "Weight saved.",
+        weightTrendUp: "Weight up {pct}% vs 5 days ago",
+        weightTrendDown: "Weight down {pct}% vs 5 days ago",
+        weightTrendFlat: "No weight change vs 5 days ago",
+        noWeight: "No weight logged for this day.",
+        weightHint: "Log your weight for this day. Updating today's weight also refreshes your profile and BMR.",
         balanceSurplus: "Calorie surplus of {amount} cal for this day.",
         balanceDeficit: "Calorie deficit of {amount} cal for this day.",
         balanceMaintenance: "Even with your BMR and exercise for this day.",
@@ -1441,6 +1674,18 @@
         stepsUnit: "צעדים",
         stepsCaloriesNet: "נטו מצעדים: {amount} קלוריות",
         stepsSaved: "הצעדים נשמרו.",
+        weightToday: "משקל יומי",
+        weightLabel: "משקל (ק\"ג)",
+        editWeightLabel: "רשום משקל ליום זה",
+        updateWeightBtn: "עדכן משקל",
+        updateWeight: "עדכון משקל",
+        saveWeightBtn: "שמור משקל",
+        weightSaved: "המשקל נשמר.",
+        weightTrendUp: "עלייה של {pct}% במשקל לעומת לפני 5 ימים",
+        weightTrendDown: "ירידה של {pct}% במשקל לעומת לפני 5 ימים",
+        weightTrendFlat: "ללא שינוי במשקל לעומת לפני 5 ימים",
+        noWeight: "לא נרשם משקל ליום זה.",
+        weightHint: "רשום את המשקל ליום זה. עדכון משקל היום מרענן גם את הפרופיל ו-BMR.",
         balanceSurplus: "עודף קלורי של {amount} קלוריות ליום זה.",
         balanceDeficit: "גירעון קלורי של {amount} קלוריות ליום זה.",
         balanceMaintenance: "מאוזן ביחס ל-BMR ולפעילות הגופנית ליום זה.",
@@ -1529,6 +1774,8 @@
     let editingMealOriginalName = "";
     let editingWorkoutOriginalName = "";
     let currentDailySteps = null;
+    let currentDailyWeight = null;
+    let currentLatestWeight = null;
     let aiLoadingDepth = 0;
     let availableDates = new Set();
     let calendarView = new Date();
@@ -1576,6 +1823,12 @@
     const stepsSubmitButton = document.getElementById("steps-submit");
     const stepsMessage = document.getElementById("steps-message");
     const editStepsButton = document.getElementById("edit-steps-btn");
+    const weightEditModal = document.getElementById("weight-edit-modal");
+    const weightForm = document.getElementById("weight-form");
+    const weightModalMessage = document.getElementById("weight-modal-message");
+    const weightSubmitButton = document.getElementById("weight-submit");
+    const editWeightButton = document.getElementById("edit-weight-btn");
+    const weightTrendArrow = document.getElementById("weight-trend-arrow");
     const calorieModal = document.getElementById("calorie-modal");
     const calorieModalItem = document.getElementById("calorie-modal-item");
     const calorieModalValue = document.getElementById("calorie-modal-value");
@@ -1702,7 +1955,7 @@
       const formattedBalance = formatNumber(Math.abs(balance));
       balanceEl.textContent = `${balance >= 0 ? "+" : "−"}${formattedBalance}`;
       balanceEl.classList.remove("positive", "negative");
-      balanceEl.classList.add(balance >= 0 ? "positive" : "negative");
+      balanceEl.classList.add(balance >= 0 ? "negative" : "positive");
 
       balanceSummary.classList.remove("empty");
       if (balance > 0) {
@@ -1739,6 +1992,161 @@
       calEl.textContent = tf("stepsCaloriesNet", { amount: formatNumber(steps.calories_burned) });
       stepsCaloriesStat.textContent = formatNumber(steps.calories_burned);
       editStepsButton.textContent = t("editStepsBtn");
+    }
+
+    const WEIGHT_TREND_MAX_ANGLE = 30;
+    const WEIGHT_TREND_MAX_PCT = 5;
+    const WEIGHT_TREND_FLAT_THRESHOLD = 0.05;
+
+    function computeWeightTrendIndicator(trend) {
+      if (!trend?.length || trend.length < 2) {
+        return null;
+      }
+
+      const current = trend[trend.length - 1]?.weight_kg;
+      const past = trend[0]?.weight_kg;
+      if (current == null || past == null || past <= 0) {
+        return null;
+      }
+
+      const changePct = ((current - past) / past) * 100;
+      if (Math.abs(changePct) < WEIGHT_TREND_FLAT_THRESHOLD) {
+        return { direction: "flat", angle: 0, changePct: 0 };
+      }
+
+      const angle = Math.max(
+        -WEIGHT_TREND_MAX_ANGLE,
+        Math.min(WEIGHT_TREND_MAX_ANGLE, (changePct / WEIGHT_TREND_MAX_PCT) * WEIGHT_TREND_MAX_ANGLE)
+      );
+
+      return {
+        direction: changePct > 0 ? "up" : "down",
+        angle,
+        changePct,
+      };
+    }
+
+    function renderWeightTrendArrow(trend) {
+      const indicator = computeWeightTrendIndicator(trend);
+      const svg = weightTrendArrow.querySelector("svg");
+
+      weightTrendArrow.classList.remove("up", "down", "flat", "hidden");
+      weightTrendArrow.removeAttribute("title");
+
+      if (!indicator) {
+        weightTrendArrow.classList.add("hidden");
+        weightTrendArrow.setAttribute("aria-hidden", "true");
+        if (svg) {
+          svg.style.transform = "";
+        }
+        return;
+      }
+
+      weightTrendArrow.classList.add(indicator.direction);
+      weightTrendArrow.setAttribute("aria-hidden", "false");
+
+      if (indicator.direction === "flat") {
+        if (svg) {
+          svg.style.transform = "rotate(0deg)";
+        }
+        weightTrendArrow.setAttribute("title", t("weightTrendFlat"));
+        weightTrendArrow.setAttribute("aria-label", t("weightTrendFlat"));
+        return;
+      }
+
+      const displayPct = Math.abs(indicator.changePct).toFixed(1);
+      const labelKey = indicator.direction === "up" ? "weightTrendUp" : "weightTrendDown";
+      const label = tf(labelKey, { pct: displayPct });
+
+      if (svg) {
+        svg.style.transform = `rotate(${-indicator.angle}deg)`;
+      }
+      weightTrendArrow.setAttribute("title", label);
+      weightTrendArrow.setAttribute("aria-label", label);
+    }
+
+    function renderWeightSummary(data) {
+      const weightEl = document.getElementById("weight-value");
+      const latest = data.latest_weight;
+      const baseline =
+        currentUser?.initial_weight_kg ??
+        currentUser?.weight_kg ??
+        null;
+
+      if (latest?.weight_kg != null) {
+        weightEl.textContent = formatWeight(latest.weight_kg);
+      } else if (baseline != null) {
+        weightEl.textContent = formatWeight(baseline);
+      } else {
+        weightEl.textContent = "—";
+      }
+
+      renderWeightTrendArrow(data.weight_trend || []);
+    }
+
+    function openWeightEditModal() {
+      const selectedDate = summaryDateInput.value;
+      if (!selectedDate || selectedDate > todayIsoDate()) {
+        alert(t("futureDateError"));
+        return;
+      }
+
+      weightModalMessage.textContent = "";
+      weightModalMessage.classList.remove("error");
+      document.getElementById("weight-modal-date").textContent = formatDisplayDate(selectedDate);
+      document.getElementById("weight-value-input").value =
+        currentDailyWeight?.weight_kg ??
+        currentLatestWeight?.weight_kg ??
+        currentUser?.initial_weight_kg ??
+        currentUser?.weight_kg ??
+        "";
+      weightEditModal.classList.remove("hidden");
+    }
+
+    function closeWeightEditModal() {
+      weightForm.reset();
+      weightModalMessage.textContent = "";
+      weightModalMessage.classList.remove("error");
+      weightEditModal.classList.add("hidden");
+    }
+
+    async function saveDailyWeight(event) {
+      event.preventDefault();
+      const selectedDate = summaryDateInput.value;
+      if (!selectedDate) {
+        return;
+      }
+
+      weightModalMessage.textContent = "";
+      weightModalMessage.classList.remove("error");
+      const formData = new FormData(weightForm);
+      const weightKg = Number(formData.get("weight_kg"));
+
+      weightSubmitButton.disabled = true;
+      weightSubmitButton.textContent = t("saveWeightBtn");
+
+      try {
+        const response = await apiFetch(`/api/weight?date=${selectedDate}`, {
+          method: "PUT",
+          body: JSON.stringify({ weight_kg: weightKg }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          const detail = error.detail || t("requestFailed");
+          throw new Error(Array.isArray(detail) ? detail.map((item) => item.msg).join(", ") : detail);
+        }
+
+        closeWeightEditModal();
+        await reloadCurrentUserProfile();
+        await refreshCalendarAndSummary(selectedDate);
+      } catch (error) {
+        weightModalMessage.textContent = error.message;
+        weightModalMessage.classList.add("error");
+      } finally {
+        weightSubmitButton.disabled = false;
+        weightSubmitButton.textContent = t("saveWeightBtn");
+      }
     }
 
     function openStepsEditModal() {
@@ -1840,6 +2248,7 @@
       closeMealEditModal();
       closeWorkoutEditModal();
       closeStepsEditModal();
+      closeWeightEditModal();
       currentUser = null;
     }
 
@@ -2060,87 +2469,371 @@
       return `${day}/${month}/${year} ${hours}:${minutes}`;
     }
 
-    function dateTimeToPickerValue(value) {
-      const date = value instanceof Date ? value : new Date(value);
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      const hours = String(date.getHours()).padStart(2, "0");
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-      return `${date.getFullYear()}-${month}-${day}T${hours}:${minutes}`;
-    }
+    const loggedAtPickerState = new Map();
+    let loggedAtPickerDocListenersBound = false;
 
-    function nowDateTimeLocalMax() {
-      return dateTimeToPickerValue(new Date());
-    }
-
-    function loggedAtDateTimePicker(textInputId) {
-      return document.getElementById(`${textInputId}-picker`);
-    }
-
-    function syncLoggedAtPickerFromDisplay(textInputId) {
+    function initLoggedAtPickerState(textInputId) {
       const textInput = document.getElementById(textInputId);
-      const picker = loggedAtDateTimePicker(textInputId);
-      if (!picker) {
-        return;
-      }
+      let selected = new Date();
 
       try {
         const parsed = parseLoggedAtDisplay(textInput.value);
-        if (!parsed) {
-          picker.value = "";
-          return;
+        if (parsed) {
+          selected = parsed;
         }
-        picker.value = dateTimeToPickerValue(parsed);
       } catch {
-        picker.value = "";
+        // Keep current time when the text field is invalid.
       }
+
+      loggedAtPickerState.set(textInputId, {
+        viewYear: selected.getFullYear(),
+        viewMonth: selected.getMonth(),
+        selected,
+      });
+
+      return loggedAtPickerState.get(textInputId);
     }
 
-    function syncLoggedAtDisplayFromPicker(textInputId) {
-      const textInput = document.getElementById(textInputId);
-      const picker = loggedAtDateTimePicker(textInputId);
-      if (!picker || !picker.value) {
-        return;
-      }
-
-      const [datePart, timePart] = picker.value.split("T");
-      const [year, month, day] = datePart.split("-").map(Number);
-      const [hours, minutes] = timePart.split(":").map(Number);
-      textInput.value = formatLoggedAtDisplay(new Date(year, month - 1, day, hours, minutes, 0, 0));
+    function getLoggedAtPickerPanel(textInputId) {
+      return document.getElementById(`${textInputId}-panel`);
     }
 
-    function openLoggedAtPicker(textInputId) {
-      const picker = loggedAtDateTimePicker(textInputId);
-      if (!picker) {
-        return;
+    function ensureLoggedAtPickerPanel(textInputId) {
+      let panel = getLoggedAtPickerPanel(textInputId);
+      if (panel) {
+        return panel;
       }
 
-      syncLoggedAtPickerFromDisplay(textInputId);
-      picker.max = nowDateTimeLocalMax();
+      const combo = document.getElementById(textInputId).closest(".logged-at-combo");
+      panel = document.createElement("div");
+      panel.id = `${textInputId}-panel`;
+      panel.className = "logged-at-picker-panel hidden";
+      panel.setAttribute("role", "dialog");
+      panel.innerHTML = `
+        <div class="logged-at-picker-month">
+          <button type="button" class="btn-secondary logged-at-picker-prev-month" aria-label="Previous month">‹</button>
+          <span class="logged-at-picker-month-label"></span>
+          <button type="button" class="btn-secondary logged-at-picker-next-month" aria-label="Next month">›</button>
+        </div>
+        <div class="logged-at-picker-weekdays"></div>
+        <div class="logged-at-picker-days"></div>
+        <p class="logged-at-picker-time-label"></p>
+        <div class="logged-at-picker-time">
+          <div class="logged-at-picker-hours"></div>
+          <div class="logged-at-picker-minutes"></div>
+        </div>
+      `;
 
-      if (typeof picker.showPicker === "function") {
-        try {
-          picker.showPicker();
+      panel.querySelector(".logged-at-picker-prev-month").addEventListener("click", (event) => {
+        event.stopPropagation();
+        changeLoggedAtPickerMonth(textInputId, -1);
+      });
+      panel.querySelector(".logged-at-picker-next-month").addEventListener("click", (event) => {
+        event.stopPropagation();
+        changeLoggedAtPickerMonth(textInputId, 1);
+      });
+      panel.addEventListener("click", (event) => event.stopPropagation());
+
+      combo.appendChild(panel);
+      return panel;
+    }
+
+    function closeAllLoggedAtPickerPanels(exceptId = null) {
+      document.querySelectorAll(".logged-at-picker-panel").forEach((panel) => {
+        if (exceptId && panel.id === `${exceptId}-panel`) {
           return;
-        } catch {
-          // Fall back to click when showPicker is blocked.
         }
+        panel.classList.add("hidden");
+        const inputId = panel.id.replace(/-panel$/, "");
+        const button = document.getElementById(`${inputId}-picker-btn`);
+        if (button) {
+          button.setAttribute("aria-expanded", "false");
+        }
+      });
+    }
+
+    function closeLoggedAtPickerPanel(textInputId) {
+      const panel = getLoggedAtPickerPanel(textInputId);
+      if (panel) {
+        panel.classList.add("hidden");
+      }
+      const button = document.getElementById(`${textInputId}-picker-btn`);
+      if (button) {
+        button.setAttribute("aria-expanded", "false");
+      }
+    }
+
+    function applyLoggedAtPickerValue(textInputId) {
+      const state = loggedAtPickerState.get(textInputId);
+      if (!state) {
+        return;
       }
 
-      picker.click();
+      if (state.selected.getTime() > Date.now()) {
+        state.selected = new Date();
+      }
+
+      document.getElementById(textInputId).value = formatLoggedAtDisplay(state.selected);
+    }
+
+    function confirmLoggedAtPickerValue(textInputId) {
+      applyLoggedAtPickerValue(textInputId);
+      closeLoggedAtPickerPanel(textInputId);
+    }
+
+    function changeLoggedAtPickerMonth(textInputId, direction) {
+      const state = loggedAtPickerState.get(textInputId);
+      if (!state) {
+        return;
+      }
+
+      const next = new Date(state.viewYear, state.viewMonth + direction, 1);
+      const now = new Date();
+      if (
+        direction > 0 &&
+        (next.getFullYear() > now.getFullYear() ||
+          (next.getFullYear() === now.getFullYear() && next.getMonth() > now.getMonth()))
+      ) {
+        return;
+      }
+
+      state.viewYear = next.getFullYear();
+      state.viewMonth = next.getMonth();
+      renderLoggedAtPickerPanel(textInputId);
+    }
+
+    function selectLoggedAtPickerDay(textInputId, year, month, day) {
+      const state = loggedAtPickerState.get(textInputId);
+      if (!state) {
+        return;
+      }
+
+      const candidate = new Date(
+        year,
+        month,
+        day,
+        state.selected.getHours(),
+        state.selected.getMinutes(),
+        0,
+        0,
+      );
+
+      if (candidate.getTime() > Date.now()) {
+        return;
+      }
+
+      state.selected = candidate;
+      renderLoggedAtPickerPanel(textInputId);
+    }
+
+    function selectLoggedAtPickerHour(textInputId, hour) {
+      const state = loggedAtPickerState.get(textInputId);
+      if (!state) {
+        return;
+      }
+
+      state.selected = new Date(
+        state.selected.getFullYear(),
+        state.selected.getMonth(),
+        state.selected.getDate(),
+        hour,
+        state.selected.getMinutes(),
+        0,
+        0,
+      );
+
+      if (state.selected.getTime() > Date.now()) {
+        state.selected = new Date();
+      }
+
+      renderLoggedAtPickerPanel(textInputId);
+    }
+
+    function selectLoggedAtPickerMinute(textInputId, minute) {
+      const state = loggedAtPickerState.get(textInputId);
+      if (!state) {
+        return;
+      }
+
+      state.selected = new Date(
+        state.selected.getFullYear(),
+        state.selected.getMonth(),
+        state.selected.getDate(),
+        state.selected.getHours(),
+        minute,
+        0,
+        0,
+      );
+
+      if (state.selected.getTime() > Date.now()) {
+        state.selected = new Date();
+      }
+
+      renderLoggedAtPickerPanel(textInputId);
+    }
+
+    function renderLoggedAtPickerPanel(textInputId) {
+      const panel = ensureLoggedAtPickerPanel(textInputId);
+      const state = loggedAtPickerState.get(textInputId);
+      if (!state) {
+        return;
+      }
+
+      const { viewYear, viewMonth, selected } = state;
+      const viewDate = new Date(viewYear, viewMonth, 1);
+      const now = new Date();
+      const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth();
+
+      panel.querySelector(".logged-at-picker-month-label").textContent = viewDate.toLocaleDateString(
+        localeTag(),
+        { month: "long", year: "numeric" },
+      );
+      panel.querySelector(".logged-at-picker-time-label").textContent = t("timeLabel");
+      panel.querySelector(".logged-at-picker-next-month").disabled = isCurrentMonth;
+
+      const weekdaysEl = panel.querySelector(".logged-at-picker-weekdays");
+      weekdaysEl.innerHTML = "";
+      weekdayLabels.forEach((label) => {
+        const span = document.createElement("span");
+        span.textContent = label;
+        weekdaysEl.appendChild(span);
+      });
+
+      const daysEl = panel.querySelector(".logged-at-picker-days");
+      daysEl.innerHTML = "";
+
+      const firstDay = viewDate.getDay();
+      const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+      for (let index = 0; index < firstDay; index += 1) {
+        const empty = document.createElement("span");
+        empty.className = "logged-at-picker-day empty-cell";
+        daysEl.appendChild(empty);
+      }
+
+      for (let day = 1; day <= daysInMonth; day += 1) {
+        const iso = isoFromParts(viewYear, viewMonth, day);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "logged-at-picker-day";
+        button.textContent = String(day);
+
+        const isFuture = iso > todayIsoDate();
+        button.disabled = isFuture;
+
+        const isSelected =
+          selected.getFullYear() === viewYear &&
+          selected.getMonth() === viewMonth &&
+          selected.getDate() === day;
+
+        if (isSelected) {
+          button.classList.add("selected");
+        }
+
+        button.addEventListener("click", () => selectLoggedAtPickerDay(textInputId, viewYear, viewMonth, day));
+        button.addEventListener("dblclick", (event) => {
+          event.preventDefault();
+          selectLoggedAtPickerDay(textInputId, viewYear, viewMonth, day);
+          confirmLoggedAtPickerValue(textInputId);
+        });
+
+        daysEl.appendChild(button);
+      }
+
+      const hoursEl = panel.querySelector(".logged-at-picker-hours");
+      hoursEl.innerHTML = "";
+      for (let hour = 0; hour < 24; hour += 1) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "logged-at-picker-time-option";
+        button.textContent = String(hour).padStart(2, "0");
+        if (selected.getHours() === hour) {
+          button.classList.add("selected");
+        }
+        button.addEventListener("click", () => selectLoggedAtPickerHour(textInputId, hour));
+        button.addEventListener("dblclick", (event) => {
+          event.preventDefault();
+          selectLoggedAtPickerHour(textInputId, hour);
+          confirmLoggedAtPickerValue(textInputId);
+        });
+        hoursEl.appendChild(button);
+      }
+
+      const minutesEl = panel.querySelector(".logged-at-picker-minutes");
+      minutesEl.innerHTML = "";
+      for (let minute = 0; minute < 60; minute += 1) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "logged-at-picker-time-option";
+        button.textContent = String(minute).padStart(2, "0");
+        if (selected.getMinutes() === minute) {
+          button.classList.add("selected");
+        }
+        button.addEventListener("click", () => selectLoggedAtPickerMinute(textInputId, minute));
+        button.addEventListener("dblclick", (event) => {
+          event.preventDefault();
+          selectLoggedAtPickerMinute(textInputId, minute);
+          confirmLoggedAtPickerValue(textInputId);
+        });
+        minutesEl.appendChild(button);
+      }
+    }
+
+    function openLoggedAtPickerPanel(textInputId) {
+      initLoggedAtPickerState(textInputId);
+      ensureLoggedAtPickerPanel(textInputId);
+      renderLoggedAtPickerPanel(textInputId);
+      closeAllLoggedAtPickerPanels(textInputId);
+
+      const panel = getLoggedAtPickerPanel(textInputId);
+      panel.classList.remove("hidden");
+
+      const button = document.getElementById(`${textInputId}-picker-btn`);
+      if (button) {
+        button.setAttribute("aria-expanded", "true");
+      }
+    }
+
+    function toggleLoggedAtPickerPanel(textInputId) {
+      const panel = getLoggedAtPickerPanel(textInputId);
+      if (panel && !panel.classList.contains("hidden")) {
+        closeLoggedAtPickerPanel(textInputId);
+        return;
+      }
+
+      openLoggedAtPickerPanel(textInputId);
     }
 
     function setupLoggedAtPicker(textInputId) {
       const textInput = document.getElementById(textInputId);
-      const picker = loggedAtDateTimePicker(textInputId);
       const pickerButton = document.getElementById(`${textInputId}-picker-btn`);
-      if (!picker || !pickerButton) {
+      if (!textInput || !pickerButton) {
         return;
       }
 
-      pickerButton.addEventListener("click", () => openLoggedAtPicker(textInputId));
-      picker.addEventListener("change", () => syncLoggedAtDisplayFromPicker(textInputId));
-      textInput.addEventListener("blur", () => syncLoggedAtPickerFromDisplay(textInputId));
+      pickerButton.setAttribute("aria-expanded", "false");
+      pickerButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        toggleLoggedAtPickerPanel(textInputId);
+      });
+
+      textInput.addEventListener("blur", () => {
+        try {
+          initLoggedAtPickerState(textInputId);
+        } catch {
+          // Ignore invalid manual input until submit validation runs.
+        }
+      });
+
+      if (!loggedAtPickerDocListenersBound) {
+        loggedAtPickerDocListenersBound = true;
+        document.addEventListener("click", () => closeAllLoggedAtPickerPanels());
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            closeAllLoggedAtPickerPanels();
+          }
+        });
+      }
     }
 
     function parseLoggedAtDisplay(value) {
@@ -2459,14 +3152,24 @@
       renderCalendar();
     }
 
-    async function refreshCalendarAndSummary() {
+    async function refreshCalendarAndSummary(targetDateIso = null) {
       const previous = summaryDateInput.value;
       await loadAvailableDates();
-      if (previous && availableDates.has(previous)) {
+
+      if (targetDateIso && targetDateIso <= todayIsoDate()) {
+        availableDates.add(targetDateIso);
+        updateNoDatesMessage();
+      }
+
+      const preferred = targetDateIso || previous;
+      if (preferred && availableDates.has(preferred) && preferred <= todayIsoDate()) {
+        setSelectedDate(preferred, false);
+      } else if (previous && availableDates.has(previous)) {
         setSelectedDate(previous, false);
       } else {
         pickInitialDate();
       }
+
       if (summaryDateInput.value) {
         await loadSummary();
       }
@@ -2474,12 +3177,16 @@
 
     function setLoggedAtField(inputId, isoString) {
       document.getElementById(inputId).value = formatLoggedAtDisplay(new Date(isoString));
-      syncLoggedAtPickerFromDisplay(inputId);
+      initLoggedAtPickerState(inputId);
+      const panel = getLoggedAtPickerPanel(inputId);
+      if (panel && !panel.classList.contains("hidden")) {
+        renderLoggedAtPickerPanel(inputId);
+      }
     }
 
     function initLoggedAtField(inputId) {
       document.getElementById(inputId).value = formatLoggedAtDisplay(new Date());
-      syncLoggedAtPickerFromDisplay(inputId);
+      initLoggedAtPickerState(inputId);
     }
 
     function assertLoggedAtNotFuture(loggedAt) {
@@ -2493,6 +3200,19 @@
 
     function formatNumber(value) {
       return Number(value).toLocaleString(localeTag(), { maximumFractionDigits: 0 });
+    }
+
+    function formatWeight(value) {
+      return Number(value).toLocaleString(localeTag(), {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      });
+    }
+
+    function formatShortDate(iso) {
+      const [year, month, day] = iso.split("-").map(Number);
+      const date = new Date(year, month - 1, day);
+      return date.toLocaleDateString(localeTag(), { day: "numeric", month: "short" });
     }
 
     function setupModalDismiss(modalEl, closeFn, cancelButtonId) {
@@ -2693,7 +3413,10 @@
       document.getElementById("total-fats").textContent = formatNumber(data.total_fats);
       document.getElementById("calories-burned").textContent = formatNumber(data.calories_burned);
       currentDailySteps = data.daily_steps;
+      currentDailyWeight = data.daily_weight;
+      currentLatestWeight = data.latest_weight;
       renderStepsSummary(data);
+      renderWeightSummary(data);
       renderDailyBalance(data);
 
       renderList("meals-list", data.meals, t("noMeals"), "food_name", "calories", "meal");
@@ -2799,8 +3522,8 @@
       };
 
       const loggedAtValue = formData.get("logged_at_display");
+      let loggedAt = null;
       if (loggedAtValue) {
-        let loggedAt;
         try {
           loggedAt = parseLoggedAtDisplay(loggedAtValue);
           if (loggedAt) {
@@ -2880,7 +3603,25 @@
           showCalorieModal(data, entryType);
         }
 
-        await refreshCalendarAndSummary();
+        let targetDateIso = null;
+        if (!isEdit) {
+          if (loggedAt) {
+            targetDateIso = isoFromParts(
+              loggedAt.getFullYear(),
+              loggedAt.getMonth(),
+              loggedAt.getDate(),
+            );
+          } else if (data.logged_at) {
+            const entryDate = new Date(data.logged_at);
+            targetDateIso = isoFromParts(
+              entryDate.getFullYear(),
+              entryDate.getMonth(),
+              entryDate.getDate(),
+            );
+          }
+        }
+
+        await refreshCalendarAndSummary(targetDateIso);
       } catch (error) {
         messageEl.textContent = error.message;
         messageEl.classList.add("error");
@@ -3019,6 +3760,9 @@
     setupModalDismiss(stepsEditModal, closeStepsEditModal, "steps-edit-cancel");
     editStepsButton.addEventListener("click", openStepsEditModal);
     stepsForm.addEventListener("submit", saveDailySteps);
+    setupModalDismiss(weightEditModal, closeWeightEditModal, "weight-edit-cancel");
+    editWeightButton.addEventListener("click", openWeightEditModal);
+    weightForm.addEventListener("submit", saveDailyWeight);
 
     calendarView = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
@@ -3037,6 +3781,8 @@
     initLoggedAtField("workout-logged-at");
     setupLoggedAtPicker("meal-logged-at");
     setupLoggedAtPicker("workout-logged-at");
+    setupLoggedAtPicker("meal-edit-logged-at");
+    setupLoggedAtPicker("workout-edit-logged-at");
 
     getAiInsightButton.addEventListener("click", () => {
       loadAiInsight().catch((error) => alert(error.message));

@@ -24,6 +24,7 @@ def test_capabilities_endpoint_lists_features(empty_client: TestClient) -> None:
     assert caps["meal_delete"] is True
     assert caps["workout_edit"] is True
     assert caps["workout_delete"] is True
+    assert caps["weight"] is True
 
 
 def test_summary_requires_auth(empty_client: TestClient) -> None:
@@ -50,6 +51,10 @@ def test_nutrition_summary_endpoint_returns_ok(client: TestClient) -> None:
     assert payload["total_protein"] >= 0
     assert payload["total_carbohydrates"] >= 0
     assert payload["total_fats"] >= 0
+    assert "daily_weight" in payload
+    assert "latest_weight" in payload
+    assert "weight_trend" in payload
+    assert len(payload["weight_trend"]) == 6
 
 
 def test_log_meal_with_explicit_macros(client: TestClient) -> None:
@@ -251,3 +256,81 @@ def test_steps_upsert_updates_existing_record(mock_estimate, client: TestClient)
     assert second.status_code == 200
     assert second.json()["daily_steps"]["steps_count"] == 8000
     assert mock_estimate.call_count == 2
+
+
+def test_weight_upsert_and_summary_trend(client: TestClient) -> None:
+    target_date = date.today().isoformat()
+    response = client.put(
+        f"/api/weight?date={target_date}",
+        headers=client.auth_headers,
+        json={"weight_kg": 74.5},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["daily_weight"]["weight_kg"] == 74.5
+    assert body["latest_weight"]["weight_kg"] == 74.5
+    assert len(body["weight_trend"]) == 6
+    assert body["weight_trend"][-1]["weight_kg"] == 74.5
+
+    summary = client.get(
+        f"/api/summary?date={target_date}",
+        headers=client.auth_headers,
+    )
+    assert summary.status_code == 200
+    payload = summary.json()
+    assert payload["daily_weight"]["weight_kg"] == 74.5
+    assert payload["latest_weight"]["weight_kg"] == 74.5
+    assert len(payload["weight_trend"]) == 6
+    assert payload["weight_trend"][-1]["date"] == target_date
+
+
+def test_latest_weight_carried_forward_to_later_day(client: TestClient) -> None:
+    from datetime import timedelta
+
+    logged_date = (date.today() - timedelta(days=2)).isoformat()
+    view_date = date.today().isoformat()
+
+    log_response = client.put(
+        f"/api/weight?date={logged_date}",
+        headers=client.auth_headers,
+        json={"weight_kg": 72.3},
+    )
+    assert log_response.status_code == 200
+
+    summary = client.get(
+        f"/api/summary?date={view_date}",
+        headers=client.auth_headers,
+    )
+    assert summary.status_code == 200
+    payload = summary.json()
+    assert payload["daily_weight"] is None
+    assert payload["latest_weight"]["weight_kg"] == 72.3
+    assert payload["latest_weight"]["logged_on_selected_date"] is False
+    assert payload["latest_weight"]["source"] == "daily"
+
+
+def test_latest_weight_uses_registration_baseline_without_daily_log(client: TestClient) -> None:
+    register_response = client.post(
+        "/api/auth/register",
+        json={
+            "username": "baselineuser",
+            "password": "secret123",
+            "name": "Baseline User",
+            "gender": "female",
+            "age": 28,
+            "weight_kg": 68.2,
+        },
+    )
+    assert register_response.status_code == 201
+    token = register_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    summary = client.get("/api/summary", headers=headers)
+    assert summary.status_code == 200
+    payload = summary.json()
+    assert payload["daily_weight"] is None
+    assert payload["latest_weight"]["weight_kg"] == 68.2
+    assert payload["latest_weight"]["source"] == "initial"
+    assert payload["latest_weight"]["logged_on_selected_date"] is False
+    assert payload["weight_trend"][-1]["weight_kg"] == 68.2

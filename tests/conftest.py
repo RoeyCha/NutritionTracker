@@ -68,6 +68,7 @@ def client(monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient, None, None]
         gender="male",
         age=30,
         weight_kg=75.0,
+        initial_weight_kg=75.0,
         bmr=1700.0,
     )
     db.add(user)

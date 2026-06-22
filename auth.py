@@ -75,6 +75,7 @@ def user_to_dict(user: User) -> dict:
         "gender": user.gender,
         "age": user.age,
         "weight_kg": user.weight_kg,
+        "initial_weight_kg": user.initial_weight_kg,
         "bmr": user.bmr,
         "bmr_explanation": user.bmr_explanation,
         "created_at": user.created_at.isoformat(),

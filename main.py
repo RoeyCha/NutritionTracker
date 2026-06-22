@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import time
-from datetime import date, datetime, time as dt_time
+from datetime import date, datetime, timedelta, time as dt_time
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -35,7 +35,7 @@ from auth import (
     user_to_dict,
     verify_password,
 )
-from models import DailySteps, Meal, SessionLocal, User, Workout, init_db
+from models import DailySteps, DailyWeight, Meal, SessionLocal, User, Workout, init_db
 from seed import seed_test_user
 from steps_calories import estimate_steps_calories
 
@@ -153,6 +153,10 @@ class StepsUpsert(BaseModel):
     steps_count: int = Field(..., ge=0, le=100000)
 
 
+class WeightUpsert(BaseModel):
+    weight_kg: float = Field(..., ge=1, le=500)
+
+
 def _get_user_meal(meal_id: int, user: User, db: Session) -> Meal:
     meal = db.query(Meal).filter(Meal.id == meal_id, Meal.user_id == user.id).first()
     if meal is None:
@@ -219,6 +223,88 @@ def _refresh_daily_steps_calories(db: Session, user: User, target_date: date) ->
     record.ai_explanation = estimate.explanation
     record.updated_at = datetime.utcnow()
     return record
+
+
+def _daily_weight_payload(record: DailyWeight | None) -> dict | None:
+    if record is None:
+        return None
+    return {
+        "weight_kg": record.weight_kg,
+        "updated_at": record.updated_at.isoformat(),
+    }
+
+
+def _user_baseline_weight(user: User) -> float | None:
+    if user.initial_weight_kg is not None:
+        return float(user.initial_weight_kg)
+    if user.weight_kg is not None:
+        return float(user.weight_kg)
+    return None
+
+
+def _latest_weight_as_of(
+    db: Session,
+    user_id: int,
+    as_of_date: date,
+    baseline_weight: float | None = None,
+) -> dict | None:
+    record = (
+        db.query(DailyWeight)
+        .filter(DailyWeight.user_id == user_id, DailyWeight.entry_date <= as_of_date)
+        .order_by(DailyWeight.entry_date.desc())
+        .first()
+    )
+    if record:
+        return {
+            "weight_kg": record.weight_kg,
+            "entry_date": record.entry_date.isoformat(),
+            "logged_on_selected_date": record.entry_date == as_of_date,
+            "source": "daily",
+        }
+    if baseline_weight is not None:
+        return {
+            "weight_kg": baseline_weight,
+            "entry_date": None,
+            "logged_on_selected_date": False,
+            "source": "initial",
+        }
+    return None
+
+
+def _weight_trend(
+    db: Session,
+    user_id: int,
+    end_date: date,
+    baseline_weight: float | None = None,
+    days: int = 5,
+) -> list[dict]:
+    start_date = end_date - timedelta(days=days)
+    records = (
+        db.query(DailyWeight)
+        .filter(DailyWeight.user_id == user_id, DailyWeight.entry_date <= end_date)
+        .order_by(DailyWeight.entry_date.asc())
+        .all()
+    )
+    weights_by_date = {record.entry_date: record.weight_kg for record in records}
+
+    latest = baseline_weight
+    for record in records:
+        if record.entry_date < start_date:
+            latest = record.weight_kg
+
+    trend = []
+    for offset in range(days + 1):
+        day = start_date + timedelta(days=offset)
+        if day in weights_by_date:
+            latest = weights_by_date[day]
+        trend.append(
+            {
+                "date": day.isoformat(),
+                "weight_kg": latest,
+                "logged_today": day in weights_by_date,
+            }
+        )
+    return trend
 
 
 def _daily_steps_payload(record: DailySteps | None) -> dict | None:
@@ -305,6 +391,7 @@ def get_capabilities():
             "workout_edit": True,
             "workout_delete": True,
             "steps": True,
+            "weight": True,
             "ai_insight": True,
         }
     }
@@ -336,6 +423,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         gender=payload.gender,
         age=payload.age,
         weight_kg=payload.weight_kg,
+        initial_weight_kg=payload.weight_kg,
     )
     db.add(user)
     try:
@@ -488,6 +576,11 @@ def get_daily_summary(
         .filter(DailySteps.user_id == current_user.id, DailySteps.entry_date == target_date)
         .first()
     )
+    weight_record = (
+        db.query(DailyWeight)
+        .filter(DailyWeight.user_id == current_user.id, DailyWeight.entry_date == target_date)
+        .first()
+    )
     steps_calories = float(steps_record.calories_burned) if steps_record else 0.0
     activity_calories_burned = float(calories_burned) + steps_calories
     bmr = float(current_user.bmr) if current_user.bmr is not None else None
@@ -511,6 +604,13 @@ def get_daily_summary(
         "calorie_balance": calorie_balance,
         "bmr_explanation": current_user.bmr_explanation,
         "daily_steps": _daily_steps_payload(steps_record),
+        "daily_weight": _daily_weight_payload(weight_record),
+        "latest_weight": _latest_weight_as_of(
+            db, current_user.id, target_date, _user_baseline_weight(current_user)
+        ),
+        "weight_trend": _weight_trend(
+            db, current_user.id, target_date, _user_baseline_weight(current_user)
+        ),
         "meals": [_meal_to_dict(meal) for meal in meals],
         "workouts": [
             {
@@ -546,7 +646,55 @@ def get_dates_with_data(
         if entry_date <= today:
             dates.add(entry_date)
 
+    for (entry_date,) in db.query(DailyWeight.entry_date).filter(DailyWeight.user_id == current_user.id).all():
+        if entry_date <= today:
+            dates.add(entry_date)
+
     return {"dates": sorted(d.isoformat() for d in dates)}
+
+
+@app.put("/api/weight")
+def upsert_daily_weight(
+    payload: WeightUpsert,
+    target_date: date = Query(alias="date"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    _ensure_not_future_date(target_date)
+
+    record = (
+        db.query(DailyWeight)
+        .filter(DailyWeight.user_id == current_user.id, DailyWeight.entry_date == target_date)
+        .first()
+    )
+
+    if record is None:
+        record = DailyWeight(
+            user_id=current_user.id,
+            entry_date=target_date,
+            weight_kg=payload.weight_kg,
+        )
+        db.add(record)
+    else:
+        record.weight_kg = payload.weight_kg
+        record.updated_at = datetime.utcnow()
+
+    if target_date == date.today():
+        current_user.weight_kg = payload.weight_kg
+        apply_bmr_to_user(current_user)
+
+    db.commit()
+    db.refresh(record)
+    return {
+        "date": target_date.isoformat(),
+        "daily_weight": _daily_weight_payload(record),
+        "latest_weight": _latest_weight_as_of(
+            db, current_user.id, target_date, _user_baseline_weight(current_user)
+        ),
+        "weight_trend": _weight_trend(
+            db, current_user.id, target_date, _user_baseline_weight(current_user)
+        ),
+    }
 
 
 @app.put("/api/steps")
