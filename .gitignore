@@ -1,8 +1,8 @@
-venv/
-__pycache__/
-*.py[cod]
-*.db
 .env
+__pycache__/
+*.db
+venv/
+*.py[cod]
 .venv/
 *.egg-info/
 .pytest_cache/

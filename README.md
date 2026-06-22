@@ -12,6 +12,37 @@ MVP web app for logging meals and workouts and viewing your daily calorie balanc
 - Log workouts (activity type + calories burned)
 - View daily summary: consumed vs. burned vs. net calories
 - Browse meals and workouts for any selected date
+- **English and Hebrew UI** with RTL layout for Hebrew
+- Full UTF-8 support for Hebrew meal and workout names
+- **User accounts** with login, registration, and profile management
+- Each user has isolated meals, workouts, and daily summaries
+- **AI calorie estimation** for meals and workouts (OpenAI, with local fallback)
+
+## AI calorie estimation
+
+When you add a meal or workout, calories are calculated automatically. A popup shows how many calories were consumed or burned.
+
+1. Copy `.env.example` to `.env`
+2. Add your OpenAI API key:
+
+```env
+OPENAI_API_KEY=your-openai-api-key-here
+```
+
+Without an API key, the app uses local fallback estimates so you can still test the flow.
+
+## Gemini daily insights
+
+The **Get AI Insight** button sends today's meals and workouts to Google Gemini and displays encouraging feedback plus a health tip.
+
+Add to `.env`:
+
+```env
+GEMINI_API_KEY=your-gemini-api-key-here
+GEMINI_MODEL=gemini-2.0-flash
+```
+
+Then restart the server. Insights respect the selected summary date and UI language (English/Hebrew).
 
 ## Project structure
 
@@ -19,6 +50,10 @@ MVP web app for logging meals and workouts and viewing your daily calorie balanc
 NutritionTracker/
 ├── main.py              # FastAPI app and API routes
 ├── models.py            # SQLAlchemy models (User, Meal, Workout)
+├── auth.py              # Password hashing and JWT authentication
+├── ai_calories.py       # AI/local calorie estimation
+├── gemini_insight.py    # Gemini daily feedback
+├── seed.py              # Test user and sample data seeding
 ├── requirements.txt     # Python dependencies
 ├── templates/
 │   └── index.html       # Frontend UI
@@ -80,35 +115,61 @@ uvicorn main:app --reload
 
 Stop the server with `Ctrl+C`.
 
+## Test account
+
+On first startup, the app creates a demo user with sample data:
+
+| Field | Value |
+|-------|-------|
+| Username | `test` |
+| Password | `1234` |
+
+Sample data includes meals and workouts for today and yesterday.
+
 ## API endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/` | Frontend page |
-| GET | `/api/summary?date=YYYY-MM-DD` | Daily calorie summary |
-| POST | `/api/meals` | Add a meal |
-| POST | `/api/workouts` | Add a workout |
+| POST | `/api/auth/register` | Create account |
+| POST | `/api/auth/login` | Sign in |
+| GET | `/api/auth/me` | Current user profile (auth required) |
+| PUT | `/api/profile` | Update profile (auth required) |
+| POST | `/api/ai-insight` | Gemini daily feedback and health tip (auth required) |
+| GET | `/api/summary?date=YYYY-MM-DD` | Daily calorie summary (auth required) |
+| POST | `/api/meals` | Add a meal (auth required) |
+| POST | `/api/workouts` | Add a workout (auth required) |
+
+Protected routes require a Bearer token from login/register:
+
+```powershell
+$login = Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/auth/login" -Method POST -ContentType "application/json" -Body '{"username":"test","password":"1234"}'
+$headers = @{ Authorization = "Bearer $($login.access_token)" }
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/summary" -Headers $headers
+```
 
 ### Example: add a meal
 
 ```powershell
-Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/meals" -Method POST -ContentType "application/json" -Body '{"food_name":"Oatmeal","calories":350}'
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/meals" -Method POST -Headers $headers -ContentType "application/json" -Body '{"food_name":"Oatmeal","calories":350}'
 ```
 
 ### Example: add a workout
 
 ```powershell
-Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/workouts" -Method POST -ContentType "application/json" -Body '{"activity_type":"Running","calories_burned":250}'
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/workouts" -Method POST -Headers $headers -ContentType "application/json" -Body '{"activity_type":"Running","calories_burned":250}'
 ```
 
 ## Reset local data
 
-Delete the SQLite file and restart the app:
+Delete the SQLite file and restart the app (stop the server first if it is running):
 
 ```powershell
 Remove-Item nutrition_tracker.db
 uvicorn main:app --reload
 ```
+
+The test user and sample data are recreated automatically on startup.
 
 ## Updating from GitHub
 

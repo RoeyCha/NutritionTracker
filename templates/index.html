@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,13 +16,11 @@
       --border: #d9e2ec;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: "Segoe UI", Tahoma, Arial, Helvetica, sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.5;
@@ -36,17 +34,48 @@
 
     header {
       margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
 
-    h1 {
-      margin: 0 0 0.25rem;
-      font-size: 2rem;
+    .header-text { flex: 1; min-width: 220px; }
+
+    h1 { margin: 0 0 0.25rem; font-size: 2rem; }
+    .subtitle { color: var(--muted); margin: 0; }
+
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
     }
 
-    .subtitle {
+    .lang-switch {
+      display: flex;
+      gap: 0.35rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.25rem;
+    }
+
+    .lang-switch button {
+      width: auto;
+      padding: 0.45rem 0.85rem;
+      background: transparent;
       color: var(--muted);
-      margin: 0;
+      font-size: 0.9rem;
+      border: none;
+      cursor: pointer;
+      border-radius: 999px;
+      font-weight: 600;
     }
+
+    .lang-switch button.active { background: var(--accent); color: white; }
+    .lang-switch button:not(.active):hover { background: #edf2f7; color: var(--text); }
 
     .grid {
       display: grid;
@@ -62,10 +91,8 @@
       box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
     }
 
-    .card h2 {
-      margin-top: 0;
-      font-size: 1.1rem;
-    }
+    .card h2, .card h3 { margin-top: 0; }
+    .card h2 { font-size: 1.1rem; }
 
     label {
       display: block;
@@ -74,19 +101,18 @@
       font-size: 0.9rem;
     }
 
-    input, button {
+    input, select, button.btn-primary, button.btn-secondary {
       width: 100%;
       padding: 0.65rem 0.75rem;
       border-radius: 8px;
       border: 1px solid var(--border);
       font-size: 1rem;
+      font-family: inherit;
     }
 
-    input {
-      margin-bottom: 0.85rem;
-    }
+    input, select { margin-bottom: 0.85rem; }
 
-    button {
+    button.btn-primary {
       background: var(--accent);
       color: white;
       border: none;
@@ -94,9 +120,16 @@
       font-weight: 600;
     }
 
-    button:hover {
-      background: var(--accent-dark);
+    button.btn-primary:hover { background: var(--accent-dark); }
+
+    button.btn-secondary {
+      background: white;
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 600;
     }
+
+    button.btn-secondary:hover { background: #edf2f7; }
 
     .summary-stats {
       display: grid;
@@ -112,30 +145,12 @@
       text-align: center;
     }
 
-    .stat-value {
-      display: block;
-      font-size: 1.5rem;
-      font-weight: 700;
-    }
+    .stat-value { display: block; font-size: 1.5rem; font-weight: 700; }
+    .stat-label { color: var(--muted); font-size: 0.85rem; }
+    .positive { color: var(--accent); }
+    .negative { color: var(--danger); }
 
-    .stat-label {
-      color: var(--muted);
-      font-size: 0.85rem;
-    }
-
-    .positive {
-      color: var(--accent);
-    }
-
-    .negative {
-      color: var(--danger);
-    }
-
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
+    ul { list-style: none; padding: 0; margin: 0; }
 
     li {
       padding: 0.65rem 0;
@@ -145,14 +160,8 @@
       gap: 1rem;
     }
 
-    li:last-child {
-      border-bottom: none;
-    }
-
-    .empty {
-      color: var(--muted);
-      font-style: italic;
-    }
+    li:last-child { border-bottom: none; }
+    .empty { color: var(--muted); font-style: italic; }
 
     .toolbar {
       display: flex;
@@ -162,10 +171,8 @@
       flex-wrap: wrap;
     }
 
-    .toolbar input[type="date"] {
-      width: auto;
-      margin: 0;
-    }
+    .toolbar input[type="date"] { width: auto; margin: 0; }
+    .toolbar button { width: auto; }
 
     .message {
       margin-top: 0.75rem;
@@ -174,97 +181,713 @@
       min-height: 1.2rem;
     }
 
-    .message.error {
-      color: var(--danger);
+    .message.error { color: var(--danger); }
+
+    .hidden { display: none !important; }
+
+    .auth-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .auth-tabs button {
+      flex: 1;
+      width: auto;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid var(--border);
+      background: #edf2f7;
+      color: var(--text);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .auth-tabs button.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .profile-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .profile-meta {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .profile-meta strong { color: var(--text); }
+
+    .profile-details {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
+    }
+
+    .profile-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .profile-actions button { width: auto; min-width: 110px; }
+
+    [dir="rtl"] .list-item-name { text-align: right; }
+    [dir="rtl"] .list-item-value { text-align: left; white-space: nowrap; }
+
+    .ai-hint {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin: -0.35rem 0 0.85rem;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 1000;
+    }
+
+    .modal-card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 1.5rem;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 12px 40px rgba(15, 23, 42, 0.18);
+      text-align: center;
+    }
+
+    .modal-card h3 {
+      margin: 0 0 0.75rem;
+      font-size: 1.2rem;
+    }
+
+    .modal-calories {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin: 0.5rem 0;
+    }
+
+    .modal-item-name {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-note {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin: 0.75rem 0 1rem;
+    }
+
+    button:disabled {
+      opacity: 0.7;
+      cursor: wait;
+    }
+
+    .insight-card {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .insight-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    .insight-header h3 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .insight-header button {
+      width: auto;
+      min-width: 140px;
+    }
+
+    .insight-body {
+      background: #edf2f7;
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: start;
+    }
+
+    .insight-body.empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .insight-feedback {
+      margin: 0 0 0.75rem;
+    }
+
+    .insight-tip-label {
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin: 0 0 0.35rem;
+    }
+
+    .insight-tip {
+      margin: 0;
+      color: var(--text);
     }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <h1>Nutrition Tracker</h1>
-      <p class="subtitle">Log meals and workouts, then review your daily calorie balance.</p>
+      <div class="header-text">
+        <h1 data-i18n="appTitle">Nutrition Tracker</h1>
+        <p class="subtitle" data-i18n="appSubtitle">Log meals and workouts, then review your daily calorie balance.</p>
+      </div>
+      <div class="header-actions">
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" class="lang-btn" data-lang="en" id="lang-en">English</button>
+          <button type="button" class="lang-btn" data-lang="he" id="lang-he">עברית</button>
+        </div>
+      </div>
     </header>
 
-    <div class="toolbar card">
-      <label for="summary-date">Summary date</label>
-      <input type="date" id="summary-date">
-      <button type="button" id="refresh-summary">Refresh summary</button>
-    </div>
+    <section id="auth-section" class="card" style="max-width: 480px; margin: 0 auto 1rem;">
+      <h2 data-i18n="welcomeTitle">Welcome</h2>
+      <p class="subtitle" data-i18n="welcomeSubtitle">Sign in or create an account to manage your nutrition data.</p>
 
-    <section class="card" style="margin-bottom: 1rem;">
-      <h2>Daily Summary</h2>
-      <div class="summary-stats">
-        <div class="stat">
-          <span class="stat-value" id="calories-consumed">0</span>
-          <span class="stat-label">Calories consumed</span>
-        </div>
-        <div class="stat">
-          <span class="stat-value" id="calories-burned">0</span>
-          <span class="stat-label">Calories burned</span>
-        </div>
-        <div class="stat">
-          <span class="stat-value" id="net-calories">0</span>
-          <span class="stat-label">Net calories</span>
-        </div>
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" data-tab="login" data-i18n="loginTab">Login</button>
+        <button type="button" class="auth-tab" data-tab="register" data-i18n="registerTab">Register</button>
       </div>
 
-      <div class="grid">
-        <div>
-          <h3>Meals today</h3>
-          <ul id="meals-list"></ul>
-        </div>
-        <div>
-          <h3>Workouts today</h3>
-          <ul id="workouts-list"></ul>
-        </div>
-      </div>
+      <form id="login-form">
+        <label for="login-username" data-i18n="username">Username</label>
+        <input id="login-username" name="username" type="text" autocomplete="username" required>
+
+        <label for="login-password" data-i18n="password">Password</label>
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+
+        <button type="submit" class="btn-primary" data-i18n="loginBtn">Login</button>
+      </form>
+
+      <form id="register-form" class="hidden">
+        <label for="register-username" data-i18n="username">Username</label>
+        <input id="register-username" name="username" type="text" autocomplete="username" required>
+
+        <label for="register-name" data-i18n="displayName">Display name</label>
+        <input id="register-name" name="name" type="text" autocomplete="name" required>
+
+        <label for="register-email" data-i18n="emailOptional">Email (optional)</label>
+        <input id="register-email" name="email" type="email" autocomplete="email">
+
+        <label for="register-gender" data-i18n="gender">Gender</label>
+        <select id="register-gender" name="gender">
+          <option value="" data-i18n-option="genderUnset">Prefer not to say</option>
+          <option value="male" data-i18n-option="genderMale">Male</option>
+          <option value="female" data-i18n-option="genderFemale">Female</option>
+          <option value="other" data-i18n-option="genderOther">Other</option>
+        </select>
+
+        <label for="register-age" data-i18n="age">Age</label>
+        <input id="register-age" name="age" type="number" min="1" max="120" step="1">
+
+        <label for="register-weight" data-i18n="weightKg">Weight (kg)</label>
+        <input id="register-weight" name="weight_kg" type="number" min="1" max="500" step="0.1">
+
+        <label for="register-password" data-i18n="password">Password</label>
+        <input id="register-password" name="password" type="password" autocomplete="new-password" required>
+
+        <button type="submit" class="btn-primary" data-i18n="registerBtn">Create account</button>
+      </form>
+
+      <p class="message" id="auth-message"></p>
+      <p class="subtitle" style="margin-top: 1rem;" data-i18n="testUserHint">Test account: username <strong>test</strong>, password <strong>1234</strong></p>
     </section>
 
-    <div class="grid">
-      <section class="card">
-        <h2>Add Meal</h2>
-        <form id="meal-form">
-          <label for="meal-food">Food name</label>
-          <input id="meal-food" name="food_name" type="text" placeholder="e.g. Grilled chicken salad" required>
-
-          <label for="meal-calories">Calories</label>
-          <input id="meal-calories" name="calories" type="number" min="1" step="1" placeholder="450" required>
-
-          <label for="meal-time">Date &amp; time</label>
-          <input id="meal-time" name="logged_at" type="datetime-local">
-
-          <button type="submit">Add meal</button>
-        </form>
-        <p class="message" id="meal-message"></p>
+    <div id="app-section" class="hidden">
+      <section class="card profile-bar">
+        <div class="profile-meta">
+          <span data-i18n="signedInAs">Signed in as</span>
+          <strong id="profile-display-name">-</strong>
+          (<span id="profile-username">-</span>)
+          <div id="profile-details" class="profile-details"></div>
+        </div>
+        <div class="profile-actions">
+          <button type="button" class="btn-secondary" id="edit-profile-btn" data-i18n="editProfile">Edit profile</button>
+          <button type="button" class="btn-secondary" id="logout-btn" data-i18n="logout">Logout</button>
+        </div>
       </section>
 
-      <section class="card">
-        <h2>Add Workout</h2>
-        <form id="workout-form">
-          <label for="workout-activity">Activity type</label>
-          <input id="workout-activity" name="activity_type" type="text" placeholder="e.g. Running" required>
+      <section id="profile-edit-section" class="card hidden" style="margin-bottom: 1rem;">
+        <h2 data-i18n="editProfile">Edit profile</h2>
+        <form id="profile-form">
+          <label for="profile-name" data-i18n="displayName">Display name</label>
+          <input id="profile-name" name="name" type="text" required>
 
-          <label for="workout-calories">Calories burned</label>
-          <input id="workout-calories" name="calories_burned" type="number" min="1" step="1" placeholder="300" required>
+          <label for="profile-email" data-i18n="emailOptional">Email (optional)</label>
+          <input id="profile-email" name="email" type="email">
 
-          <label for="workout-time">Date &amp; time</label>
-          <input id="workout-time" name="logged_at" type="datetime-local">
+          <label for="profile-gender" data-i18n="gender">Gender</label>
+          <select id="profile-gender" name="gender">
+            <option value="" data-i18n-option="genderUnset">Prefer not to say</option>
+            <option value="male" data-i18n-option="genderMale">Male</option>
+            <option value="female" data-i18n-option="genderFemale">Female</option>
+            <option value="other" data-i18n-option="genderOther">Other</option>
+          </select>
 
-          <button type="submit">Add workout</button>
+          <label for="profile-age" data-i18n="age">Age</label>
+          <input id="profile-age" name="age" type="number" min="1" max="120" step="1">
+
+          <label for="profile-weight" data-i18n="weightKg">Weight (kg)</label>
+          <input id="profile-weight" name="weight_kg" type="number" min="1" max="500" step="0.1">
+
+          <button type="submit" class="btn-primary" data-i18n="saveProfile">Save profile</button>
         </form>
-        <p class="message" id="workout-message"></p>
+        <p class="message" id="profile-message"></p>
       </section>
+
+      <div class="toolbar card">
+        <label for="summary-date" data-i18n="summaryDate">Summary date</label>
+        <input type="date" id="summary-date">
+        <button type="button" class="btn-primary" id="refresh-summary" data-i18n="refreshSummary">Refresh summary</button>
+      </div>
+
+      <section class="card" style="margin-bottom: 1rem;">
+        <h2 data-i18n="dailySummary">Daily Summary</h2>
+        <div class="summary-stats">
+          <div class="stat">
+            <span class="stat-value" id="calories-consumed">0</span>
+            <span class="stat-label" data-i18n="caloriesConsumed">Calories consumed</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="calories-burned">0</span>
+            <span class="stat-label" data-i18n="caloriesBurned">Calories burned</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="net-calories">0</span>
+            <span class="stat-label" data-i18n="netCalories">Net calories</span>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div>
+            <h3 data-i18n="mealsToday">Meals today</h3>
+            <ul id="meals-list"></ul>
+          </div>
+          <div>
+            <h3 data-i18n="workoutsToday">Workouts today</h3>
+            <ul id="workouts-list"></ul>
+          </div>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-header">
+            <h3 data-i18n="aiInsightTitle">AI Daily Insight</h3>
+            <button type="button" class="btn-primary" id="get-ai-insight" data-i18n="getAiInsight">Get AI Insight</button>
+          </div>
+          <div class="insight-body empty" id="ai-insight-body">
+            <p data-i18n="aiInsightEmpty">Tap the button to get personalized feedback for this day.</p>
+          </div>
+          <p class="message" id="ai-insight-message"></p>
+        </div>
+      </section>
+
+      <div class="grid">
+        <section class="card">
+          <h2 data-i18n="addMeal">Add Meal</h2>
+          <form id="meal-form">
+            <label for="meal-food" data-i18n="foodName">Food name</label>
+            <input id="meal-food" name="food_name" type="text" data-i18n-placeholder="foodPlaceholder" required>
+            <p class="ai-hint" data-i18n="aiMealHint">Calories will be estimated automatically by AI.</p>
+
+            <label for="meal-time" data-i18n="dateTime">Date &amp; time</label>
+            <input id="meal-time" name="logged_at" type="datetime-local">
+
+            <button type="submit" class="btn-primary" id="meal-submit" data-i18n="addMealBtn">Add meal</button>
+          </form>
+          <p class="message" id="meal-message"></p>
+        </section>
+
+        <section class="card">
+          <h2 data-i18n="addWorkout">Add Workout</h2>
+          <form id="workout-form">
+            <label for="workout-activity" data-i18n="activityType">Activity type</label>
+            <input id="workout-activity" name="activity_type" type="text" data-i18n-placeholder="activityPlaceholder" required>
+            <p class="ai-hint" data-i18n="aiWorkoutHint">Calories burned will be estimated automatically by AI.</p>
+
+            <label for="workout-time" data-i18n="dateTime">Date &amp; time</label>
+            <input id="workout-time" name="logged_at" type="datetime-local">
+
+            <button type="submit" class="btn-primary" id="workout-submit" data-i18n="addWorkoutBtn">Add workout</button>
+          </form>
+          <p class="message" id="workout-message"></p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="calorie-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="calorie-modal-title">
+    <div class="modal-card">
+      <h3 id="calorie-modal-title" data-i18n="caloriePopupTitle">Calories calculated</h3>
+      <p class="modal-item-name" id="calorie-modal-item"></p>
+      <p class="modal-calories" id="calorie-modal-value"></p>
+      <p class="modal-note" id="calorie-modal-note"></p>
+      <button type="button" class="btn-primary" id="calorie-modal-close" data-i18n="caloriePopupOk">OK</button>
     </div>
   </div>
 
   <script>
+    const TRANSLATIONS = {
+      en: {
+        appTitle: "Nutrition Tracker",
+        appSubtitle: "Log meals and workouts, then review your daily calorie balance.",
+        welcomeTitle: "Welcome",
+        welcomeSubtitle: "Sign in or create an account to manage your nutrition data.",
+        loginTab: "Login",
+        registerTab: "Register",
+        username: "Username",
+        password: "Password",
+        displayName: "Display name",
+        emailOptional: "Email (optional)",
+        gender: "Gender",
+        genderUnset: "Prefer not to say",
+        genderMale: "Male",
+        genderFemale: "Female",
+        genderOther: "Other",
+        age: "Age",
+        weightKg: "Weight (kg)",
+        yearsOld: "yrs",
+        kgUnit: "kg",
+        profileIncomplete: "Profile details not set yet",
+        loginBtn: "Login",
+        registerBtn: "Create account",
+        testUserHint: "Test account: username test, password 1234",
+        signedInAs: "Signed in as",
+        editProfile: "Edit profile",
+        logout: "Logout",
+        saveProfile: "Save profile",
+        summaryDate: "Summary date",
+        refreshSummary: "Refresh summary",
+        dailySummary: "Daily Summary",
+        caloriesConsumed: "Calories consumed",
+        caloriesBurned: "Calories burned",
+        netCalories: "Net calories",
+        mealsToday: "Meals today",
+        workoutsToday: "Workouts today",
+        addMeal: "Add Meal",
+        foodName: "Food name",
+        foodPlaceholder: "e.g. Grilled chicken salad",
+        calories: "Calories",
+        dateTime: "Date & time",
+        addMealBtn: "Add meal",
+        addWorkout: "Add Workout",
+        activityType: "Activity type",
+        activityPlaceholder: "e.g. Running",
+        caloriesBurnedField: "Calories burned",
+        addWorkoutBtn: "Add workout",
+        noMeals: "No meals logged for this day.",
+        noWorkouts: "No workouts logged for this day.",
+        savedSuccess: "Saved successfully.",
+        profileSaved: "Profile updated.",
+        loginSuccess: "Logged in successfully.",
+        registerSuccess: "Account created.",
+        loadSummaryError: "Could not load daily summary.",
+        requestFailed: "Request failed.",
+        authRequired: "Please sign in to continue.",
+        calUnit: "cal",
+        langGroupLabel: "Language",
+        aiMealHint: "Calories will be estimated automatically by AI.",
+        aiWorkoutHint: "Calories burned will be estimated automatically by AI.",
+        aiCalculating: "Calculating calories...",
+        caloriePopupTitle: "Calories calculated",
+        caloriePopupOk: "OK",
+        mealCaloriePopup: "consumed",
+        workoutCaloriePopup: "burned",
+        aiPoweredNote: "Estimated by AI based on your entry and profile.",
+        localEstimateNote: "Estimated locally. Add OPENAI_API_KEY for AI estimates.",
+        aiInsightTitle: "AI Daily Insight",
+        getAiInsight: "Get AI Insight",
+        aiInsightEmpty: "Tap the button to get personalized feedback for this day.",
+        aiInsightLoading: "Generating insight...",
+        aiInsightTipLabel: "Health tip",
+        aiInsightError: "Could not load AI insight.",
+      },
+      he: {
+        appTitle: "מעקב תזונה",
+        appSubtitle: "רשום ארוחות ואימונים, וצפה במאזן הקלורי היומי שלך.",
+        welcomeTitle: "ברוכים הבאים",
+        welcomeSubtitle: "התחבר או צור חשבון כדי לנהל את נתוני התזונה שלך.",
+        loginTab: "התחברות",
+        registerTab: "הרשמה",
+        username: "שם משתמש",
+        password: "סיסמה",
+        displayName: "שם תצוגה",
+        emailOptional: "אימייל (אופציונלי)",
+        gender: "מגדר",
+        genderUnset: "לא מעוניין/ת לציין",
+        genderMale: "זכר",
+        genderFemale: "נקבה",
+        genderOther: "אחר",
+        age: "גיל",
+        weightKg: "משקל (ק\"ג)",
+        yearsOld: "שנים",
+        kgUnit: "ק\"ג",
+        profileIncomplete: "פרטי פרופיל טרם הוזנו",
+        loginBtn: "התחבר",
+        registerBtn: "צור חשבון",
+        testUserHint: "חשבון בדיקה: שם משתמש test, סיסמה 1234",
+        signedInAs: "מחובר בתור",
+        editProfile: "עריכת פרופיל",
+        logout: "התנתק",
+        saveProfile: "שמור פרופיל",
+        summaryDate: "תאריך סיכום",
+        refreshSummary: "רענן סיכום",
+        dailySummary: "סיכום יומי",
+        caloriesConsumed: "קלוריות שנצרכו",
+        caloriesBurned: "קלוריות שנשרפו",
+        netCalories: "קלוריות נטו",
+        mealsToday: "ארוחות היום",
+        workoutsToday: "אימונים היום",
+        addMeal: "הוספת ארוחה",
+        foodName: "שם המאכל",
+        foodPlaceholder: "לדוגמה: סלט עוף על האש",
+        calories: "קלוריות",
+        dateTime: "תאריך ושעה",
+        addMealBtn: "הוסף ארוחה",
+        addWorkout: "הוספת אימון",
+        activityType: "סוג פעילות",
+        activityPlaceholder: "לדוגמה: ריצה",
+        caloriesBurnedField: "קלוריות שנשרפו",
+        addWorkoutBtn: "הוסף אימון",
+        noMeals: "לא נרשמו ארוחות ליום זה.",
+        noWorkouts: "לא נרשמו אימונים ליום זה.",
+        savedSuccess: "נשמר בהצלחה.",
+        profileSaved: "הפרופיל עודכן.",
+        loginSuccess: "התחברת בהצלחה.",
+        registerSuccess: "החשבון נוצר.",
+        loadSummaryError: "לא ניתן לטעון את הסיכום היומי.",
+        requestFailed: "הבקשה נכשלה.",
+        authRequired: "יש להתחבר כדי להמשיך.",
+        calUnit: "קל'",
+        langGroupLabel: "שפה",
+        aiMealHint: "הקלוריות יחושבו אוטומטית על ידי AI.",
+        aiWorkoutHint: "קלוריות שנשרפו יחושבו אוטומטית על ידי AI.",
+        aiCalculating: "מחשב קלוריות...",
+        caloriePopupTitle: "קלוריות חושבו",
+        caloriePopupOk: "אישור",
+        mealCaloriePopup: "נצרכו",
+        workoutCaloriePopup: "נשרפו",
+        aiPoweredNote: "הערכה של AI על בסיס הפריט והפרופיל שלך.",
+        localEstimateNote: "הערכה מקומית. הוסף OPENAI_API_KEY להערכת AI.",
+        aiInsightTitle: "תובנת AI יומית",
+        getAiInsight: "קבל תובנת AI",
+        aiInsightEmpty: "לחץ על הכפתור לקבלת משוב מותאם אישית ליום זה.",
+        aiInsightLoading: "מייצר תובנה...",
+        aiInsightTipLabel: "טיפ לבריאות",
+        aiInsightError: "לא ניתן לטעון תובנת AI.",
+      },
+    };
+
+    const LANG_STORAGE_KEY = "nutrition-tracker-lang";
+    const TOKEN_STORAGE_KEY = "nutrition-tracker-token";
+    let currentLang = localStorage.getItem(LANG_STORAGE_KEY) || "en";
+    let authToken = localStorage.getItem(TOKEN_STORAGE_KEY) || "";
+    let currentUser = null;
+
+    const authSection = document.getElementById("auth-section");
+    const appSection = document.getElementById("app-section");
+    const authMessage = document.getElementById("auth-message");
+    const loginForm = document.getElementById("login-form");
+    const registerForm = document.getElementById("register-form");
+    const profileForm = document.getElementById("profile-form");
+    const profileEditSection = document.getElementById("profile-edit-section");
+    const profileMessage = document.getElementById("profile-message");
     const summaryDateInput = document.getElementById("summary-date");
     const refreshButton = document.getElementById("refresh-summary");
     const mealForm = document.getElementById("meal-form");
     const workoutForm = document.getElementById("workout-form");
     const mealMessage = document.getElementById("meal-message");
     const workoutMessage = document.getElementById("workout-message");
+    const mealSubmitButton = document.getElementById("meal-submit");
+    const workoutSubmitButton = document.getElementById("workout-submit");
+    const calorieModal = document.getElementById("calorie-modal");
+    const calorieModalItem = document.getElementById("calorie-modal-item");
+    const calorieModalValue = document.getElementById("calorie-modal-value");
+    const calorieModalNote = document.getElementById("calorie-modal-note");
+    const calorieModalClose = document.getElementById("calorie-modal-close");
+    const getAiInsightButton = document.getElementById("get-ai-insight");
+    const aiInsightBody = document.getElementById("ai-insight-body");
+    const aiInsightMessage = document.getElementById("ai-insight-message");
+    const langButtons = document.querySelectorAll(".lang-btn");
+    const authTabs = document.querySelectorAll(".auth-tab");
+
+    function t(key) {
+      return TRANSLATIONS[currentLang][key] || TRANSLATIONS.en[key] || key;
+    }
+
+    function localeTag() {
+      return currentLang === "he" ? "he-IL" : "en-US";
+    }
+
+    function applyLanguage(lang) {
+      currentLang = lang === "he" ? "he" : "en";
+      localStorage.setItem(LANG_STORAGE_KEY, currentLang);
+
+      document.documentElement.lang = currentLang;
+      document.documentElement.dir = currentLang === "he" ? "rtl" : "ltr";
+      document.title = t("appTitle");
+
+      document.querySelectorAll("[data-i18n]").forEach((el) => {
+        el.textContent = t(el.dataset.i18n);
+      });
+
+      document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+        el.placeholder = t(el.dataset.i18nPlaceholder);
+      });
+
+      document.querySelectorAll("[data-i18n-option]").forEach((el) => {
+        el.textContent = t(el.dataset.i18nOption);
+      });
+
+      document.querySelector(".lang-switch").setAttribute("aria-label", t("langGroupLabel"));
+
+      langButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.lang === currentLang);
+      });
+
+      if (currentUser) {
+        document.getElementById("profile-details").textContent = formatProfileDetails(currentUser);
+      }
+
+      resetAiInsightDisplay();
+    }
+
+    function formatGender(value) {
+      const key = {
+        male: "genderMale",
+        female: "genderFemale",
+        other: "genderOther",
+      }[value];
+      return key ? t(key) : value;
+    }
+
+    function formatProfileDetails(user) {
+      const parts = [];
+      if (user.age != null) {
+        parts.push(`${user.age} ${t("yearsOld")}`);
+      }
+      if (user.weight_kg != null) {
+        parts.push(`${user.weight_kg} ${t("kgUnit")}`);
+      }
+      if (user.gender) {
+        parts.push(formatGender(user.gender));
+      }
+      return parts.length ? parts.join(" · ") : t("profileIncomplete");
+    }
+
+    function fillProfileForm(user) {
+      document.getElementById("profile-name").value = user.name;
+      document.getElementById("profile-email").value = user.email || "";
+      document.getElementById("profile-gender").value = user.gender || "";
+      document.getElementById("profile-age").value = user.age ?? "";
+      document.getElementById("profile-weight").value = user.weight_kg ?? "";
+    }
+
+    function buildProfilePayload(formData) {
+      const age = formData.get("age");
+      const weight = formData.get("weight_kg");
+      return {
+        name: formData.get("name"),
+        email: formData.get("email") || null,
+        gender: formData.get("gender") || null,
+        age: age ? Number(age) : null,
+        weight_kg: weight ? Number(weight) : null,
+      };
+    }
+
+    function setAuthToken(token) {
+      authToken = token || "";
+      if (authToken) {
+        localStorage.setItem(TOKEN_STORAGE_KEY, authToken);
+      } else {
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
+      }
+    }
+
+    function showAuthView() {
+      authSection.classList.remove("hidden");
+      appSection.classList.add("hidden");
+      profileEditSection.classList.add("hidden");
+      currentUser = null;
+    }
+
+    function showAppView(user) {
+      currentUser = user;
+      document.getElementById("profile-display-name").textContent = user.name;
+      document.getElementById("profile-username").textContent = user.username;
+      document.getElementById("profile-details").textContent = formatProfileDetails(user);
+      fillProfileForm(user);
+
+      authSection.classList.add("hidden");
+      appSection.classList.remove("hidden");
+    }
+
+    async function apiFetch(url, options = {}) {
+      const headers = {
+        Accept: "application/json",
+        ...(options.headers || {}),
+      };
+
+      if (authToken) {
+        headers.Authorization = `Bearer ${authToken}`;
+      }
+
+      if (options.body && !headers["Content-Type"]) {
+        headers["Content-Type"] = "application/json; charset=utf-8";
+      }
+
+      const response = await fetch(url, { ...options, headers });
+
+      if (response.status === 401) {
+        setAuthToken("");
+        showAuthView();
+        throw new Error(t("authRequired"));
+      }
+
+      return response;
+    }
+
+    async function loadCurrentUser() {
+      if (!authToken) {
+        showAuthView();
+        return;
+      }
+
+      const response = await apiFetch("/api/auth/me");
+      if (!response.ok) {
+        setAuthToken("");
+        showAuthView();
+        return;
+      }
+
+      const user = await response.json();
+      showAppView(user);
+      await loadSummary();
+    }
 
     function todayIsoDate() {
       const now = new Date();
@@ -281,14 +904,10 @@
     }
 
     function formatNumber(value) {
-      return Number(value).toLocaleString(undefined, { maximumFractionDigits: 0 });
+      return Number(value).toLocaleString(localeTag(), { maximumFractionDigits: 0 });
     }
 
-    function formatTime(isoString) {
-      return new Date(isoString).toLocaleString();
-    }
-
-    function renderList(containerId, items, emptyText, formatter) {
+    function renderList(containerId, items, emptyText, nameKey, valueKey) {
       const list = document.getElementById(containerId);
       list.innerHTML = "";
 
@@ -302,17 +921,27 @@
 
       items.forEach((item) => {
         const li = document.createElement("li");
-        li.innerHTML = formatter(item);
+
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "list-item-name";
+        nameSpan.textContent = item[nameKey];
+
+        const valueSpan = document.createElement("span");
+        valueSpan.className = "list-item-value";
+        valueSpan.textContent = `${formatNumber(item[valueKey])} ${t("calUnit")}`;
+
+        li.appendChild(nameSpan);
+        li.appendChild(valueSpan);
         list.appendChild(li);
       });
     }
 
     async function loadSummary() {
       const selectedDate = summaryDateInput.value || todayIsoDate();
-      const response = await fetch(`/api/summary?date=${selectedDate}`);
+      const response = await apiFetch(`/api/summary?date=${selectedDate}`);
 
       if (!response.ok) {
-        throw new Error("Could not load daily summary.");
+        throw new Error(t("loadSummaryError"));
       }
 
       const data = await response.json();
@@ -325,23 +954,97 @@
       netEl.classList.remove("positive", "negative");
       netEl.classList.add(data.net_calories >= 0 ? "positive" : "negative");
 
-      renderList(
-        "meals-list",
-        data.meals,
-        "No meals logged for this day.",
-        (meal) => `<span>${meal.food_name}</span><span>${formatNumber(meal.calories)} cal</span>`
-      );
-
-      renderList(
-        "workouts-list",
-        data.workouts,
-        "No workouts logged for this day.",
-        (workout) =>
-          `<span>${workout.activity_type}</span><span>${formatNumber(workout.calories_burned)} cal</span>`
-      );
+      renderList("meals-list", data.meals, t("noMeals"), "food_name", "calories");
+      renderList("workouts-list", data.workouts, t("noWorkouts"), "activity_type", "calories_burned");
     }
 
-    async function submitEntry(form, endpoint, messageEl) {
+    function resetAiInsightDisplay() {
+      aiInsightBody.className = "insight-body empty";
+      aiInsightBody.innerHTML = `<p data-i18n="aiInsightEmpty">${t("aiInsightEmpty")}</p>`;
+      aiInsightMessage.textContent = "";
+      aiInsightMessage.classList.remove("error");
+    }
+
+    function renderAiInsight(data) {
+      aiInsightBody.className = "insight-body";
+      aiInsightBody.innerHTML = "";
+
+      const feedback = document.createElement("p");
+      feedback.className = "insight-feedback";
+      feedback.textContent = data.feedback;
+
+      const tipLabel = document.createElement("p");
+      tipLabel.className = "insight-tip-label";
+      tipLabel.textContent = t("aiInsightTipLabel");
+
+      const tip = document.createElement("p");
+      tip.className = "insight-tip";
+      tip.textContent = data.health_tip;
+
+      aiInsightBody.appendChild(feedback);
+      aiInsightBody.appendChild(tipLabel);
+      aiInsightBody.appendChild(tip);
+    }
+
+    async function loadAiInsight() {
+      aiInsightMessage.textContent = "";
+      aiInsightMessage.classList.remove("error");
+      getAiInsightButton.disabled = true;
+      getAiInsightButton.textContent = t("aiInsightLoading");
+
+      const selectedDate = summaryDateInput.value || todayIsoDate();
+
+      try {
+        const response = await apiFetch("/api/ai-insight", {
+          method: "POST",
+          body: JSON.stringify({
+            date: selectedDate,
+            language: currentLang,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          const detail = error.detail || t("aiInsightError");
+          throw new Error(Array.isArray(detail) ? detail.map((item) => item.msg).join(", ") : detail);
+        }
+
+        const data = await response.json();
+        renderAiInsight(data);
+      } catch (error) {
+        aiInsightMessage.textContent = error.message;
+        aiInsightMessage.classList.add("error");
+      } finally {
+        getAiInsightButton.disabled = false;
+        getAiInsightButton.textContent = t("getAiInsight");
+      }
+    }
+
+    function showCalorieModal(data, entryType) {
+      const isMeal = entryType === "meal";
+      const itemName = isMeal ? data.food_name : data.activity_type;
+      const calories = isMeal ? data.calories : data.calories_burned;
+      const actionLabel = isMeal ? t("mealCaloriePopup") : t("workoutCaloriePopup");
+
+      calorieModalItem.textContent = itemName;
+      calorieModalValue.textContent = `${formatNumber(calories)} ${t("calUnit")} ${actionLabel}`;
+      calorieModalNote.textContent = data.ai_estimated ? t("aiPoweredNote") : t("localEstimateNote");
+      if (data.ai_explanation) {
+        calorieModalNote.textContent += ` ${data.ai_explanation}`;
+      }
+      calorieModal.classList.remove("hidden");
+    }
+
+    function hideCalorieModal() {
+      calorieModal.classList.add("hidden");
+    }
+
+    function setSubmitLoading(button, isLoading, defaultLabelKey) {
+      button.disabled = isLoading;
+      button.textContent = isLoading ? t("aiCalculating") : t(defaultLabelKey);
+    }
+
+    async function submitEntry(form, endpoint, messageEl, submitButton, entryType, defaultLabelKey) {
       messageEl.textContent = "";
       messageEl.classList.remove("error");
 
@@ -349,10 +1052,6 @@
       const payload = {
         food_name: formData.get("food_name"),
         activity_type: formData.get("activity_type"),
-        calories: formData.get("calories") ? Number(formData.get("calories")) : undefined,
-        calories_burned: formData.get("calories_burned")
-          ? Number(formData.get("calories_burned"))
-          : undefined,
       };
 
       const loggedAt = formData.get("logged_at");
@@ -364,53 +1063,188 @@
         Object.entries(payload).filter(([, value]) => value !== undefined && value !== null && value !== "")
       );
 
+      setSubmitLoading(submitButton, true, defaultLabelKey);
+
       try {
-        const response = await fetch(endpoint, {
+        const response = await apiFetch(endpoint, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(cleanedPayload),
         });
 
         if (!response.ok) {
           const error = await response.json().catch(() => ({}));
-          const detail = error.detail || "Request failed.";
+          const detail = error.detail || t("requestFailed");
           throw new Error(Array.isArray(detail) ? detail.map((item) => item.msg).join(", ") : detail);
         }
 
+        const data = await response.json();
         form.reset();
         document.getElementById("meal-time").value = nowForDatetimeLocal();
         document.getElementById("workout-time").value = nowForDatetimeLocal();
-        messageEl.textContent = "Saved successfully.";
+        messageEl.textContent = t("savedSuccess");
+        showCalorieModal(data, entryType);
         await loadSummary();
       } catch (error) {
         messageEl.textContent = error.message;
         messageEl.classList.add("error");
+      } finally {
+        setSubmitLoading(submitButton, false, defaultLabelKey);
       }
     }
+
+    async function handleAuthSubmit(form, endpoint, successMessage) {
+      authMessage.textContent = "";
+      authMessage.classList.remove("error");
+
+      const formData = new FormData(form);
+      let payload;
+
+      if (form.id === "register-form") {
+        payload = {
+          ...buildProfilePayload(formData),
+          username: formData.get("username"),
+          password: formData.get("password"),
+        };
+      } else {
+        payload = {
+          username: formData.get("username"),
+          password: formData.get("password"),
+        };
+      }
+
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json; charset=utf-8",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const detail = data.detail || t("requestFailed");
+          throw new Error(Array.isArray(detail) ? detail.map((item) => item.msg).join(", ") : detail);
+        }
+
+        setAuthToken(data.access_token);
+        authMessage.textContent = successMessage;
+        showAppView(data.user);
+        await loadSummary();
+      } catch (error) {
+        authMessage.textContent = error.message;
+        authMessage.classList.add("error");
+      }
+    }
+
+    authTabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        authTabs.forEach((button) => button.classList.toggle("active", button === tab));
+        const isLogin = tab.dataset.tab === "login";
+        loginForm.classList.toggle("hidden", !isLogin);
+        registerForm.classList.toggle("hidden", isLogin);
+        authMessage.textContent = "";
+        authMessage.classList.remove("error");
+      });
+    });
+
+    langButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        applyLanguage(button.dataset.lang);
+        if (currentUser) {
+          loadSummary().catch((error) => alert(error.message));
+        }
+      });
+    });
+
+    loginForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      handleAuthSubmit(loginForm, "/api/auth/login", t("loginSuccess"));
+    });
+
+    registerForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      handleAuthSubmit(registerForm, "/api/auth/register", t("registerSuccess"));
+    });
+
+    profileForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      profileMessage.textContent = "";
+      profileMessage.classList.remove("error");
+
+      const formData = new FormData(profileForm);
+      const payload = buildProfilePayload(formData);
+
+      try {
+        const response = await apiFetch("/api/profile", {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          const detail = error.detail || t("requestFailed");
+          throw new Error(Array.isArray(detail) ? detail.map((item) => item.msg).join(", ") : detail);
+        }
+
+        const user = await response.json();
+        showAppView(user);
+        profileMessage.textContent = t("profileSaved");
+      } catch (error) {
+        profileMessage.textContent = error.message;
+        profileMessage.classList.add("error");
+      }
+    });
+
+    document.getElementById("logout-btn").addEventListener("click", () => {
+      setAuthToken("");
+      showAuthView();
+      authMessage.textContent = "";
+    });
+
+    document.getElementById("edit-profile-btn").addEventListener("click", () => {
+      profileEditSection.classList.toggle("hidden");
+      profileMessage.textContent = "";
+    });
 
     summaryDateInput.value = todayIsoDate();
     document.getElementById("meal-time").value = nowForDatetimeLocal();
     document.getElementById("workout-time").value = nowForDatetimeLocal();
+
+    applyLanguage(currentLang);
 
     refreshButton.addEventListener("click", () => {
       loadSummary().catch((error) => alert(error.message));
     });
 
     summaryDateInput.addEventListener("change", () => {
+      resetAiInsightDisplay();
       loadSummary().catch((error) => alert(error.message));
+    });
+
+    getAiInsightButton.addEventListener("click", () => {
+      loadAiInsight().catch((error) => alert(error.message));
     });
 
     mealForm.addEventListener("submit", (event) => {
       event.preventDefault();
-      submitEntry(mealForm, "/api/meals", mealMessage);
+      submitEntry(mealForm, "/api/meals", mealMessage, mealSubmitButton, "meal", "addMealBtn");
     });
 
     workoutForm.addEventListener("submit", (event) => {
       event.preventDefault();
-      submitEntry(workoutForm, "/api/workouts", workoutMessage);
+      submitEntry(workoutForm, "/api/workouts", workoutMessage, workoutSubmitButton, "workout", "addWorkoutBtn");
     });
 
-    loadSummary().catch((error) => alert(error.message));
+    calorieModalClose.addEventListener("click", hideCalorieModal);
+    calorieModal.addEventListener("click", (event) => {
+      if (event.target === calorieModal) {
+        hideCalorieModal();
+      }
+    });
+
+    loadCurrentUser().catch(() => showAuthView());
   </script>
 </body>
 </html>
