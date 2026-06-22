@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nutrition Tracker</title>
+  <style>
+    :root {
+      --bg: #f4f7f6;
+      --card: #ffffff;
+      --text: #1f2933;
+      --muted: #52606d;
+      --accent: #2f855a;
+      --accent-dark: #276749;
+      --danger: #c53030;
+      --border: #d9e2ec;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1rem 3rem;
+    }
+
+    header {
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      margin: 0 0 0.25rem;
+      font-size: 2rem;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      font-size: 1.1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.35rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 0.65rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 1rem;
+    }
+
+    input {
+      margin-bottom: 0.85rem;
+    }
+
+    button {
+      background: var(--accent);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background: var(--accent-dark);
+    }
+
+    .summary-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+
+    .stat {
+      background: #edf2f7;
+      border-radius: 10px;
+      padding: 0.85rem;
+      text-align: center;
+    }
+
+    .stat-value {
+      display: block;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .positive {
+      color: var(--accent);
+    }
+
+    .negative {
+      color: var(--danger);
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      padding: 0.65rem 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    li:last-child {
+      border-bottom: none;
+    }
+
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .toolbar input[type="date"] {
+      width: auto;
+      margin: 0;
+    }
+
+    .message {
+      margin-top: 0.75rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+      min-height: 1.2rem;
+    }
+
+    .message.error {
+      color: var(--danger);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Nutrition Tracker</h1>
+      <p class="subtitle">Log meals and workouts, then review your daily calorie balance.</p>
+    </header>
+
+    <div class="toolbar card">
+      <label for="summary-date">Summary date</label>
+      <input type="date" id="summary-date">
+      <button type="button" id="refresh-summary">Refresh summary</button>
+    </div>
+
+    <section class="card" style="margin-bottom: 1rem;">
+      <h2>Daily Summary</h2>
+      <div class="summary-stats">
+        <div class="stat">
+          <span class="stat-value" id="calories-consumed">0</span>
+          <span class="stat-label">Calories consumed</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="calories-burned">0</span>
+          <span class="stat-label">Calories burned</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="net-calories">0</span>
+          <span class="stat-label">Net calories</span>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <h3>Meals today</h3>
+          <ul id="meals-list"></ul>
+        </div>
+        <div>
+          <h3>Workouts today</h3>
+          <ul id="workouts-list"></ul>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Add Meal</h2>
+        <form id="meal-form">
+          <label for="meal-food">Food name</label>
+          <input id="meal-food" name="food_name" type="text" placeholder="e.g. Grilled chicken salad" required>
+
+          <label for="meal-calories">Calories</label>
+          <input id="meal-calories" name="calories" type="number" min="1" step="1" placeholder="450" required>
+
+          <label for="meal-time">Date &amp; time</label>
+          <input id="meal-time" name="logged_at" type="datetime-local">
+
+          <button type="submit">Add meal</button>
+        </form>
+        <p class="message" id="meal-message"></p>
+      </section>
+
+      <section class="card">
+        <h2>Add Workout</h2>
+        <form id="workout-form">
+          <label for="workout-activity">Activity type</label>
+          <input id="workout-activity" name="activity_type" type="text" placeholder="e.g. Running" required>
+
+          <label for="workout-calories">Calories burned</label>
+          <input id="workout-calories" name="calories_burned" type="number" min="1" step="1" placeholder="300" required>
+
+          <label for="workout-time">Date &amp; time</label>
+          <input id="workout-time" name="logged_at" type="datetime-local">
+
+          <button type="submit">Add workout</button>
+        </form>
+        <p class="message" id="workout-message"></p>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const summaryDateInput = document.getElementById("summary-date");
+    const refreshButton = document.getElementById("refresh-summary");
+    const mealForm = document.getElementById("meal-form");
+    const workoutForm = document.getElementById("workout-form");
+    const mealMessage = document.getElementById("meal-message");
+    const workoutMessage = document.getElementById("workout-message");
+
+    function todayIsoDate() {
+      const now = new Date();
+      const offset = now.getTimezoneOffset();
+      const local = new Date(now.getTime() - offset * 60 * 1000);
+      return local.toISOString().slice(0, 10);
+    }
+
+    function nowForDatetimeLocal() {
+      const now = new Date();
+      const offset = now.getTimezoneOffset();
+      const local = new Date(now.getTime() - offset * 60 * 1000);
+      return local.toISOString().slice(0, 16);
+    }
+
+    function formatNumber(value) {
+      return Number(value).toLocaleString(undefined, { maximumFractionDigits: 0 });
+    }
+
+    function formatTime(isoString) {
+      return new Date(isoString).toLocaleString();
+    }
+
+    function renderList(containerId, items, emptyText, formatter) {
+      const list = document.getElementById(containerId);
+      list.innerHTML = "";
+
+      if (!items.length) {
+        const li = document.createElement("li");
+        li.className = "empty";
+        li.textContent = emptyText;
+        list.appendChild(li);
+        return;
+      }
+
+      items.forEach((item) => {
+        const li = document.createElement("li");
+        li.innerHTML = formatter(item);
+        list.appendChild(li);
+      });
+    }
+
+    async function loadSummary() {
+      const selectedDate = summaryDateInput.value || todayIsoDate();
+      const response = await fetch(`/api/summary?date=${selectedDate}`);
+
+      if (!response.ok) {
+        throw new Error("Could not load daily summary.");
+      }
+
+      const data = await response.json();
+
+      document.getElementById("calories-consumed").textContent = formatNumber(data.calories_consumed);
+      document.getElementById("calories-burned").textContent = formatNumber(data.calories_burned);
+
+      const netEl = document.getElementById("net-calories");
+      netEl.textContent = formatNumber(data.net_calories);
+      netEl.classList.remove("positive", "negative");
+      netEl.classList.add(data.net_calories >= 0 ? "positive" : "negative");
+
+      renderList(
+        "meals-list",
+        data.meals,
+        "No meals logged for this day.",
+        (meal) => `<span>${meal.food_name}</span><span>${formatNumber(meal.calories)} cal</span>`
+      );
+
+      renderList(
+        "workouts-list",
+        data.workouts,
+        "No workouts logged for this day.",
+        (workout) =>
+          `<span>${workout.activity_type}</span><span>${formatNumber(workout.calories_burned)} cal</span>`
+      );
+    }
+
+    async function submitEntry(form, endpoint, messageEl) {
+      messageEl.textContent = "";
+      messageEl.classList.remove("error");
+
+      const formData = new FormData(form);
+      const payload = {
+        food_name: formData.get("food_name"),
+        activity_type: formData.get("activity_type"),
+        calories: formData.get("calories") ? Number(formData.get("calories")) : undefined,
+        calories_burned: formData.get("calories_burned")
+          ? Number(formData.get("calories_burned"))
+          : undefined,
+      };
+
+      const loggedAt = formData.get("logged_at");
+      if (loggedAt) {
+        payload.logged_at = new Date(loggedAt).toISOString();
+      }
+
+      const cleanedPayload = Object.fromEntries(
+        Object.entries(payload).filter(([, value]) => value !== undefined && value !== null && value !== "")
+      );
+
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(cleanedPayload),
+        });
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          const detail = error.detail || "Request failed.";
+          throw new Error(Array.isArray(detail) ? detail.map((item) => item.msg).join(", ") : detail);
+        }
+
+        form.reset();
+        document.getElementById("meal-time").value = nowForDatetimeLocal();
+        document.getElementById("workout-time").value = nowForDatetimeLocal();
+        messageEl.textContent = "Saved successfully.";
+        await loadSummary();
+      } catch (error) {
+        messageEl.textContent = error.message;
+        messageEl.classList.add("error");
+      }
+    }
+
+    summaryDateInput.value = todayIsoDate();
+    document.getElementById("meal-time").value = nowForDatetimeLocal();
+    document.getElementById("workout-time").value = nowForDatetimeLocal();
+
+    refreshButton.addEventListener("click", () => {
+      loadSummary().catch((error) => alert(error.message));
+    });
+
+    summaryDateInput.addEventListener("change", () => {
+      loadSummary().catch((error) => alert(error.message));
+    });
+
+    mealForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      submitEntry(mealForm, "/api/meals", mealMessage);
+    });
+
+    workoutForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      submitEntry(workoutForm, "/api/workouts", workoutMessage);
+    });
+
+    loadSummary().catch((error) => alert(error.message));
+  </script>
+</body>
+</html>
