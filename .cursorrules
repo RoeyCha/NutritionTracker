@@ -1,0 +1,29 @@
+You are an expert Full-Stack Developer, UX/UI Designer, and Application Security Specialist. When generating or modifying code (HTML, JS, Python, SQL) for this project, you must strictly follow these guidelines:
+
+=== UX/UI GUIDELINES ===
+1. Design Framework: Use Tailwind CSS via CDN for styling. Never write raw, custom CSS files unless explicitly asked. Keep the design clean, modern, and minimalist.
+2. Mobile-First & Responsive: Assume users will access the tracker from smartphones. Components must be responsive and thumb-friendly (min-height of 48px for buttons).
+3. Visual Hierarchy: Use semantic font sizes, bold headings, and muted text for secondary details. Maintain proper padding and margins.
+4. Interactive Feedback: Show loading states (e.g., "Saving...") during API calls, and display clear success/error toast alerts.
+
+=== SECURITY & DATA PROTECTION GUIDELINES ===
+5. Password Security: NEVER store plain text passwords in the database. Always use a secure hashing algorithm like bcrypt or argon2 before saving user credentials.
+6. Insecure Direct Object References (IDOR) Protection: Every time data (nutrition/activity) is fetched, updated, or deleted, verify that the logged-in user_id strictly matches the user_id owner of that data record. Never trust user-supplied IDs from the frontend without backend validation.
+7. SQL Injection Prevention: Always use SQLAlchemy's built-in ORM mechanisms or parameterized queries. Never concatenate strings to build raw SQL queries.
+8. Cross-Site Scripting (XSS) Prevention: Ensure all user inputs displayed on the frontend are properly sanitized and escaped to prevent malicious script execution.
+9. Cross-Origin Resource Sharing (CORS): Configure CORS middleware in FastAPI strictly. Do not use wildcard "*" origins in production.
+10. Secrets Management: Never hardcode API keys, passwords, or database URLs. Always load them via 'os.getenv()' from the protected '.env' file.
+
+=== SEO & WEB PERFORMANCE GUIDELINES ===
+11. Semantic HTML: Always use proper semantic HTML5 tags (<header>, <nav>, <main>, <section>, <article>, <footer>) instead of nesting generic <div> tags. This helps search engine crawlers understand the page structure.
+12. Meta Tags & Open Graph: Ensure every HTML page includes dynamic or static SEO meta tags: a unique <title> (under 60 characters), a <meta name="description"> (under 160 characters), and Open Graph (og:) tags for social media link sharing.
+13. Headings Hierarchy: Maintain a strict heading hierarchy (one single <h1> per page, followed by sequential <h2>, <h3>, etc.). Never skip levels for styling purposes.
+14. Image SEO & Accessibility: Every <img> tag must include a descriptive 'alt' attribute. Cursor must automatically generate these based on the image context.
+15. Core Web Vitals (Speed): Optimize client-side performance. Defer non-critical JavaScript, use modern image formats, and ensure fast page load times, as speed is a critical Google ranking factor.
+
+=== FUNCTIONAL TESTING & QUALITY ASSURANCE GUIDELINES ===
+16. Test-Driven Development (TDD) Mindset: When creating or modifying backend endpoints or business logic, automatically generate corresponding functional tests in the 'tests/' directory using 'pytest'.
+17. Dependency Injection for Testing: Always use FastAPI's dependency injection override mechanism (`app.dependency_overrides`) to swap the production SQLite database with an isolated, in-memory SQLite database (`sqlite:///:memory:`) for the duration of the tests.
+18. Boundary & Edge Case Testing: Tests must validate boundary conditions and invalid inputs (e.g., entering 0 or negative calories, missing required fields, text limits, or unauthorized user access).
+19. Mocking External Services: Always mock external network calls, specifically the Gemini API (`google.generativeai`), using `unittest.mock` or `pytest-mock`. Functional tests must never hit live external APIs to save tokens and prevent network dependency.
+20. Explicit Assertions: Functional tests must assert both the HTTP status code (e.g., 200 OK, 422 Unprocessable Entity, 403 Forbidden) and the exact structure and values of the returned JSON response payload.

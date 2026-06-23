@@ -13,6 +13,12 @@ def test_home_page_loads(client: TestClient) -> None:
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
     assert "Nutrition Tracker" in response.text
+    assert 'name="description"' in response.text
+    assert 'property="og:title"' in response.text
+    assert 'property="og:description"' in response.text
+    assert 'property="og:url"' in response.text
+    assert "<main" in response.text
+    assert "<footer" in response.text
 
 
 def test_capabilities_endpoint_lists_features(empty_client: TestClient) -> None:

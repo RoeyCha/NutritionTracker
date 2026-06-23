@@ -3,7 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Nutrition Tracker</title>
+  <title>{{ page_title }}</title>
+  <meta name="description" content="{{ page_description }}">
+  <meta property="og:title" content="{{ og_title }}">
+  <meta property="og:description" content="{{ og_description }}">
+  <meta property="og:type" content="{{ og_type }}">
+  <meta property="og:url" content="{{ og_url }}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      corePlugins: {
+        preflight: false,
+      },
+    };
+  </script>
   <style>
     :root {
       --bg: #f4f7f6;
@@ -103,6 +116,7 @@
 
     input, select, button.btn-primary, button.btn-secondary {
       width: 100%;
+      min-height: 48px;
       padding: 0.65rem 0.75rem;
       border-radius: 8px;
       border: 1px solid var(--border);
@@ -140,6 +154,15 @@
     }
 
     button.btn-danger:hover { background: #fff5f5; }
+
+    .auth-tab, .lang-btn {
+      min-height: 48px;
+    }
+
+    .toast-visible {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+    }
 
     .list-delete-btn {
       width: auto;
@@ -457,25 +480,6 @@
       margin: 0;
     }
 
-    .steps-summary-panel {
-      background: #edf2f7;
-      border-radius: 10px;
-      margin-bottom: 0.75rem;
-      padding: 0.85rem;
-    }
-
-    .steps-count-display {
-      font-size: 1.25rem;
-      font-weight: 700;
-      margin: 0 0 0.35rem;
-    }
-
-    .steps-calories-display {
-      color: var(--muted);
-      font-size: 0.9rem;
-      margin: 0;
-    }
-
     .calc-explanation,
     .insight-source {
       color: var(--muted);
@@ -488,10 +492,6 @@
     .insight-source {
       font-style: italic;
       margin-bottom: 0.5rem;
-    }
-
-    #edit-steps-btn {
-      width: 100%;
     }
 
     ul { list-style: none; padding: 0; margin: 0; }
@@ -1033,17 +1033,23 @@
   </style>
 </head>
 <body>
-  <div class="container">
+  <div
+    id="toast-host"
+    class="fixed bottom-4 inset-x-0 z-[3000] flex flex-col items-center gap-2 pointer-events-none px-4"
+    aria-live="polite"
+    aria-atomic="true"
+  ></div>
+  <main class="container">
     <header>
       <div class="header-text">
         <h1 data-i18n="appTitle">Nutrition Tracker</h1>
         <p class="subtitle" data-i18n="appSubtitle">Log meals and workouts, then review your daily calorie balance.</p>
       </div>
       <div class="header-actions">
-        <div class="lang-switch" role="group" aria-label="Language">
+        <nav class="lang-switch" aria-label="Language">
           <button type="button" class="lang-btn" data-lang="en" id="lang-en">English</button>
           <button type="button" class="lang-btn" data-lang="he" id="lang-he">עברית</button>
-        </div>
+        </nav>
       </div>
     </header>
 
@@ -1176,34 +1182,6 @@
             <h2 data-i18n="dailySummary">Daily Summary</h2>
             <div class="summary-stats">
               <div class="stat">
-                <span class="stat-value" id="bmr-value">—</span>
-                <span class="stat-label" data-i18n="bmrLabel">BMR (daily baseline)</span>
-              </div>
-              <div class="stat">
-                <span class="stat-value" id="calories-consumed">0</span>
-                <span class="stat-label" data-i18n="caloriesConsumed">Calories consumed</span>
-              </div>
-              <div class="stat">
-                <span class="stat-value" id="total-protein">0</span>
-                <span class="stat-label" data-i18n="proteinLabel">Protein (g)</span>
-              </div>
-              <div class="stat">
-                <span class="stat-value" id="total-carbohydrates">0</span>
-                <span class="stat-label" data-i18n="carbsLabel">Carbs (g)</span>
-              </div>
-              <div class="stat">
-                <span class="stat-value" id="total-fats">0</span>
-                <span class="stat-label" data-i18n="fatsLabel">Fats (g)</span>
-              </div>
-              <div class="stat">
-                <span class="stat-value" id="calories-burned">0</span>
-                <span class="stat-label" data-i18n="caloriesBurned">Exercise burned</span>
-              </div>
-              <div class="stat">
-                <span class="stat-value" id="steps-calories-value">—</span>
-                <span class="stat-label" data-i18n="stepsCaloriesLabel">Steps burned (net)</span>
-              </div>
-              <div class="stat">
                 <span class="stat-value stat-value-with-trend">
                   <span id="weight-value">—</span>
                   <span
@@ -1234,8 +1212,50 @@
                 </span>
               </div>
               <div class="stat">
+                <span class="stat-value" id="bmr-value">—</span>
+                <span class="stat-label" data-i18n="bmrLabel">BMR (daily baseline)</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value" id="calories-consumed">0</span>
+                <span class="stat-label" data-i18n="caloriesConsumed">Calories consumed</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value" id="total-protein">0</span>
+                <span class="stat-label" data-i18n="proteinLabel">Protein (g)</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value" id="total-carbohydrates">0</span>
+                <span class="stat-label" data-i18n="carbsLabel">Carbs (g)</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value" id="total-fats">0</span>
+                <span class="stat-label" data-i18n="fatsLabel">Fats (g)</span>
+              </div>
+              <div class="stat">
                 <span class="stat-value" id="daily-balance">—</span>
                 <span class="stat-label" data-i18n="dailyBalance">Daily balance</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value" id="calories-burned">0</span>
+                <span class="stat-label" data-i18n="caloriesBurned">Exercise burned</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value" id="steps-calories-value">—</span>
+                <span class="stat-label stat-label-with-action">
+                  <span data-i18n="stepsCaloriesLabel">Steps burned (net)</span>
+                  <button
+                    type="button"
+                    class="stat-edit-btn"
+                    id="edit-steps-btn"
+                    data-i18n-aria-label="editStepsLabel"
+                    aria-label="Log steps for this day"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 20h9"></path>
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                    </svg>
+                  </button>
+                </span>
               </div>
             </div>
 
@@ -1252,15 +1272,6 @@
               <div>
                 <h3 data-i18n="workoutsToday">Workouts today</h3>
                 <ul id="workouts-list"></ul>
-              </div>
-              <div>
-                <h3 data-i18n="stepsToday">Daily steps</h3>
-                <div id="steps-summary-panel" class="steps-summary-panel">
-                  <p id="steps-count-display" class="steps-count-display">—</p>
-                  <p id="steps-calories-display" class="steps-calories-display"></p>
-                </div>
-                <button type="button" class="btn-secondary" id="edit-steps-btn" data-i18n="addStepsBtn">Add steps</button>
-                <p class="message" id="steps-message"></p>
               </div>
             </div>
 
@@ -1356,7 +1367,11 @@
         </section>
       </div>
     </div>
-  </div>
+  </main>
+
+  <footer class="container" style="padding-top: 0; padding-bottom: 2rem;">
+    <p class="subtitle" data-i18n="footerNote">Personal meal and workout logging with calorie balance tracking.</p>
+  </footer>
 
   <div id="profile-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
     <div class="modal-card modal-card-form">
@@ -1569,6 +1584,8 @@
       en: {
         appTitle: "Nutrition Tracker",
         appSubtitle: "Log meals and workouts, then review your daily calorie balance.",
+        footerNote: "Personal meal and workout logging with calorie balance tracking.",
+        savingBtn: "Saving...",
         welcomeTitle: "Welcome",
         welcomeSubtitle: "Sign in or create an account to manage your nutrition data.",
         loginTab: "Login",
@@ -1637,6 +1654,7 @@
         weightToday: "Daily weight",
         weightLabel: "Weight (kg)",
         editWeightLabel: "Log weight for this day",
+        editStepsLabel: "Log steps for this day",
         updateWeightBtn: "Update weight",
         updateWeight: "Update weight",
         saveWeightBtn: "Save weight",
@@ -1723,6 +1741,8 @@
       he: {
         appTitle: "מעקב תזונה",
         appSubtitle: "רשום ארוחות ואימונים, וצפה במאזן הקלורי היומי שלך.",
+        footerNote: "רישום ארוחות ואימונים אישי עם מעקב מאזן קלורי.",
+        savingBtn: "שומר...",
         welcomeTitle: "ברוכים הבאים",
         welcomeSubtitle: "התחבר או צור חשבון כדי לנהל את נתוני התזונה שלך.",
         loginTab: "התחברות",
@@ -1791,6 +1811,7 @@
         weightToday: "משקל יומי",
         weightLabel: "משקל (ק\"ג)",
         editWeightLabel: "רשום משקל ליום זה",
+        editStepsLabel: "רשום צעדים ליום זה",
         updateWeightBtn: "עדכן משקל",
         updateWeight: "עדכון משקל",
         saveWeightBtn: "שמור משקל",
@@ -1878,6 +1899,44 @@
 
     const LANG_STORAGE_KEY = "nutrition-tracker-lang";
     const TOKEN_STORAGE_KEY = "nutrition-tracker-token";
+
+    function escapeHtml(text) {
+      if (text == null) {
+        return "";
+      }
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function showToast(message, type = "success") {
+      const host = document.getElementById("toast-host");
+      if (!host || !message) {
+        return;
+      }
+
+      const toast = document.createElement("div");
+      const toneClasses = type === "error"
+        ? "bg-red-600 text-white"
+        : "bg-emerald-700 text-white";
+      toast.className = [
+        "pointer-events-auto px-4 py-3 rounded-lg shadow-lg text-sm font-medium",
+        "transform transition-all duration-300 translate-y-2 opacity-0",
+        toneClasses,
+      ].join(" ");
+      toast.setAttribute("role", type === "error" ? "alert" : "status");
+      toast.textContent = message;
+      host.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.add("toast-visible"));
+      window.setTimeout(() => {
+        toast.classList.remove("toast-visible");
+        window.setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
     let currentLang = localStorage.getItem(LANG_STORAGE_KEY) || "en";
     let authToken = localStorage.getItem(TOKEN_STORAGE_KEY) || "";
     let currentUser = null;
@@ -1936,7 +1995,6 @@
     const stepsForm = document.getElementById("steps-form");
     const stepsModalMessage = document.getElementById("steps-modal-message");
     const stepsSubmitButton = document.getElementById("steps-submit");
-    const stepsMessage = document.getElementById("steps-message");
     const editStepsButton = document.getElementById("edit-steps-btn");
     const weightEditModal = document.getElementById("weight-edit-modal");
     const weightForm = document.getElementById("weight-form");
@@ -2189,27 +2247,19 @@
 
     function renderStepsSummary(data) {
       const steps = data.daily_steps;
-      const countEl = document.getElementById("steps-count-display");
-      const calEl = document.getElementById("steps-calories-display");
       const stepsCaloriesStat = document.getElementById("steps-calories-value");
 
       if (!steps) {
-        countEl.textContent = t("noSteps");
-        calEl.textContent = "";
         stepsCaloriesStat.textContent = "—";
-        editStepsButton.textContent = t("addStepsBtn");
+        stepsCaloriesStat.removeAttribute("title");
         return;
       }
 
-      countEl.textContent = `${formatNumber(steps.steps_count)} ${t("stepsUnit")}`;
-      const netLine = tf("stepsCaloriesNet", { amount: formatNumber(steps.calories_burned) });
-      if (steps.ai_explanation) {
-        calEl.innerHTML = `${netLine}<span class="calc-explanation">${steps.ai_explanation}</span>`;
-      } else {
-        calEl.textContent = netLine;
-      }
       stepsCaloriesStat.textContent = formatNumber(steps.calories_burned);
-      editStepsButton.textContent = t("editStepsBtn");
+      stepsCaloriesStat.setAttribute(
+        "title",
+        `${formatNumber(steps.steps_count)} ${t("stepsUnit")}`
+      );
     }
 
     const WEIGHT_TREND_MAX_ANGLE = 30;
@@ -2370,13 +2420,10 @@
     function openStepsEditModal() {
       const selectedDate = summaryDateInput.value;
       if (!selectedDate || selectedDate > todayIsoDate()) {
-        stepsMessage.textContent = t("futureDateError");
-        stepsMessage.classList.add("error");
+        showToast(t("futureDateError"), "error");
         return;
       }
 
-      stepsMessage.textContent = "";
-      stepsMessage.classList.remove("error");
       stepsModalMessage.textContent = "";
       stepsModalMessage.classList.remove("error");
       document.getElementById("steps-modal-date").textContent = formatDisplayDate(selectedDate);
@@ -2419,7 +2466,7 @@
         }
 
         closeStepsEditModal();
-        stepsMessage.textContent = t("stepsSaved");
+        showToast(t("stepsSaved"));
         await refreshCalendarAndSummary();
       } catch (error) {
         stepsModalMessage.textContent = error.message;
@@ -3212,11 +3259,7 @@
       if (!loggedAtPickerDocListenersBound) {
         loggedAtPickerDocListenersBound = true;
         document.addEventListener("click", () => closeAllLoggedAtPickerPanels());
-        document.addEventListener("keydown", (event) => {
-          if (event.key === "Escape") {
-            closeAllLoggedAtPickerPanels();
-          }
-        });
+        document.addEventListener("keydown", handleGlobalEscape);
       }
     }
 
@@ -3612,6 +3655,36 @@
       });
     }
 
+    function handleGlobalEscape(event) {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      const openPicker = document.querySelector(".logged-at-picker-panel:not(.hidden)");
+      if (openPicker) {
+        event.preventDefault();
+        closeAllLoggedAtPickerPanels();
+        return;
+      }
+
+      const openModals = [
+        { el: mealEditModal, close: closeMealEditModal },
+        { el: workoutEditModal, close: closeWorkoutEditModal },
+        { el: stepsEditModal, close: closeStepsEditModal },
+        { el: weightEditModal, close: closeWeightEditModal },
+        { el: profileModal, close: closeProfileModal },
+        { el: calorieModal, close: hideCalorieModal },
+      ];
+
+      for (const { el, close } of openModals) {
+        if (el && !el.classList.contains("hidden")) {
+          event.preventDefault();
+          close();
+          return;
+        }
+      }
+    }
+
     function openProfileModal() {
       if (!currentUser) {
         return;
@@ -3626,6 +3699,9 @@
       profileModal.classList.add("hidden");
       profileMessage.textContent = "";
       profileMessage.classList.remove("error");
+      if (currentUser) {
+        fillProfileForm(currentUser);
+      }
     }
 
     function openMealEditModal(item) {
@@ -3669,6 +3745,7 @@
       }
 
       await refreshCalendarAndSummary();
+      showToast(t("deleteSuccess"));
     }
 
     async function deleteWorkout(workoutId) {
@@ -3692,6 +3769,7 @@
       }
 
       await refreshCalendarAndSummary();
+      showToast(t("deleteSuccess"));
     }
 
     function openWorkoutEditModal(item) {
@@ -3959,7 +4037,7 @@
         submitButton,
         true,
         isEdit ? saveLabelKey : defaultLabelKey,
-        usesAi ? "aiCalculating" : null
+        usesAi ? "aiCalculating" : "savingBtn"
       );
 
       try {
@@ -3994,6 +4072,7 @@
           }
         } else {
           messageEl.textContent = t("savedSuccess");
+          showToast(t("savedSuccess"));
           if (entryType === "meal") {
             resetAddForm(form, "meal-logged-at");
           } else {
@@ -4027,6 +4106,7 @@
       } catch (error) {
         messageEl.textContent = error.message;
         messageEl.classList.add("error");
+        showToast(error.message, "error");
       } finally {
         setSubmitLoading(submitButton, false, isEdit ? saveLabelKey : defaultLabelKey);
       }
@@ -4055,7 +4135,13 @@
       } catch (error) {
         authMessage.textContent = error.message;
         authMessage.classList.add("error");
+        showToast(error.message, "error");
         return;
+      }
+
+      const submitButton = form.querySelector('button[type="submit"]');
+      if (submitButton) {
+        setSubmitLoading(submitButton, true, form.id === "register-form" ? "registerBtn" : "loginBtn", "savingBtn");
       }
 
       try {
@@ -4076,12 +4162,22 @@
 
         setAuthToken(data.access_token);
         authMessage.textContent = successMessage;
+        showToast(successMessage);
         showAppView(data.user);
         await checkServerCapabilities();
         await initializeDashboard();
       } catch (error) {
         authMessage.textContent = error.message;
         authMessage.classList.add("error");
+        showToast(error.message, "error");
+      } finally {
+        if (submitButton) {
+          setSubmitLoading(
+            submitButton,
+            false,
+            form.id === "register-form" ? "registerBtn" : "loginBtn"
+          );
+        }
       }
     }
 
@@ -4120,6 +4216,9 @@
       profileMessage.textContent = "";
       profileMessage.classList.remove("error");
 
+      const profileSubmitButton = profileForm.querySelector('button[type="submit"]')
+        || document.querySelector('button[form="profile-form"]');
+
       const formData = new FormData(profileForm);
       let payload;
 
@@ -4129,6 +4228,10 @@
         profileMessage.textContent = error.message;
         profileMessage.classList.add("error");
         return;
+      }
+
+      if (profileSubmitButton) {
+        setSubmitLoading(profileSubmitButton, true, "saveProfile", "savingBtn");
       }
 
       try {
@@ -4146,10 +4249,17 @@
         const user = await response.json();
         showAppView(user);
         closeProfileModal();
+        profileMessage.textContent = t("profileSaved");
+        showToast(t("profileSaved"));
         await refreshCalendarAndSummary();
       } catch (error) {
         profileMessage.textContent = error.message;
         profileMessage.classList.add("error");
+        showToast(error.message, "error");
+      } finally {
+        if (profileSubmitButton) {
+          setSubmitLoading(profileSubmitButton, false, "saveProfile");
+        }
       }
     });
 

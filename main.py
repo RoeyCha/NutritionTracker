@@ -18,6 +18,7 @@ setup_logging()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -54,6 +55,35 @@ class UTF8JSONResponse(JSONResponse):
 
 app = FastAPI(title="Nutrition Tracker MVP", default_response_class=UTF8JSONResponse)
 templates = Jinja2Templates(directory="templates")
+
+SEO_META = {
+    "page_title": "Nutrition Tracker",
+    "page_description": (
+        "Log meals and workouts, track calories, BMR, and your daily nutrition balance."
+    ),
+    "og_title": "Nutrition Tracker",
+    "og_description": (
+        "Log meals and workouts, track calories, BMR, and your daily nutrition balance."
+    ),
+    "og_type": "website",
+}
+
+
+def _cors_origins() -> list[str]:
+    raw = os.getenv(
+        "CORS_ALLOWED_ORIGINS",
+        "http://127.0.0.1:8000,http://localhost:8000",
+    )
+    return [origin.strip() for origin in raw.split(",") if origin.strip()]
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins(),
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
 
 BASE_DIR = Path(__file__).resolve().parent
 static_dir = BASE_DIR / "static"
@@ -514,7 +544,12 @@ def get_capabilities():
 
 @app.get("/", response_class=HTMLResponse)
 def serve_frontend(request: Request):
-    response = templates.TemplateResponse("index.html", {"request": request})
+    context = {
+        "request": request,
+        **SEO_META,
+        "og_url": str(request.base_url).rstrip("/"),
+    }
+    response = templates.TemplateResponse("index.html", context)
     response.headers["Content-Type"] = "text/html; charset=utf-8"
     return response
 
