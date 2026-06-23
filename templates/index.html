@@ -386,6 +386,18 @@
 
     .stat-value { display: block; font-size: 1.5rem; font-weight: 700; }
 
+    .stat-subvalue {
+      color: var(--muted);
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-top: 0.15rem;
+    }
+
+    .stat-subvalue.hidden {
+      display: none;
+    }
+
     .stat-value-with-trend {
       display: inline-flex;
       align-items: center;
@@ -1241,6 +1253,7 @@
               </div>
               <div class="stat">
                 <span class="stat-value" id="steps-calories-value">—</span>
+                <span class="stat-subvalue hidden" id="steps-count-subvalue"></span>
                 <span class="stat-label stat-label-with-action">
                   <span data-i18n="stepsCaloriesLabel">Steps burned (net)</span>
                   <button
@@ -1641,7 +1654,8 @@
         balanceFormula: "Daily balance = consumed − BMR − exercise − steps (net of workouts)",
         stepsToday: "Daily steps",
         stepsCount: "Step count",
-        stepsHint: "Total steps for the day (includes workouts). AI excludes calories already counted from logged exercise.",
+        stepsCountLogged: "{count} steps logged",
+        stepsHint: "Total steps for the day (includes workouts). Net calories are calculated on the server from your weight and logged walking/running workouts.",
         addStepsBtn: "Add steps",
         editStepsBtn: "Edit steps",
         editSteps: "Daily steps",
@@ -1798,7 +1812,8 @@
         balanceFormula: "מאזן יומי = נצרך − BMR − פעילות − צעדים (נטו מפעילות גופנית)",
         stepsToday: "צעדים יומיים",
         stepsCount: "מספר צעדים",
-        stepsHint: "סך הצעדים ליום (כולל אימונים). AI מפחית קלוריות שכבר נספרו בפעילות גופנית.",
+        stepsCountLogged: "{count} צעדים נרשמו",
+        stepsHint: "סך הצעדים ליום (כולל אימונים). קלוריות נטו מחושבות בשרת לפי המשקל ואימוני הליכה/ריצה שרשמת.",
         addStepsBtn: "הוסף צעדים",
         editStepsBtn: "ערוך צעדים",
         editSteps: "צעדים יומיים",
@@ -2248,18 +2263,30 @@
     function renderStepsSummary(data) {
       const steps = data.daily_steps;
       const stepsCaloriesStat = document.getElementById("steps-calories-value");
+      const stepsCountSub = document.getElementById("steps-count-subvalue");
 
       if (!steps) {
         stepsCaloriesStat.textContent = "—";
         stepsCaloriesStat.removeAttribute("title");
+        if (stepsCountSub) {
+          stepsCountSub.textContent = "";
+          stepsCountSub.classList.add("hidden");
+        }
         return;
       }
 
-      stepsCaloriesStat.textContent = formatNumber(steps.calories_burned);
-      stepsCaloriesStat.setAttribute(
-        "title",
-        `${formatNumber(steps.steps_count)} ${t("stepsUnit")}`
-      );
+      stepsCaloriesStat.textContent = `${formatNumber(steps.calories_burned)} ${t("calUnit")}`;
+      if (stepsCountSub) {
+        stepsCountSub.textContent = tf("stepsCountLogged", {
+          count: formatNumber(steps.steps_count),
+        });
+        stepsCountSub.classList.remove("hidden");
+      }
+      if (steps.ai_explanation) {
+        stepsCaloriesStat.setAttribute("title", steps.ai_explanation);
+      } else {
+        stepsCaloriesStat.removeAttribute("title");
+      }
     }
 
     const WEIGHT_TREND_MAX_ANGLE = 30;
@@ -2657,7 +2684,7 @@
 
     function entryUsesAiEstimate(form, entryType, editingId) {
       if (!editingId) {
-        return false;
+        return true;
       }
 
       const formData = new FormData(form);
