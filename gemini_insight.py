@@ -8,6 +8,7 @@ import google.generativeai as genai
 from sqlalchemy.orm import Session
 
 from models import Meal, User, Workout
+from profile_utils import user_age_for_calculations
 
 logger = logging.getLogger(__name__)
 
@@ -83,8 +84,12 @@ def fetch_daily_logs(db: Session, user: User, target_date: date) -> dict:
 
 def _user_profile_text(user: User) -> str:
     parts = [f"Name: {user.name}"]
-    if user.age is not None:
-        parts.append(f"Age: {user.age}")
+    if user.birth_date is not None:
+        age = user_age_for_calculations(user)
+        if age is not None:
+            parts.append(f"Age: {age}")
+    if user.height_cm is not None:
+        parts.append(f"Height: {user.height_cm} cm")
     if user.weight_kg is not None:
         parts.append(f"Weight: {user.weight_kg} kg")
     if user.gender:

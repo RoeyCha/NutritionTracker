@@ -8,6 +8,7 @@ import google.generativeai as genai
 
 from gemini_insight import GEMINI_MODEL, GEMINI_MODEL_FALLBACKS
 from models import User
+from profile_utils import user_age_for_calculations
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +22,12 @@ class StepsCalorieEstimate:
 
 def _user_context(user: User) -> str:
     parts = []
-    if user.age is not None:
-        parts.append(f"age {user.age}")
+    if user.birth_date is not None:
+        age = user_age_for_calculations(user)
+        if age is not None:
+            parts.append(f"age {age}")
+    if user.height_cm is not None:
+        parts.append(f"height {user.height_cm} cm")
     if user.weight_kg is not None:
         parts.append(f"weight {user.weight_kg} kg")
     if user.gender:
@@ -61,14 +66,22 @@ def _fallback_steps_calories(
     user: User, steps_count: int, workouts: list[dict]
 ) -> StepsCalorieEstimate:
     weight = user.weight_kg or 70.0
-    gross = steps_count * 0.04 * (weight / 70.0)
-    overlap = _step_overlap_calories(workouts)
+    gross = round(steps_count * 0.04 * (weight / 70.0), 1)
+    overlap = round(_step_overlap_calories(workouts), 1)
     net = max(0.0, round(gross - overlap, 1))
+
+    explanation_parts = [
+        f"{steps_count:,} steps at {weight:g} kg → about {gross:g} kcal estimated walking burn."
+    ]
+    if overlap > 0:
+        explanation_parts.append(
+            f"Subtracted {overlap:g} kcal already counted in walking/running workouts to avoid double-counting."
+        )
+    explanation_parts.append(f"Net steps contribution: {net:g} kcal. Calculated locally — no AI.")
+
     return StepsCalorieEstimate(
         calories_burned=net,
-        explanation=(
-            "Local estimate from step count, minus calories already counted for walking/running workouts."
-        ),
+        explanation=" ".join(explanation_parts),
         ai_estimated=False,
     )
 
@@ -124,13 +137,8 @@ def _gemini_steps_calories(
 def estimate_steps_calories(
     user: User, steps_count: int, workouts: list[dict]
 ) -> StepsCalorieEstimate:
-    try:
-        return _gemini_steps_calories(user, steps_count, workouts)
-    except Exception as exc:
-        logger.warning(
-            "Steps calorie AI failed for %s steps, using local fallback: %s",
-            steps_count,
-            exc,
-            exc_info=True,
-        )
-        return _fallback_steps_calories(user, steps_count, workouts)
+    """Estimate net step calories locally (no AI).
+
+    Walking/running workout calories logged the same day are subtracted to avoid double-counting.
+    """
+    return _fallback_steps_calories(user, steps_count, workouts)

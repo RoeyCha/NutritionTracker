@@ -1,5 +1,7 @@
 from collections.abc import Generator
 
+from datetime import date, datetime, timedelta
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -34,6 +36,7 @@ def empty_client(monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient, None,
 
     monkeypatch.setattr("main.init_db", lambda: None)
     monkeypatch.setattr("main.seed_test_user", lambda db: None)
+    monkeypatch.setattr("main.recalculate_all_users_bmr", lambda db: None)
     app.dependency_overrides[get_db] = override_get_db
 
     with TestClient(app) as test_client:
@@ -58,6 +61,7 @@ def client(monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient, None, None]
 
     monkeypatch.setattr("main.init_db", lambda: None)
     monkeypatch.setattr("main.seed_test_user", lambda db: None)
+    monkeypatch.setattr("main.recalculate_all_users_bmr", lambda db: None)
     app.dependency_overrides[get_db] = override_get_db
 
     db = testing_session_local()
@@ -66,16 +70,15 @@ def client(monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient, None, None]
         password_hash=hash_password("testpass"),
         name="Pytest User",
         gender="male",
-        age=30,
+        birth_date=date.today() - timedelta(days=365 * 30),
+        height_cm=175.0,
         weight_kg=75.0,
         initial_weight_kg=75.0,
-        bmr=1700.0,
+        bmr=1698.8,
     )
     db.add(user)
     db.commit()
     db.refresh(user)
-
-    from datetime import datetime
 
     today = datetime.utcnow()
     db.add(

@@ -8,6 +8,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from models import SessionLocal, User
+from profile_utils import age_years_from_birth_date
 
 JWT_SECRET = os.getenv("JWT_SECRET", "nutrition-tracker-dev-secret")
 JWT_ALGORITHM = "HS256"
@@ -73,7 +74,9 @@ def user_to_dict(user: User) -> dict:
         "name": user.name,
         "email": user.email,
         "gender": user.gender,
-        "age": user.age,
+        "birth_date": user.birth_date.isoformat() if user.birth_date else None,
+        "height_cm": user.height_cm,
+        "age": age_years_from_birth_date(user.birth_date),
         "weight_kg": user.weight_kg,
         "initial_weight_kg": user.initial_weight_kg,
         "bmr": user.bmr,

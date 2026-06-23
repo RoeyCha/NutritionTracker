@@ -22,7 +22,8 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     email: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
     gender: Mapped[str | None] = mapped_column(String(20), nullable=True)
-    age: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    birth_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    height_cm: Mapped[float | None] = mapped_column(Float, nullable=True)
     weight_kg: Mapped[float | None] = mapped_column(Float, nullable=True)
     initial_weight_kg: Mapped[float | None] = mapped_column(Float, nullable=True)
     bmr: Mapped[float | None] = mapped_column(Float, nullable=True)
@@ -108,8 +109,10 @@ def migrate_db() -> None:
         statements.append("ALTER TABLE users ADD COLUMN password_hash VARCHAR(255)")
     if "gender" not in columns:
         statements.append("ALTER TABLE users ADD COLUMN gender VARCHAR(20)")
-    if "age" not in columns:
-        statements.append("ALTER TABLE users ADD COLUMN age INTEGER")
+    if "birth_date" not in columns:
+        statements.append("ALTER TABLE users ADD COLUMN birth_date DATE")
+    if "height_cm" not in columns:
+        statements.append("ALTER TABLE users ADD COLUMN height_cm FLOAT")
     if "weight_kg" not in columns:
         statements.append("ALTER TABLE users ADD COLUMN weight_kg FLOAT")
     if "initial_weight_kg" not in columns:
@@ -144,6 +147,13 @@ def migrate_db() -> None:
                     text(
                         "UPDATE users SET initial_weight_kg = weight_kg "
                         "WHERE initial_weight_kg IS NULL AND weight_kg IS NOT NULL"
+                    )
+                )
+            if "birth_date" in updated_columns and "age" in updated_columns:
+                connection.execute(
+                    text(
+                        "UPDATE users SET birth_date = date('now', '-' || age || ' years') "
+                        "WHERE birth_date IS NULL AND age IS NOT NULL"
                     )
                 )
 
@@ -192,7 +202,8 @@ def _rebuild_users_table(connection) -> None:
                 name VARCHAR(100) NOT NULL,
                 email VARCHAR(255) UNIQUE,
                 gender VARCHAR(20),
-                age INTEGER,
+                birth_date DATE,
+                height_cm FLOAT,
                 weight_kg FLOAT,
                 initial_weight_kg FLOAT,
                 bmr FLOAT,
@@ -206,8 +217,8 @@ def _rebuild_users_table(connection) -> None:
         text(
             """
             INSERT INTO users__new (
-                id, username, password_hash, name, email, gender, age, weight_kg,
-                initial_weight_kg, bmr, bmr_explanation, created_at
+                id, username, password_hash, name, email, gender, birth_date, height_cm,
+                weight_kg, initial_weight_kg, bmr, bmr_explanation, created_at
             )
             SELECT
                 id,
@@ -216,7 +227,8 @@ def _rebuild_users_table(connection) -> None:
                 name,
                 NULLIF(email, ''),
                 gender,
-                age,
+                birth_date,
+                height_cm,
                 weight_kg,
                 initial_weight_kg,
                 bmr,

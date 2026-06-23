@@ -8,6 +8,7 @@ import google.generativeai as genai
 
 from gemini_insight import GEMINI_MODEL, GEMINI_MODEL_FALLBACKS
 from models import User
+from profile_utils import user_age_for_calculations
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,10 @@ class CalorieEstimate:
 
 def _user_context(user: User) -> str:
     parts = []
-    if user.age is not None:
-        parts.append(f"age {user.age}")
+    if user.birth_date is not None:
+        age = user_age_for_calculations(user)
+        if age is not None:
+            parts.append(f"age {age}")
     if user.weight_kg is not None:
         parts.append(f"weight {user.weight_kg} kg")
     if user.gender:
@@ -144,31 +147,39 @@ def _gemini_meal_estimate(prompt: str) -> CalorieEstimate:
     raise last_error or RuntimeError("No Gemini model available")
 
 
+def _format_macro_summary(protein: float, carbohydrates: float, fats: float) -> str:
+    return f"{protein:g}g protein, {carbohydrates:g}g carbs, {fats:g}g fat"
+
+
 def _fallback_meal_estimate(food_name: str) -> CalorieEstimate:
     text = food_name.lower()
     rules = [
-        (r"salad|סלט", 380, 0.20, 0.35, 0.45),
-        (r"chicken|עוף", 450, 0.45, 0.10, 0.45),
-        (r"rice|אורז", 320, 0.10, 0.80, 0.10),
-        (r"pizza|פיצה", 650, 0.20, 0.50, 0.30),
-        (r"burger|המבורגר", 720, 0.25, 0.40, 0.35),
-        (r"oatmeal|שיבולת|דייס", 350, 0.15, 0.65, 0.20),
-        (r"yogurt|יוגורט", 180, 0.35, 0.40, 0.25),
-        (r"soup|מרק", 250, 0.25, 0.45, 0.30),
-        (r"fish|salmon|דג|סלמון", 520, 0.40, 0.05, 0.55),
-        (r"steak|בשר", 600, 0.45, 0.05, 0.50),
-        (r"apple|banana|fruit|תפוח|בננה|פרי", 95, 0.05, 0.90, 0.05),
-        (r"coffee|קפה", 25, 0.10, 0.70, 0.20),
-        (r"sandwich|כריך", 420, 0.25, 0.45, 0.30),
+        (r"salad|סלט", 380, 0.20, 0.35, 0.45, "salad"),
+        (r"chicken|עוף", 450, 0.45, 0.10, 0.45, "chicken dish"),
+        (r"rice|אורז", 320, 0.10, 0.80, 0.10, "rice dish"),
+        (r"pizza|פיצה", 650, 0.20, 0.50, 0.30, "pizza slice/meal"),
+        (r"burger|המבורגר", 720, 0.25, 0.40, 0.35, "burger"),
+        (r"oatmeal|שיבולת|דייס", 350, 0.15, 0.65, 0.20, "oatmeal bowl"),
+        (r"yogurt|יוגורט", 180, 0.35, 0.40, 0.25, "yogurt serving"),
+        (r"soup|מרק", 250, 0.25, 0.45, 0.30, "soup bowl"),
+        (r"fish|salmon|דג|סלמון", 520, 0.40, 0.05, 0.55, "fish meal"),
+        (r"steak|בשר", 600, 0.45, 0.05, 0.50, "steak/meat dish"),
+        (r"apple|banana|fruit|תפוח|בננה|פרי", 95, 0.05, 0.90, 0.05, "fruit serving"),
+        (r"coffee|קפה", 25, 0.10, 0.70, 0.20, "coffee drink"),
+        (r"sandwich|כריך", 420, 0.25, 0.45, 0.30, "sandwich"),
     ]
-    for pattern, calories, protein_pct, carb_pct, fat_pct in rules:
+    for pattern, calories, protein_pct, carb_pct, fat_pct, category in rules:
         if re.search(pattern, text):
             protein, carbohydrates, fats = _macros_from_calories(
                 calories, protein_pct, carb_pct, fat_pct
             )
             return CalorieEstimate(
                 calories=float(calories),
-                explanation="Local estimate based on typical portion size.",
+                explanation=(
+                    f'"{food_name}" matched a typical {category}: about {calories} kcal '
+                    f"({_format_macro_summary(protein, carbohydrates, fats)}). "
+                    "Calculated locally from built-in portion tables — no AI."
+                ),
                 ai_estimated=False,
                 protein=protein,
                 carbohydrates=carbohydrates,
@@ -179,7 +190,11 @@ def _fallback_meal_estimate(food_name: str) -> CalorieEstimate:
     protein, carbohydrates, fats = _macros_from_calories(calories)
     return CalorieEstimate(
         calories=calories,
-        explanation="Local default estimate for a typical single serving.",
+        explanation=(
+            f'No close match for "{food_name}"; using a typical single serving (~{calories:.0f} kcal, '
+            f"{_format_macro_summary(protein, carbohydrates, fats)}). "
+            "Calculated locally from a default portion — no AI."
+        ),
         ai_estimated=False,
         protein=protein,
         carbohydrates=carbohydrates,
@@ -192,30 +207,38 @@ def _fallback_workout_estimate(activity_type: str, user: User) -> CalorieEstimat
     weight = user.weight_kg or 70.0
     base = max(120.0, weight * 3.5)
     rules = [
-        (r"run|ריצ", 1.4),
-        (r"walk|הליכ", 0.7),
-        (r"swim|שחי", 1.3),
-        (r"cycle|bike|אופנ", 1.2),
-        (r"weight|gym|כושר|משקול", 1.0),
-        (r"yoga|יוג", 0.5),
-        (r"hiit|interval", 1.5),
+        (r"run|ריצ", 1.4, "running"),
+        (r"walk|הליכ", 0.7, "walking"),
+        (r"swim|שחי", 1.3, "swimming"),
+        (r"cycle|bike|אופנ", 1.2, "cycling"),
+        (r"weight|gym|כושר|משקול", 1.0, "strength training"),
+        (r"yoga|יוג", 0.5, "yoga"),
+        (r"hiit|interval", 1.5, "HIIT"),
     ]
     multiplier = 1.0
-    for pattern, factor in rules:
+    activity_label = "general activity"
+    for pattern, factor, label in rules:
         if re.search(pattern, text):
             multiplier = factor
+            activity_label = label
             break
 
     duration_match = re.search(r"(\d+)\s*(min|minutes|minute|דק)", text)
     if duration_match:
         minutes = int(duration_match.group(1))
         calories = base * multiplier * (minutes / 30)
+        duration_text = f"a {minutes}-minute session"
     else:
         calories = base * multiplier
+        duration_text = "a moderate 30-minute session (duration not specified)"
 
+    calories = round(calories, 1)
     return CalorieEstimate(
-        calories=round(calories, 1),
-        explanation="Local estimate based on activity type and profile.",
+        calories=calories,
+        explanation=(
+            f'"{activity_type}" ({activity_label}): about {calories:g} kcal for {duration_text}, '
+            f"based on your weight ({weight:g} kg). Calculated locally — no AI."
+        ),
         ai_estimated=False,
     )
 

@@ -252,6 +252,27 @@
       flex: 1;
     }
 
+    .logged-at-picker-date-nav {
+      display: flex;
+      gap: 0.35rem;
+      margin-bottom: 0.45rem;
+    }
+
+    .logged-at-picker-date-nav select {
+      flex: 1;
+      min-width: 0;
+      font-size: 0.82rem;
+      padding: 0.35rem 0.45rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card);
+      color: var(--text);
+    }
+
+    .logged-at-picker-panel.birth-date-mode {
+      width: min(100%, 300px);
+    }
+
     .logged-at-picker-weekdays,
     .logged-at-picker-days {
       display: grid;
@@ -453,6 +474,20 @@
       color: var(--muted);
       font-size: 0.9rem;
       margin: 0;
+    }
+
+    .calc-explanation,
+    .insight-source {
+      color: var(--muted);
+      display: block;
+      font-size: 0.82rem;
+      line-height: 1.45;
+      margin-top: 0.35rem;
+    }
+
+    .insight-source {
+      font-style: italic;
+      margin-bottom: 0.5rem;
     }
 
     #edit-steps-btn {
@@ -809,6 +844,10 @@
       z-index: 1000;
     }
 
+    #calorie-modal {
+      z-index: 2100;
+    }
+
     .modal-card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -1045,8 +1084,37 @@
           <option value="other" data-i18n-option="genderOther">Other</option>
         </select>
 
-        <label for="register-age" data-i18n="age">Age</label>
-        <input id="register-age" name="age" type="number" min="1" max="120" step="1">
+        <label for="register-birth-date" data-i18n="birthDate">Birth date</label>
+        <div class="logged-at-combo">
+          <input
+            id="register-birth-date"
+            name="birth_date"
+            class="logged-at-input"
+            type="text"
+            inputmode="numeric"
+            autocomplete="bday"
+            placeholder="dd/mm/yyyy"
+            data-i18n-placeholder="birthDatePlaceholder"
+          >
+          <button
+            type="button"
+            class="logged-at-picker-btn"
+            id="register-birth-date-picker-btn"
+            data-i18n-aria-label="openBirthDatePicker"
+            aria-label="Open birth date picker"
+            aria-expanded="false"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </button>
+        </div>
+
+        <label for="register-height" data-i18n="heightCm">Height (cm)</label>
+        <input id="register-height" name="height_cm" type="number" min="50" max="300" step="1" inputmode="numeric">
 
         <label for="register-weight" data-i18n="weightKg">Weight (kg)</label>
         <input id="register-weight" name="weight_kg" type="number" min="1" max="500" step="0.1">
@@ -1308,8 +1376,37 @@
           <option value="other" data-i18n-option="genderOther">Other</option>
         </select>
 
-        <label for="profile-age" data-i18n="age">Age</label>
-        <input id="profile-age" name="age" type="number" min="1" max="120" step="1">
+        <label for="profile-birth-date" data-i18n="birthDate">Birth date</label>
+        <div class="logged-at-combo">
+          <input
+            id="profile-birth-date"
+            name="birth_date"
+            class="logged-at-input"
+            type="text"
+            inputmode="numeric"
+            autocomplete="bday"
+            placeholder="dd/mm/yyyy"
+            data-i18n-placeholder="birthDatePlaceholder"
+          >
+          <button
+            type="button"
+            class="logged-at-picker-btn"
+            id="profile-birth-date-picker-btn"
+            data-i18n-aria-label="openBirthDatePicker"
+            aria-label="Open birth date picker"
+            aria-expanded="false"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </button>
+        </div>
+
+        <label for="profile-height" data-i18n="heightCm">Height (cm)</label>
+        <input id="profile-height" name="height_cm" type="number" min="50" max="300" step="1" inputmode="numeric">
 
         <label for="profile-weight" data-i18n="weightKg">Weight (kg)</label>
         <input id="profile-weight" name="weight_kg" type="number" min="1" max="500" step="0.1">
@@ -1485,6 +1582,14 @@
         genderMale: "Male",
         genderFemale: "Female",
         genderOther: "Other",
+        birthDate: "Birth date",
+        birthDatePlaceholder: "dd/mm/yyyy",
+        openBirthDatePicker: "Open birth date picker",
+        birthDateMonthLabel: "Month",
+        birthDateYearLabel: "Year",
+        invalidBirthDateFormat: "Use format dd/mm/yyyy for birth date.",
+        heightCm: "Height (cm)",
+        cmUnit: "cm",
         age: "Age",
         weightKg: "Weight (kg)",
         yearsOld: "yrs",
@@ -1515,7 +1620,7 @@
         bmrLabel: "BMR (daily baseline)",
         stepsCaloriesLabel: "Steps burned (net)",
         dailyBalance: "Daily balance",
-        balanceIncomplete: "Complete your profile (age & weight) to calculate BMR and daily balance.",
+        balanceIncomplete: "Complete your profile (birth date & weight) to calculate BMR and daily balance.",
         balanceFormula: "Daily balance = consumed − BMR − exercise − steps (net of workouts)",
         stepsToday: "Daily steps",
         stepsCount: "Step count",
@@ -1588,7 +1693,8 @@
         mealCaloriePopup: "consumed",
         workoutCaloriePopup: "burned",
         aiPoweredNote: "Estimated by AI based on your entry and profile.",
-        localEstimateNote: "Estimated locally. Add GEMINI_API_KEY for AI estimates.",
+        localEstimateNote: "Calculated locally from your profile and built-in portion/activity tables — no AI.",
+        localInsightNote: "Generated locally from your daily totals and simple rules — not AI-personalized.",
         aiInsightTitle: "AI Daily Insight",
         getAiInsight: "Get AI Insight",
         aiInsightEmpty: "Tap the button to get personalized feedback for this day.",
@@ -1630,6 +1736,14 @@
         genderMale: "זכר",
         genderFemale: "נקבה",
         genderOther: "אחר",
+        birthDate: "תאריך לידה",
+        birthDatePlaceholder: "dd/mm/yyyy",
+        openBirthDatePicker: "פתח בוחר תאריך לידה",
+        birthDateMonthLabel: "חודש",
+        birthDateYearLabel: "שנה",
+        invalidBirthDateFormat: "השתמש בפורמט dd/mm/yyyy לתאריך לידה.",
+        heightCm: "גובה (ס\"מ)",
+        cmUnit: "ס\"מ",
         age: "גיל",
         weightKg: "משקל (ק\"ג)",
         yearsOld: "שנים",
@@ -1660,7 +1774,7 @@
         bmrLabel: "BMR (קצב חילוף בסיסי)",
         dailyBalance: "מאזן יומי",
         stepsCaloriesLabel: "צעדים (נטו)",
-        balanceIncomplete: "השלם את הפרופיל (גיל ומשקל) כדי לחשב BMR ומאזן יומי.",
+        balanceIncomplete: "השלם את הפרופיל (תאריך לידה ומשקל) כדי לחשב BMR ומאזן יומי.",
         balanceFormula: "מאזן יומי = נצרך − BMR − פעילות − צעדים (נטו מפעילות גופנית)",
         stepsToday: "צעדים יומיים",
         stepsCount: "מספר צעדים",
@@ -1733,7 +1847,8 @@
         mealCaloriePopup: "נצרכו",
         workoutCaloriePopup: "נשרפו",
         aiPoweredNote: "הערכה של AI על בסיס הפריט והפרופיל שלך.",
-        localEstimateNote: "הערכה מקומית. הוסף GEMINI_API_KEY להערכת AI.",
+        localEstimateNote: "חושב מקומית לפי הפרופיל שלך וטבלאות מנות/פעילות מובנות — ללא AI.",
+        localInsightNote: "נוצר מקומית מסיכום היום שלך וכללים פשוטים — לא מותאם AI.",
         aiInsightTitle: "תובנת AI יומית",
         getAiInsight: "קבל תובנת AI",
         aiInsightEmpty: "לחץ על הכפתור לקבלת משוב מותאם אישית ליום זה.",
@@ -1859,6 +1974,19 @@
     }
 
     const LOGGED_AT_DISPLAY_PATTERN = /^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})$/;
+    const BIRTH_DATE_DISPLAY_PATTERN = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+    const LOGGED_AT_MINUTE_OPTIONS = [0, 15, 30, 45];
+
+    function snapToQuarterHour(date) {
+      const result = new Date(date);
+      let snapped = Math.round(result.getMinutes() / 15) * 15;
+      if (snapped === 60) {
+        result.setHours(result.getHours() + 1);
+        snapped = 0;
+      }
+      result.setMinutes(snapped, 0, 0);
+      return result;
+    }
 
     function applyLanguage(lang) {
       currentLang = lang === "he" ? "he" : "en";
@@ -1915,10 +2043,95 @@
       return key ? t(key) : value;
     }
 
+    function formatBirthDateDisplay(iso) {
+      if (!iso) {
+        return "";
+      }
+
+      const [year, month, day] = iso.split("-").map(Number);
+      if (!year || !month || !day) {
+        return "";
+      }
+
+      return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
+    }
+
+    function parseBirthDateDisplay(value) {
+      const trimmed = String(value || "").trim();
+      if (!trimmed) {
+        return null;
+      }
+
+      const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (isoMatch) {
+        const year = Number(isoMatch[1]);
+        const month = Number(isoMatch[2]);
+        const day = Number(isoMatch[3]);
+        const parsed = new Date(year, month - 1, day);
+        if (
+          parsed.getFullYear() !== year ||
+          parsed.getMonth() !== month - 1 ||
+          parsed.getDate() !== day
+        ) {
+          throw new Error(t("invalidBirthDateFormat"));
+        }
+        return isoFromParts(year, month - 1, day);
+      }
+
+      const match = trimmed.match(BIRTH_DATE_DISPLAY_PATTERN);
+      if (!match) {
+        throw new Error(t("invalidBirthDateFormat"));
+      }
+
+      const day = Number(match[1]);
+      const month = Number(match[2]);
+      const year = Number(match[3]);
+
+      if (month < 1 || month > 12 || day < 1 || day > 31) {
+        throw new Error(t("invalidBirthDateFormat"));
+      }
+
+      const parsed = new Date(year, month - 1, day);
+      if (
+        parsed.getFullYear() !== year ||
+        parsed.getMonth() !== month - 1 ||
+        parsed.getDate() !== day
+      ) {
+        throw new Error(t("invalidBirthDateFormat"));
+      }
+
+      if (isoFromParts(year, month - 1, day) > todayIsoDate()) {
+        throw new Error(t("invalidBirthDateFormat"));
+      }
+
+      return isoFromParts(year, month - 1, day);
+    }
+
+    function ageFromBirthDate(birthDateIso) {
+      if (!birthDateIso) {
+        return null;
+      }
+      const today = new Date();
+      const birth = new Date(`${birthDateIso}T00:00:00`);
+      let age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age -= 1;
+      }
+      return age;
+    }
+
     function formatProfileDetails(user) {
       const parts = [];
-      if (user.age != null) {
-        parts.push(`${user.age} ${t("yearsOld")}`);
+      if (user.birth_date) {
+        parts.push(formatBirthDateDisplay(user.birth_date));
+      }
+      const age = user.age ?? ageFromBirthDate(user.birth_date);
+      if (age != null) {
+        parts.push(`${age} ${t("yearsOld")}`);
+      }
+      if (user.height_cm != null) {
+        parts.push(`${Math.round(user.height_cm)} ${t("cmUnit")}`);
       }
       if (user.weight_kg != null) {
         parts.push(`${user.weight_kg} ${t("kgUnit")}`);
@@ -1989,7 +2202,12 @@
       }
 
       countEl.textContent = `${formatNumber(steps.steps_count)} ${t("stepsUnit")}`;
-      calEl.textContent = tf("stepsCaloriesNet", { amount: formatNumber(steps.calories_burned) });
+      const netLine = tf("stepsCaloriesNet", { amount: formatNumber(steps.calories_burned) });
+      if (steps.ai_explanation) {
+        calEl.innerHTML = `${netLine}<span class="calc-explanation">${steps.ai_explanation}</span>`;
+      } else {
+        calEl.textContent = netLine;
+      }
       stepsCaloriesStat.textContent = formatNumber(steps.calories_burned);
       editStepsButton.textContent = t("editStepsBtn");
     }
@@ -2216,19 +2434,42 @@
       document.getElementById("profile-name").value = user.name;
       document.getElementById("profile-email").value = user.email || "";
       document.getElementById("profile-gender").value = user.gender || "";
-      document.getElementById("profile-age").value = user.age ?? "";
+      document.getElementById("profile-birth-date").value = formatBirthDateDisplay(user.birth_date);
+      document.getElementById("profile-height").value =
+        user.height_cm != null ? Math.round(user.height_cm) : "";
       document.getElementById("profile-weight").value = user.weight_kg ?? "";
     }
 
+    function parseHeightCm(value) {
+      if (value === "" || value == null) {
+        return null;
+      }
+      return Math.round(Number(value));
+    }
+
     function buildProfilePayload(formData) {
-      const age = formData.get("age");
+      const birthDateDisplay = formData.get("birth_date");
+      const height = formData.get("height_cm");
       const weight = formData.get("weight_kg");
+
+      let birth_date = null;
+      const birthDateText = String(birthDateDisplay || "").trim();
+      if (birthDateText) {
+        birth_date = parseBirthDateDisplay(birthDateText);
+      } else if (currentUser?.birth_date) {
+        birth_date = currentUser.birth_date;
+      }
+
+      const heightValue = parseHeightCm(height);
+      const weightValue = weight !== "" && weight != null ? Number(weight) : null;
+
       return {
         name: formData.get("name"),
         email: formData.get("email") || null,
         gender: formData.get("gender") || null,
-        age: age ? Number(age) : null,
-        weight_kg: weight ? Number(weight) : null,
+        birth_date,
+        height_cm: heightValue ?? (currentUser?.height_cm != null ? Math.round(currentUser.height_cm) : null),
+        weight_kg: weightValue ?? currentUser?.weight_kg ?? null,
       };
     }
 
@@ -2369,7 +2610,7 @@
 
     function entryUsesAiEstimate(form, entryType, editingId) {
       if (!editingId) {
-        return true;
+        return false;
       }
 
       const formData = new FormData(form);
@@ -2460,7 +2701,7 @@
     }
 
     function formatLoggedAtDisplay(value) {
-      const date = value instanceof Date ? value : new Date(value);
+      const date = snapToQuarterHour(value instanceof Date ? value : new Date(value));
       const day = String(date.getDate()).padStart(2, "0");
       const month = String(date.getMonth() + 1).padStart(2, "0");
       const year = date.getFullYear();
@@ -2471,24 +2712,54 @@
 
     const loggedAtPickerState = new Map();
     let loggedAtPickerDocListenersBound = false;
+    const BIRTH_DATE_DEFAULT_AGE_YEARS = 25;
+    const BIRTH_DATE_MAX_AGE_YEARS = 120;
 
-    function initLoggedAtPickerState(textInputId) {
+    function defaultBirthDateAnchor() {
+      const now = new Date();
+      return new Date(
+        now.getFullYear() - BIRTH_DATE_DEFAULT_AGE_YEARS,
+        now.getMonth(),
+        now.getDate(),
+        12,
+        0,
+        0,
+        0,
+      );
+    }
+
+    function initLoggedAtPickerState(textInputId, mode = "datetime") {
       const textInput = document.getElementById(textInputId);
-      let selected = new Date();
+      let selected = mode === "date" ? defaultBirthDateAnchor() : snapToQuarterHour(new Date());
 
       try {
-        const parsed = parseLoggedAtDisplay(textInput.value);
-        if (parsed) {
-          selected = parsed;
+        if (mode === "date") {
+          const iso = parseBirthDateDisplay(textInput.value);
+          if (iso) {
+            const [year, month, day] = iso.split("-").map(Number);
+            selected = new Date(year, month - 1, day, 12, 0, 0, 0);
+          }
+        } else {
+          const parsed = parseLoggedAtDisplay(textInput.value);
+          if (parsed) {
+            selected = parsed;
+          }
         }
       } catch {
-        // Keep current time when the text field is invalid.
+        if (mode !== "date") {
+          // Keep current time when the text field is invalid.
+        }
+      }
+
+      if (mode !== "date") {
+        selected = snapToQuarterHour(selected);
       }
 
       loggedAtPickerState.set(textInputId, {
         viewYear: selected.getFullYear(),
         viewMonth: selected.getMonth(),
         selected,
+        mode,
       });
 
       return loggedAtPickerState.get(textInputId);
@@ -2510,7 +2781,7 @@
       panel.className = "logged-at-picker-panel hidden";
       panel.setAttribute("role", "dialog");
       panel.innerHTML = `
-        <div class="logged-at-picker-month">
+        <div class="logged-at-picker-nav logged-at-picker-month">
           <button type="button" class="btn-secondary logged-at-picker-prev-month" aria-label="Previous month">‹</button>
           <span class="logged-at-picker-month-label"></span>
           <button type="button" class="btn-secondary logged-at-picker-next-month" aria-label="Next month">›</button>
@@ -2569,8 +2840,26 @@
         return;
       }
 
+      if (state.mode === "date") {
+        const iso = isoFromParts(
+          state.selected.getFullYear(),
+          state.selected.getMonth(),
+          state.selected.getDate(),
+        );
+        if (iso > todayIsoDate()) {
+          state.selected = new Date();
+        }
+        const safeIso = isoFromParts(
+          state.selected.getFullYear(),
+          state.selected.getMonth(),
+          state.selected.getDate(),
+        );
+        document.getElementById(textInputId).value = formatBirthDateDisplay(safeIso);
+        return;
+      }
+
       if (state.selected.getTime() > Date.now()) {
-        state.selected = new Date();
+        state.selected = snapToQuarterHour(new Date());
       }
 
       document.getElementById(textInputId).value = formatLoggedAtDisplay(state.selected);
@@ -2622,7 +2911,7 @@
         return;
       }
 
-      state.selected = candidate;
+      state.selected = snapToQuarterHour(candidate);
       renderLoggedAtPickerPanel(textInputId);
     }
 
@@ -2643,7 +2932,7 @@
       );
 
       if (state.selected.getTime() > Date.now()) {
-        state.selected = new Date();
+        state.selected = snapToQuarterHour(new Date());
       }
 
       renderLoggedAtPickerPanel(textInputId);
@@ -2666,7 +2955,7 @@
       );
 
       if (state.selected.getTime() > Date.now()) {
-        state.selected = new Date();
+        state.selected = snapToQuarterHour(new Date());
       }
 
       renderLoggedAtPickerPanel(textInputId);
@@ -2683,13 +2972,91 @@
       const viewDate = new Date(viewYear, viewMonth, 1);
       const now = new Date();
       const isCurrentMonth = viewYear === now.getFullYear() && viewMonth === now.getMonth();
+      const isDateOnly = state.mode === "date";
 
-      panel.querySelector(".logged-at-picker-month-label").textContent = viewDate.toLocaleDateString(
-        localeTag(),
-        { month: "long", year: "numeric" },
-      );
-      panel.querySelector(".logged-at-picker-time-label").textContent = t("timeLabel");
-      panel.querySelector(".logged-at-picker-next-month").disabled = isCurrentMonth;
+      if (!isDateOnly) {
+        state.selected = snapToQuarterHour(state.selected);
+      }
+
+      panel.classList.toggle("birth-date-mode", isDateOnly);
+
+      const monthNav = panel.querySelector(".logged-at-picker-nav");
+      if (isDateOnly) {
+        monthNav.className = "logged-at-picker-nav logged-at-picker-date-nav";
+        monthNav.innerHTML = `
+          <select class="logged-at-picker-month-select" aria-label="${t("birthDateMonthLabel")}"></select>
+          <select class="logged-at-picker-year-select" aria-label="${t("birthDateYearLabel")}"></select>
+        `;
+
+        const monthSelect = monthNav.querySelector(".logged-at-picker-month-select");
+        const yearSelect = monthNav.querySelector(".logged-at-picker-year-select");
+        const maxYear = now.getFullYear();
+        const minYear = maxYear - BIRTH_DATE_MAX_AGE_YEARS;
+
+        for (let monthIndex = 0; monthIndex < 12; monthIndex += 1) {
+          const option = document.createElement("option");
+          option.value = String(monthIndex);
+          option.textContent = new Date(2000, monthIndex, 1).toLocaleDateString(localeTag(), {
+            month: "long",
+          });
+          option.disabled = viewYear === maxYear && monthIndex > now.getMonth();
+          if (monthIndex === viewMonth) {
+            option.selected = true;
+          }
+          monthSelect.appendChild(option);
+        }
+
+        for (let year = maxYear; year >= minYear; year -= 1) {
+          const option = document.createElement("option");
+          option.value = String(year);
+          option.textContent = String(year);
+          if (year === viewYear) {
+            option.selected = true;
+          }
+          yearSelect.appendChild(option);
+        }
+
+        monthSelect.addEventListener("change", () => {
+          state.viewMonth = Number(monthSelect.value);
+          renderLoggedAtPickerPanel(textInputId);
+        });
+        yearSelect.addEventListener("change", () => {
+          state.viewYear = Number(yearSelect.value);
+          if (
+            state.viewYear === now.getFullYear() &&
+            state.viewMonth > now.getMonth()
+          ) {
+            state.viewMonth = now.getMonth();
+          }
+          renderLoggedAtPickerPanel(textInputId);
+        });
+      } else {
+        monthNav.className = "logged-at-picker-nav logged-at-picker-month";
+        monthNav.innerHTML = `
+          <button type="button" class="btn-secondary logged-at-picker-prev-month" aria-label="Previous month">‹</button>
+          <span class="logged-at-picker-month-label"></span>
+          <button type="button" class="btn-secondary logged-at-picker-next-month" aria-label="Next month">›</button>
+        `;
+        monthNav.querySelector(".logged-at-picker-prev-month").addEventListener("click", (event) => {
+          event.stopPropagation();
+          changeLoggedAtPickerMonth(textInputId, -1);
+        });
+        monthNav.querySelector(".logged-at-picker-next-month").addEventListener("click", (event) => {
+          event.stopPropagation();
+          changeLoggedAtPickerMonth(textInputId, 1);
+        });
+        monthNav.querySelector(".logged-at-picker-month-label").textContent = viewDate.toLocaleDateString(
+          localeTag(),
+          { month: "long", year: "numeric" },
+        );
+        monthNav.querySelector(".logged-at-picker-next-month").disabled = isCurrentMonth;
+      }
+
+      const timeLabel = panel.querySelector(".logged-at-picker-time-label");
+      const timeWrap = panel.querySelector(".logged-at-picker-time");
+      timeLabel.textContent = t("timeLabel");
+      timeLabel.classList.toggle("hidden", isDateOnly);
+      timeWrap.classList.toggle("hidden", isDateOnly);
 
       const weekdaysEl = panel.querySelector(".logged-at-picker-weekdays");
       weekdaysEl.innerHTML = "";
@@ -2730,9 +3097,13 @@
           button.classList.add("selected");
         }
 
-        button.addEventListener("click", () => selectLoggedAtPickerDay(textInputId, viewYear, viewMonth, day));
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          selectLoggedAtPickerDay(textInputId, viewYear, viewMonth, day);
+        });
         button.addEventListener("dblclick", (event) => {
           event.preventDefault();
+          event.stopPropagation();
           selectLoggedAtPickerDay(textInputId, viewYear, viewMonth, day);
           confirmLoggedAtPickerValue(textInputId);
         });
@@ -2742,6 +3113,10 @@
 
       const hoursEl = panel.querySelector(".logged-at-picker-hours");
       hoursEl.innerHTML = "";
+      if (state.mode === "date") {
+        return;
+      }
+
       for (let hour = 0; hour < 24; hour += 1) {
         const button = document.createElement("button");
         button.type = "button";
@@ -2761,7 +3136,7 @@
 
       const minutesEl = panel.querySelector(".logged-at-picker-minutes");
       minutesEl.innerHTML = "";
-      for (let minute = 0; minute < 60; minute += 1) {
+      LOGGED_AT_MINUTE_OPTIONS.forEach((minute) => {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "logged-at-picker-time-option";
@@ -2776,11 +3151,11 @@
           confirmLoggedAtPickerValue(textInputId);
         });
         minutesEl.appendChild(button);
-      }
+      });
     }
 
-    function openLoggedAtPickerPanel(textInputId) {
-      initLoggedAtPickerState(textInputId);
+    function openLoggedAtPickerPanel(textInputId, mode = "datetime") {
+      initLoggedAtPickerState(textInputId, mode);
       ensureLoggedAtPickerPanel(textInputId);
       renderLoggedAtPickerPanel(textInputId);
       closeAllLoggedAtPickerPanels(textInputId);
@@ -2794,32 +3169,41 @@
       }
     }
 
-    function toggleLoggedAtPickerPanel(textInputId) {
+    function toggleLoggedAtPickerPanel(textInputId, mode = "datetime") {
       const panel = getLoggedAtPickerPanel(textInputId);
       if (panel && !panel.classList.contains("hidden")) {
         closeLoggedAtPickerPanel(textInputId);
         return;
       }
 
-      openLoggedAtPickerPanel(textInputId);
+      openLoggedAtPickerPanel(textInputId, mode);
     }
 
-    function setupLoggedAtPicker(textInputId) {
+    function setupLoggedAtPicker(textInputId, mode = "datetime") {
       const textInput = document.getElementById(textInputId);
       const pickerButton = document.getElementById(`${textInputId}-picker-btn`);
       if (!textInput || !pickerButton) {
         return;
       }
 
+      initLoggedAtPickerState(textInputId, mode);
       pickerButton.setAttribute("aria-expanded", "false");
       pickerButton.addEventListener("click", (event) => {
         event.stopPropagation();
-        toggleLoggedAtPickerPanel(textInputId);
+        toggleLoggedAtPickerPanel(textInputId, mode);
       });
 
       textInput.addEventListener("blur", () => {
         try {
-          initLoggedAtPickerState(textInputId);
+          if (mode === "date") {
+            initLoggedAtPickerState(textInputId, mode);
+            return;
+          }
+          const parsed = parseLoggedAtDisplay(textInput.value);
+          if (parsed) {
+            textInput.value = formatLoggedAtDisplay(parsed);
+          }
+          initLoggedAtPickerState(textInputId, mode);
         } catch {
           // Ignore invalid manual input until submit validation runs.
         }
@@ -2834,6 +3218,10 @@
           }
         });
       }
+    }
+
+    function setupBirthDatePicker(textInputId) {
+      setupLoggedAtPicker(textInputId, "date");
     }
 
     function parseLoggedAtDisplay(value) {
@@ -2875,7 +3263,7 @@
         throw new Error(t("invalidDateTimeFormat"));
       }
 
-      return parsed;
+      return snapToQuarterHour(parsed);
     }
 
     function formatLocalTime(isoString) {
@@ -3434,6 +3822,13 @@
       aiInsightBody.className = "insight-body";
       aiInsightBody.innerHTML = "";
 
+      if (data.ai_estimated === false) {
+        const source = document.createElement("p");
+        source.className = "insight-source";
+        source.textContent = t("localInsightNote");
+        aiInsightBody.appendChild(source);
+      }
+
       const feedback = document.createElement("p");
       feedback.className = "insight-feedback";
       feedback.textContent = data.feedback;
@@ -3488,6 +3883,9 @@
     }
 
     function showCalorieModal(data, entryType) {
+      aiLoadingDepth = 0;
+      aiLoadingOverlay.classList.add("hidden");
+
       const isMeal = entryType === "meal";
       const itemName = isMeal ? data.food_name : data.activity_type;
       const calories = isMeal ? data.calories : data.calories_burned;
@@ -3495,11 +3893,15 @@
 
       calorieModalItem.textContent = itemName;
       calorieModalValue.textContent = `${formatNumber(calories)} ${t("calUnit")} ${actionLabel}`;
-      calorieModalNote.textContent = data.ai_estimated ? t("aiPoweredNote") : t("localEstimateNote");
-      if (data.ai_explanation) {
-        calorieModalNote.textContent += ` ${data.ai_explanation}`;
+      if (data.ai_estimated) {
+        calorieModalNote.textContent = data.ai_explanation
+          ? `${t("aiPoweredNote")} ${data.ai_explanation}`
+          : t("aiPoweredNote");
+      } else {
+        calorieModalNote.textContent = data.ai_explanation || t("localEstimateNote");
       }
       calorieModal.classList.remove("hidden");
+      calorieModalClose.focus();
     }
 
     function hideCalorieModal() {
@@ -3599,10 +4001,6 @@
           }
         }
 
-        if (data.calories_recalculated || !isEdit) {
-          showCalorieModal(data, entryType);
-        }
-
         let targetDateIso = null;
         if (!isEdit) {
           if (loggedAt) {
@@ -3622,6 +4020,10 @@
         }
 
         await refreshCalendarAndSummary(targetDateIso);
+
+        if (data.calories_recalculated || !isEdit) {
+          showCalorieModal(data, entryType);
+        }
       } catch (error) {
         messageEl.textContent = error.message;
         messageEl.classList.add("error");
@@ -3637,17 +4039,23 @@
       const formData = new FormData(form);
       let payload;
 
-      if (form.id === "register-form") {
-        payload = {
-          ...buildProfilePayload(formData),
-          username: formData.get("username"),
-          password: formData.get("password"),
-        };
-      } else {
-        payload = {
-          username: formData.get("username"),
-          password: formData.get("password"),
-        };
+      try {
+        if (form.id === "register-form") {
+          payload = {
+            ...buildProfilePayload(formData),
+            username: formData.get("username"),
+            password: formData.get("password"),
+          };
+        } else {
+          payload = {
+            username: formData.get("username"),
+            password: formData.get("password"),
+          };
+        }
+      } catch (error) {
+        authMessage.textContent = error.message;
+        authMessage.classList.add("error");
+        return;
       }
 
       try {
@@ -3713,19 +4121,21 @@
       profileMessage.classList.remove("error");
 
       const formData = new FormData(profileForm);
-      const payload = buildProfilePayload(formData);
-      const usesAi = payload.age != null && payload.weight_kg != null;
+      let payload;
 
       try {
-        const response = usesAi
-          ? await apiFetchWithRetry("/api/profile", {
-              method: "PUT",
-              body: JSON.stringify(payload),
-            }, { loadingMessage: t("bmrCalculating") })
-          : await apiFetch("/api/profile", {
-              method: "PUT",
-              body: JSON.stringify(payload),
-            });
+        payload = buildProfilePayload(formData);
+      } catch (error) {
+        profileMessage.textContent = error.message;
+        profileMessage.classList.add("error");
+        return;
+      }
+
+      try {
+        const response = await apiFetch("/api/profile", {
+          method: "PUT",
+          body: JSON.stringify(payload),
+        });
 
         if (!response.ok) {
           const error = await response.json().catch(() => ({}));
@@ -3736,9 +4146,7 @@
         const user = await response.json();
         showAppView(user);
         closeProfileModal();
-        if (summaryDateInput.value) {
-          await loadSummary();
-        }
+        await refreshCalendarAndSummary();
       } catch (error) {
         profileMessage.textContent = error.message;
         profileMessage.classList.add("error");
@@ -3783,6 +4191,8 @@
     setupLoggedAtPicker("workout-logged-at");
     setupLoggedAtPicker("meal-edit-logged-at");
     setupLoggedAtPicker("workout-edit-logged-at");
+    setupBirthDatePicker("register-birth-date");
+    setupBirthDatePicker("profile-birth-date");
 
     getAiInsightButton.addEventListener("click", () => {
       loadAiInsight().catch((error) => alert(error.message));

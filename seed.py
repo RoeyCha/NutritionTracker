@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, time
+from datetime import date, datetime, timedelta, time
 
 from sqlalchemy.orm import Session
 
@@ -8,18 +8,23 @@ from models import DailySteps, Meal, User, Workout
 from steps_calories import estimate_steps_calories
 
 
+def _default_birth_date_for_age(age: int) -> date:
+    return date.today() - timedelta(days=365 * age)
+
+
 def seed_test_user(db: Session) -> User:
     user = db.query(User).filter(User.username == "test").first()
     if user is not None:
-        if user.gender is None and user.age is None and user.weight_kg is None:
+        if user.gender is None and user.birth_date is None and user.weight_kg is None:
             user.gender = "male"
-            user.age = 30
+            user.birth_date = _default_birth_date_for_age(30)
+            user.height_cm = 175.0
             user.weight_kg = 75.0
             user.initial_weight_kg = 75.0
             apply_bmr_to_user(user)
             db.commit()
             db.refresh(user)
-        elif user.bmr is None and user.age is not None and user.weight_kg is not None:
+        elif user.bmr is None and user.birth_date is not None and user.weight_kg is not None:
             apply_bmr_to_user(user)
             db.commit()
             db.refresh(user)
@@ -31,7 +36,8 @@ def seed_test_user(db: Session) -> User:
         name="Test User",
         email="test@example.com",
         gender="male",
-        age=30,
+        birth_date=_default_birth_date_for_age(30),
+        height_cm=175.0,
         weight_kg=75.0,
         initial_weight_kg=75.0,
     )

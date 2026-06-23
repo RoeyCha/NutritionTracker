@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 import models
-from models import User, migrate_db
+from models import Base, User, migrate_db
 
 
 def _legacy_users_schema(connection) -> None:
@@ -97,3 +97,49 @@ def test_migrate_db_preserves_existing_users(tmp_path: Path, monkeypatch: pytest
         assert user.name == "Legacy User"
     finally:
         session.close()
+
+
+def test_migrate_db_adds_birth_date_and_height_columns(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    db_file = tmp_path / "profile_fields.db"
+    legacy_engine = create_engine(
+        f"sqlite:///{db_file}",
+        connect_args={"check_same_thread": False},
+    )
+
+    with legacy_engine.begin() as connection:
+        connection.execute(
+            text(
+                """
+                CREATE TABLE users (
+                    id INTEGER PRIMARY KEY,
+                    username VARCHAR(50) NOT NULL UNIQUE,
+                    password_hash VARCHAR(255) NOT NULL,
+                    name VARCHAR(100) NOT NULL,
+                    email VARCHAR(255),
+                    gender VARCHAR(20),
+                    age INTEGER,
+                    weight_kg FLOAT,
+                    bmr FLOAT,
+                    bmr_explanation VARCHAR(500),
+                    created_at DATETIME NOT NULL
+                )
+                """
+            )
+        )
+
+    monkeypatch.setattr(models, "engine", legacy_engine)
+    monkeypatch.setattr(
+        models,
+        "SessionLocal",
+        sessionmaker(autocommit=False, autoflush=False, bind=legacy_engine),
+    )
+
+    migrate_db()
+    Base.metadata.create_all(bind=legacy_engine)
+
+    with sqlite3.connect(db_file) as connection:
+        columns = {row[1] for row in connection.execute("PRAGMA table_info(users)")}
+        assert "birth_date" in columns
+        assert "height_cm" in columns

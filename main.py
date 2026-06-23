@@ -1,7 +1,9 @@
 import json
 import logging
 import os
+import re
 import time
+import unicodedata
 from datetime import date, datetime, timedelta, time as dt_time
 from pathlib import Path
 
@@ -25,8 +27,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from gemini_insight import generate_daily_insight
+from profile_utils import validate_birth_date
 from ai_calories import CalorieEstimate, calories_from_macros, estimate_meal_calories, estimate_workout_calories
-from bmr_calculator import apply_bmr_to_user
+from bmr_calculator import apply_bmr_to_user, recalculate_all_users_bmr
 from auth import (
     create_access_token,
     get_current_user,
@@ -90,8 +93,35 @@ class RegisterRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     email: EmailStr | None = None
     gender: str | None = Field(default=None, pattern=r"^(male|female|other)$")
-    age: int | None = Field(default=None, ge=1, le=120)
+    birth_date: date | None = None
+    height_cm: int | None = Field(default=None, ge=50, le=300)
     weight_kg: float | None = Field(default=None, gt=0, le=500)
+
+    @field_validator("gender", mode="before")
+    @classmethod
+    def empty_gender_to_none(cls, value):
+        if value == "":
+            return None
+        return value
+
+    @field_validator("height_cm", mode="before")
+    @classmethod
+    def normalize_height_cm(cls, value):
+        if value == "" or value is None:
+            return None
+        return int(round(float(value)))
+
+    @field_validator("weight_kg", mode="before")
+    @classmethod
+    def empty_weight_to_none(cls, value):
+        if value == "":
+            return None
+        return value
+
+    @field_validator("birth_date")
+    @classmethod
+    def validate_birth_date_field(cls, value: date | None) -> date | None:
+        return validate_birth_date(value)
 
 
 class LoginRequest(BaseModel):
@@ -103,7 +133,8 @@ class ProfileUpdate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     email: EmailStr | None = None
     gender: str | None = Field(default=None, pattern=r"^(male|female|other)$")
-    age: int | None = Field(default=None, ge=1, le=120)
+    birth_date: date | None = None
+    height_cm: int | None = Field(default=None, ge=50, le=300)
     weight_kg: float | None = Field(default=None, gt=0, le=500)
 
     @field_validator("gender", mode="before")
@@ -112,6 +143,25 @@ class ProfileUpdate(BaseModel):
         if value == "":
             return None
         return value
+
+    @field_validator("height_cm", mode="before")
+    @classmethod
+    def normalize_height_cm(cls, value):
+        if value == "" or value is None:
+            return None
+        return int(round(float(value)))
+
+    @field_validator("weight_kg", mode="before")
+    @classmethod
+    def empty_weight_to_none(cls, value):
+        if value == "":
+            return None
+        return value
+
+    @field_validator("birth_date")
+    @classmethod
+    def validate_birth_date_field(cls, value: date | None) -> date | None:
+        return validate_birth_date(value)
 
 
 class MealCreate(BaseModel):
@@ -169,6 +219,66 @@ def _get_user_workout(workout_id: int, user: User, db: Session) -> Workout:
     if workout is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workout not found")
     return workout
+
+
+def _normalize_activity_type(activity_type: str) -> str:
+    text = unicodedata.normalize("NFKC", activity_type.strip())
+    for quote in ('\u05f4', '\u05f3', '\u201c', '\u201d', '\u2018', '\u2019', "'"):
+        text = text.replace(quote, '"')
+    return " ".join(text.split()).lower()
+
+
+def _lookup_prior_workout_estimate(
+    db: Session,
+    user_id: int,
+    activity_type: str,
+    exclude_workout_id: int | None = None,
+) -> CalorieEstimate | None:
+    normalized = _normalize_activity_type(activity_type)
+    query = (
+        db.query(Workout)
+        .filter(Workout.user_id == user_id)
+        .order_by(Workout.logged_at.desc())
+    )
+    if exclude_workout_id is not None:
+        query = query.filter(Workout.id != exclude_workout_id)
+
+    for prior_workout in query:
+        if _normalize_activity_type(prior_workout.activity_type) != normalized:
+            continue
+        logged_date = prior_workout.logged_at.date().isoformat()
+        return CalorieEstimate(
+            calories=prior_workout.calories_burned,
+            explanation=(
+                f'"{prior_workout.activity_type}" was logged before on {logged_date} '
+                f"({prior_workout.calories_burned:g} kcal). Reusing that value for consistency — no new estimate."
+            ),
+            ai_estimated=False,
+        )
+    return None
+
+
+def _estimate_workout_calories(
+    db: Session,
+    user: User,
+    activity_type: str,
+    *,
+    exclude_workout_id: int | None = None,
+    allow_reuse: bool = True,
+) -> CalorieEstimate:
+    if allow_reuse:
+        prior = _lookup_prior_workout_estimate(
+            db, user.id, activity_type, exclude_workout_id=exclude_workout_id
+        )
+        if prior is not None:
+            logger.info(
+                "Reused workout calories for user %s activity %r -> %.1f kcal",
+                user.username,
+                activity_type,
+                prior.calories,
+            )
+            return prior
+    return estimate_workout_calories(activity_type, user)
 
 
 def _ensure_not_future_logged_at(logged_at: datetime | None) -> datetime:
@@ -330,9 +440,13 @@ def _build_meal_nutrition(
     fats: float | None = None,
 ):
     if _macros_provided(protein, carbohydrates, fats):
+        calories = calories_from_macros(protein, carbohydrates, fats)
         return CalorieEstimate(
-            calories=calories_from_macros(protein, carbohydrates, fats),
-            explanation="Calculated from provided macronutrients.",
+            calories=calories,
+            explanation=(
+                f"Calories from your macros: {protein:g}g protein × 4 + {carbohydrates:g}g carbs × 4 + "
+                f"{fats:g}g fat × 9 = {calories:g} kcal. Exact calculation — no estimate."
+            ),
             ai_estimated=False,
             protein=round(protein, 1),
             carbohydrates=round(carbohydrates, 1),
@@ -377,6 +491,7 @@ def on_startup():
     db = SessionLocal()
     try:
         seed_test_user(db)
+        recalculate_all_users_bmr(db)
     finally:
         db.close()
     logger.info("Database ready")
@@ -421,7 +536,8 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         name=payload.name.strip(),
         email=email,
         gender=payload.gender,
-        age=payload.age,
+        birth_date=payload.birth_date,
+        height_cm=payload.height_cm,
         weight_kg=payload.weight_kg,
         initial_weight_kg=payload.weight_kg,
     )
@@ -437,6 +553,7 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
         ) from exc
     db.refresh(user)
     apply_bmr_to_user(user)
+    db.flush()
     db.commit()
     db.refresh(user)
 
@@ -462,7 +579,18 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)):
 
 
 @app.get("/api/auth/me")
-def get_me(current_user: User = Depends(get_current_user)):
+def get_me(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if (
+        current_user.bmr is None
+        and current_user.birth_date is not None
+        and current_user.weight_kg is not None
+    ):
+        apply_bmr_to_user(current_user)
+        db.commit()
+        db.refresh(current_user)
     return user_to_dict(current_user)
 
 
@@ -481,9 +609,14 @@ def update_profile(
     current_user.name = payload.name.strip()
     current_user.email = email
     current_user.gender = payload.gender
-    current_user.age = payload.age
-    current_user.weight_kg = payload.weight_kg
+    if payload.birth_date is not None:
+        current_user.birth_date = payload.birth_date
+    if payload.height_cm is not None:
+        current_user.height_cm = payload.height_cm
+    if payload.weight_kg is not None:
+        current_user.weight_kg = payload.weight_kg
     apply_bmr_to_user(current_user)
+    db.flush()
     db.commit()
     db.refresh(current_user)
     return user_to_dict(current_user)
@@ -683,6 +816,7 @@ def upsert_daily_weight(
         current_user.weight_kg = payload.weight_kg
         apply_bmr_to_user(current_user)
 
+    db.flush()
     db.commit()
     db.refresh(record)
     return {
@@ -797,7 +931,7 @@ def add_workout(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    estimate = estimate_workout_calories(payload.activity_type.strip(), current_user)
+    estimate = _estimate_workout_calories(db, current_user, payload.activity_type.strip())
     workout = Workout(
         user_id=current_user.id,
         activity_type=payload.activity_type.strip(),
@@ -896,7 +1030,13 @@ def update_workout(
     ai_estimated = False
     explanation = ""
     if payload.recalculate_calories or activity_changed:
-        estimate = estimate_workout_calories(new_activity, current_user)
+        estimate = _estimate_workout_calories(
+            db,
+            current_user,
+            new_activity,
+            exclude_workout_id=workout.id,
+            allow_reuse=not payload.recalculate_calories,
+        )
         workout.calories_burned = estimate.calories
         ai_estimated = estimate.ai_estimated
         explanation = estimate.explanation

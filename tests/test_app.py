@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
@@ -160,6 +160,127 @@ def test_log_workout_endpoint_returns_success(mock_estimate, client: TestClient)
 
 
 @patch(
+    "main.estimate_workout_calories",
+    return_value=CalorieEstimate(calories=280.0, explanation="AI estimate", ai_estimated=True),
+)
+def test_log_workout_reuses_prior_activity_calories(mock_estimate, client: TestClient) -> None:
+    first = client.post(
+        "/api/workouts",
+        headers=client.auth_headers,
+        json={"activity_type": "Morning run"},
+    )
+    assert first.status_code == 201
+    assert first.json()["calories_burned"] == 280.0
+    mock_estimate.assert_called_once()
+
+    mock_estimate.reset_mock()
+    second = client.post(
+        "/api/workouts",
+        headers=client.auth_headers,
+        json={"activity_type": "morning run"},
+    )
+    assert second.status_code == 201
+    assert second.json()["calories_burned"] == 280.0
+    assert second.json()["ai_estimated"] is False
+    assert "Reusing" in second.json()["ai_explanation"]
+    mock_estimate.assert_not_called()
+
+
+def test_normalize_activity_type_unifies_hebrew_quotes() -> None:
+    from main import _normalize_activity_type
+
+    ascii_quotes = _normalize_activity_type('הליכה 4 ק"מ, 50 דקות')
+    hebrew_quotes = _normalize_activity_type("הליכה 4 ק\u05f4מ, 50 דקות")
+    assert ascii_quotes == hebrew_quotes
+
+
+@patch(
+    "main.estimate_workout_calories",
+    return_value=CalorieEstimate(calories=278.4, explanation="AI estimate", ai_estimated=True),
+)
+def test_log_workout_reuses_hebrew_activity_with_different_quotes(
+    mock_estimate, client: TestClient
+) -> None:
+    first = client.post(
+        "/api/workouts",
+        headers=client.auth_headers,
+        json={"activity_type": 'הליכה 4 ק"מ, 50 דקות'},
+    )
+    assert first.status_code == 201
+    mock_estimate.assert_called_once()
+
+    mock_estimate.reset_mock()
+    second = client.post(
+        "/api/workouts",
+        headers=client.auth_headers,
+        json={"activity_type": "הליכה 4 ק\u05f4מ, 50 דקות"},
+    )
+    assert second.status_code == 201
+    assert second.json()["ai_estimated"] is False
+    assert second.json()["calories_burned"] == 278.4
+    mock_estimate.assert_not_called()
+
+
+@patch("steps_calories._gemini_steps_calories")
+@patch(
+    "main.estimate_workout_calories",
+    return_value=CalorieEstimate(calories=200.0, explanation="AI estimate", ai_estimated=True),
+)
+def test_add_workout_refreshes_steps_locally_without_ai(
+    mock_workout_estimate, mock_gemini_steps, client: TestClient
+) -> None:
+    today = date.today().isoformat()
+    steps_response = client.put(
+        f"/api/steps?date={today}",
+        headers=client.auth_headers,
+        json={"steps_count": 8000},
+    )
+    assert steps_response.status_code == 200
+
+    workout_response = client.post(
+        "/api/workouts",
+        headers=client.auth_headers,
+        json={"activity_type": "Evening walk"},
+    )
+    assert workout_response.status_code == 201
+    mock_gemini_steps.assert_not_called()
+
+
+@patch(
+    "main.estimate_workout_calories",
+    return_value=CalorieEstimate(calories=280.0, explanation="AI estimate", ai_estimated=True),
+)
+def test_update_workout_reuses_prior_activity_when_renamed(mock_estimate, client: TestClient) -> None:
+    first = client.post(
+        "/api/workouts",
+        headers=client.auth_headers,
+        json={"activity_type": "Morning run"},
+    )
+    assert first.status_code == 201
+    mock_estimate.assert_called_once()
+
+    second = client.post(
+        "/api/workouts",
+        headers=client.auth_headers,
+        json={"activity_type": "Evening walk"},
+    )
+    assert second.status_code == 201
+    workout_id = second.json()["id"]
+    assert mock_estimate.call_count == 2
+
+    mock_estimate.reset_mock()
+    rename_response = client.put(
+        f"/api/workouts/{workout_id}",
+        headers=client.auth_headers,
+        json={"activity_type": "Morning run"},
+    )
+    assert rename_response.status_code == 200
+    assert rename_response.json()["calories_burned"] == 280.0
+    assert rename_response.json()["ai_estimated"] is False
+    mock_estimate.assert_not_called()
+
+
+@patch(
     "main.estimate_meal_calories",
     return_value=CalorieEstimate(calories=400.0, explanation="test", ai_estimated=False),
 )
@@ -318,7 +439,8 @@ def test_latest_weight_uses_registration_baseline_without_daily_log(client: Test
             "password": "secret123",
             "name": "Baseline User",
             "gender": "female",
-            "age": 28,
+            "birth_date": (date.today() - timedelta(days=365 * 28)).isoformat(),
+            "height_cm": 162.0,
             "weight_kg": 68.2,
         },
     )

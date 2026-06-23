@@ -1,3 +1,5 @@
+from datetime import date, timedelta
+
 from fastapi.testclient import TestClient
 
 
@@ -19,6 +21,7 @@ def test_register_without_email(empty_client: TestClient) -> None:
 
 
 def test_register_with_email_and_profile(empty_client: TestClient) -> None:
+    birth_date = date(1998, 3, 15).isoformat()
     response = empty_client.post(
         "/api/auth/register",
         json={
@@ -27,7 +30,8 @@ def test_register_with_email_and_profile(empty_client: TestClient) -> None:
             "name": "Full Profile",
             "email": "full@example.com",
             "gender": "female",
-            "age": 28,
+            "birth_date": birth_date,
+            "height_cm": 165.0,
             "weight_kg": 62.5,
         },
     )
@@ -36,8 +40,12 @@ def test_register_with_email_and_profile(empty_client: TestClient) -> None:
     user = response.json()["user"]
     assert user["email"] == "full@example.com"
     assert user["gender"] == "female"
-    assert user["age"] == 28
+    assert user["birth_date"] == birth_date
+    assert user["height_cm"] == 165.0
     assert user["weight_kg"] == 62.5
+    assert user["age"] == date.today().year - 1998 - (
+        1 if (date.today().month, date.today().day) < (3, 15) else 0
+    )
 
 
 def test_register_duplicate_username_returns_409(empty_client: TestClient) -> None:
@@ -176,10 +184,45 @@ def test_profile_update_clears_email(empty_client: TestClient) -> None:
             "name": "Profile User",
             "email": None,
             "gender": None,
-            "age": None,
+            "birth_date": None,
+            "height_cm": None,
             "weight_kg": None,
         },
     )
 
     assert response.status_code == 200
     assert response.json()["email"] is None
+
+
+def test_profile_update_birth_date_and_height(empty_client: TestClient) -> None:
+    register_response = empty_client.post(
+        "/api/auth/register",
+        json={
+            "username": "profile_fields",
+            "password": "testpass",
+            "name": "Profile Fields",
+        },
+    )
+    token = register_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+    birth_date = date(1990, 7, 4).isoformat()
+
+    response = empty_client.put(
+        "/api/profile",
+        headers=headers,
+        json={
+            "name": "Profile Fields",
+            "email": None,
+            "gender": "male",
+            "birth_date": birth_date,
+            "height_cm": 178.5,
+            "weight_kg": 80.0,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["birth_date"] == birth_date
+    assert payload["height_cm"] == 178
+    assert payload["weight_kg"] == 80.0
+    assert payload["bmr"] is not None
