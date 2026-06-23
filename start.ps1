@@ -16,7 +16,7 @@ Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
         $_.CommandLine -and (
             $_.CommandLine -like "*spawn_main*" -or
             $_.CommandLine -like "*uvicorn*main:app*" -or
-            $_.CommandLine -like "*NutritionTracker*"
+            ($_.CommandLine -like "*NutritionTracker*" -and $_.Name -like "python*")
         )
     } |
     ForEach-Object {

@@ -6,6 +6,7 @@ import time
 import unicodedata
 from datetime import date, datetime, timedelta, time as dt_time
 from pathlib import Path
+from typing import Literal
 
 from dotenv import load_dotenv
 
@@ -19,7 +20,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, EmailStr, Field, field_validator
@@ -34,6 +35,7 @@ from bmr_calculator import apply_bmr_to_user, recalculate_all_users_bmr
 from auth import (
     create_access_token,
     get_current_user,
+    get_current_user_for_download,
     get_db,
     hash_password,
     user_to_dict,
@@ -42,6 +44,15 @@ from auth import (
 from models import DailySteps, DailyWeight, Meal, SessionLocal, User, Workout, init_db
 from seed import seed_test_user
 from steps_calories import estimate_steps_calories
+from user_data_io import (
+    export_csv,
+    export_json,
+    import_csv_payload,
+    import_json_payload,
+    parse_csv_payload,
+    parse_json_payload,
+    preview_import,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -235,6 +246,21 @@ class StepsUpsert(BaseModel):
 
 class WeightUpsert(BaseModel):
     weight_kg: float = Field(..., ge=1, le=500)
+
+
+class ImportResolutions(BaseModel):
+    profile: Literal["existing", "imported"] | None = None
+    meals: dict[str, Literal["existing", "imported"]] = Field(default_factory=dict)
+    workouts: dict[str, Literal["existing", "imported"]] = Field(default_factory=dict)
+    steps: dict[str, Literal["existing", "imported"]] = Field(default_factory=dict)
+    weights: dict[str, Literal["existing", "imported"]] = Field(default_factory=dict)
+
+
+class ImportApplyRequest(BaseModel):
+    mode: Literal["overwrite", "new_only"] = "overwrite"
+    format: Literal["json", "csv"] = "json"
+    content: str
+    resolutions: ImportResolutions | None = None
 
 
 def _get_user_meal(meal_id: int, user: User, db: Session) -> Meal:
@@ -538,6 +564,8 @@ def get_capabilities():
             "steps": True,
             "weight": True,
             "ai_insight": True,
+            "data_export": True,
+            "data_import": True,
         }
     }
 
@@ -1108,3 +1136,95 @@ def delete_workout(
     db.commit()
     logger.info("Deleted workout %s for user %s", workout_id, current_user.username)
     return {"id": workout_id, "deleted": True}
+
+
+@app.get("/api/user-data/export")
+def export_user_data(
+    export_format: Literal["json", "csv"] = Query("json", alias="format"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user_for_download),
+):
+    filename_base = f"nutrition-tracker-{current_user.username}"
+    if export_format == "csv":
+        content = export_csv(current_user, db)
+        return Response(
+            content=content.encode("utf-8-sig"),
+            media_type="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename_base}.csv"',
+                "Cache-Control": "no-store",
+            },
+        )
+
+    content = export_json(current_user, db)
+    return Response(
+        content=content.encode("utf-8"),
+        media_type="application/json; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename_base}.json"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+@app.post("/api/user-data/import/preview")
+async def preview_user_data_import(
+    request: Request,
+    import_format: Literal["json", "csv"] = Query("json", alias="format"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    body = await request.body()
+    try:
+        if import_format == "csv":
+            payload = parse_csv_payload(body.decode("utf-8-sig"))
+        else:
+            payload = parse_json_payload(json.loads(body.decode("utf-8")))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except json.JSONDecodeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid JSON payload",
+        ) from exc
+
+    return preview_import(current_user, db, payload)
+
+
+@app.post("/api/user-data/import")
+async def import_user_data(
+    apply_request: ImportApplyRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    resolutions = apply_request.resolutions.model_dump() if apply_request.resolutions else None
+    try:
+        if apply_request.format == "csv":
+            result = import_csv_payload(
+                current_user,
+                db,
+                apply_request.content,
+                mode=apply_request.mode,
+                resolutions=resolutions,
+            )
+        else:
+            payload = parse_json_payload(json.loads(apply_request.content))
+            result = import_json_payload(
+                current_user,
+                db,
+                payload,
+                mode=apply_request.mode,
+                resolutions=resolutions,
+            )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except json.JSONDecodeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid JSON payload",
+        ) from exc
+
+    db.commit()
+    db.refresh(current_user)
+    logger.info("Imported user data for %s: %s", current_user.username, result.to_dict())
+    return result.to_dict()

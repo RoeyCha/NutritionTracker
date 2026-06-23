@@ -769,17 +769,24 @@
     }
 
     .profile-bar {
+      position: sticky;
+      top: 0;
+      z-index: 1100;
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 1rem;
       flex-wrap: wrap;
       margin-bottom: 1rem;
+      background: var(--card);
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
     }
 
     .profile-meta {
       color: var(--muted);
       font-size: 0.95rem;
+      min-width: 0;
+      flex: 1;
     }
 
     .profile-meta strong { color: var(--text); }
@@ -790,13 +797,106 @@
       margin-top: 0.25rem;
     }
 
-    .profile-actions {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
+    .profile-menu-wrap {
+      position: relative;
+      flex-shrink: 0;
     }
 
-    .profile-actions button { width: auto; min-width: 110px; }
+    .profile-menu-btn {
+      align-items: center;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      cursor: pointer;
+      display: inline-flex;
+      justify-content: center;
+      min-height: 48px;
+      min-width: 48px;
+      padding: 0.5rem;
+      width: auto;
+    }
+
+    .profile-menu-btn:hover {
+      background: #edf2f7;
+    }
+
+    .profile-menu-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .profile-menu {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.14);
+      min-width: 240px;
+      padding: 0.35rem;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 0.35rem);
+      z-index: 1200;
+    }
+
+    .profile-menu.hidden {
+      display: none;
+    }
+
+    [dir="rtl"] .profile-menu {
+      left: 0;
+      right: auto;
+    }
+
+    .profile-menu-divider {
+      background: var(--border);
+      height: 1px;
+      margin: 0.35rem 0;
+    }
+
+    .profile-menu-item {
+      align-items: center;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      font-family: inherit;
+      font-size: 0.95rem;
+      gap: 0.65rem;
+      min-height: 48px;
+      padding: 0.55rem 0.75rem;
+      text-align: start;
+      width: 100%;
+    }
+
+    .profile-menu-item:hover,
+    .profile-menu-item:focus-visible {
+      background: #edf2f7;
+      outline: none;
+    }
+
+    .profile-menu-icon {
+      align-items: center;
+      color: var(--muted);
+      display: inline-flex;
+      flex-shrink: 0;
+      justify-content: center;
+      width: 20px;
+    }
+
+    .profile-menu-text {
+      flex: 1;
+    }
+
+    .profile-menu-item-danger {
+      color: var(--danger);
+    }
+
+    .profile-menu-item-danger .profile-menu-icon {
+      color: var(--danger);
+    }
 
     [dir="rtl"] .list-item-name { text-align: right; }
     [dir="rtl"] .list-item-value { text-align: left; white-space: nowrap; }
@@ -853,7 +953,7 @@
       align-items: center;
       justify-content: center;
       padding: 1rem;
-      z-index: 1000;
+      z-index: 1300;
     }
 
     #calorie-modal {
@@ -912,6 +1012,112 @@
     .modal-form-actions button {
       flex: 1;
       min-width: 120px;
+    }
+
+    .modal-card-import {
+      max-width: 640px;
+      max-height: min(90vh, 720px);
+      overflow: auto;
+      text-align: start;
+    }
+
+    .import-summary {
+      margin: 0 0 1rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .import-mode-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      margin-bottom: 1rem;
+    }
+
+    .import-mode-option {
+      display: flex;
+      gap: 0.6rem;
+      align-items: flex-start;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .import-mode-option:has(input:checked) {
+      border-color: var(--accent);
+      background: rgba(37, 99, 235, 0.06);
+    }
+
+    .import-mode-option input {
+      margin-top: 0.2rem;
+    }
+
+    .import-mode-option strong {
+      display: block;
+      margin-bottom: 0.15rem;
+    }
+
+    .import-mode-option span {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .import-conflicts {
+      margin-top: 1rem;
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+    }
+
+    .import-conflicts h4 {
+      margin: 0 0 0.75rem;
+      font-size: 1rem;
+    }
+
+    .import-conflict-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .import-conflict-item legend,
+    .import-conflict-label {
+      font-weight: 600;
+      font-size: 0.92rem;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .import-choice-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .import-choice-option {
+      display: flex;
+      gap: 0.55rem;
+      align-items: flex-start;
+      padding: 0.55rem 0.65rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .import-choice-option:has(input:checked) {
+      border-color: var(--accent);
+      background: rgba(37, 99, 235, 0.05);
+    }
+
+    .import-choice-option input {
+      margin-top: 0.15rem;
+    }
+
+    .import-choice-text {
+      font-size: 0.9rem;
+      line-height: 1.4;
     }
 
     button:disabled {
@@ -1150,18 +1356,99 @@
     <div id="app-section" class="hidden">
       <div id="server-warning" class="server-warning hidden" role="alert"></div>
 
-      <section class="card profile-bar">
+      <section class="card profile-bar" id="profile-bar">
         <div class="profile-meta">
           <span data-i18n="signedInAs">Signed in as</span>
           <strong id="profile-display-name">-</strong>
           (<span id="profile-username">-</span>)
           <div id="profile-details" class="profile-details"></div>
         </div>
-        <div class="profile-actions">
-          <button type="button" class="btn-secondary" id="edit-profile-btn" data-i18n="editProfile">Edit profile</button>
-          <button type="button" class="btn-secondary" id="logout-btn" data-i18n="logout">Logout</button>
+        <div class="profile-menu-wrap">
+          <button
+            type="button"
+            class="profile-menu-btn"
+            id="profile-menu-btn"
+            aria-haspopup="menu"
+            aria-expanded="false"
+            aria-controls="profile-menu"
+            data-i18n-aria-label="profileMenuLabel"
+            aria-label="Account menu"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </button>
+          <div id="profile-menu" class="profile-menu hidden" role="menu" aria-labelledby="profile-menu-btn">
+            <button type="button" role="menuitem" class="profile-menu-item" id="menu-edit-profile">
+              <span class="profile-menu-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+                </svg>
+              </span>
+              <span class="profile-menu-text" data-i18n="editProfile">Edit profile</span>
+            </button>
+            <div class="profile-menu-divider" role="separator"></div>
+            <button type="button" role="menuitem" class="profile-menu-item" id="menu-export-json">
+              <span class="profile-menu-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+              </span>
+              <span class="profile-menu-text" data-i18n="exportJson">Export JSON</span>
+            </button>
+            <button type="button" role="menuitem" class="profile-menu-item" id="menu-export-csv">
+              <span class="profile-menu-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="8" y1="13" x2="16" y2="13"></line>
+                  <line x1="8" y1="17" x2="16" y2="17"></line>
+                </svg>
+              </span>
+              <span class="profile-menu-text" data-i18n="exportCsv">Export CSV</span>
+            </button>
+            <button type="button" role="menuitem" class="profile-menu-item" id="menu-import-json">
+              <span class="profile-menu-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </span>
+              <span class="profile-menu-text" data-i18n="importJson">Import JSON</span>
+            </button>
+            <button type="button" role="menuitem" class="profile-menu-item" id="menu-import-csv">
+              <span class="profile-menu-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="12" y1="12" x2="12" y2="18"></line>
+                  <polyline points="9 15 12 18 15 15"></polyline>
+                </svg>
+              </span>
+              <span class="profile-menu-text" data-i18n="importCsv">Import CSV</span>
+            </button>
+            <div class="profile-menu-divider" role="separator"></div>
+            <button type="button" role="menuitem" class="profile-menu-item profile-menu-item-danger" id="menu-logout">
+              <span class="profile-menu-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+              </span>
+              <span class="profile-menu-text" data-i18n="logout">Logout</span>
+            </button>
+          </div>
         </div>
       </section>
+      <input type="file" id="import-json-input" class="hidden" accept=".json,application/json">
+      <input type="file" id="import-csv-input" class="hidden" accept=".csv,text/csv">
 
       <section class="card dashboard-panel">
         <div class="date-nav-top">
@@ -1575,6 +1862,40 @@
     </div>
   </div>
 
+  <div id="import-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="import-modal-title">
+    <div class="modal-card modal-card-form modal-card-import">
+      <h3 id="import-modal-title" data-i18n="importModalTitle">Import data</h3>
+      <p id="import-summary" class="import-summary"></p>
+      <fieldset class="import-mode-options">
+        <legend class="sr-only" data-i18n="importModeLegend">Import mode</legend>
+        <label class="import-mode-option">
+          <input type="radio" name="import-mode" value="overwrite" checked>
+          <div>
+            <strong data-i18n="importModeOverwrite">Overwrite existing data</strong>
+            <span data-i18n="importModeOverwriteHint">Replace matching entries with the imported file.</span>
+          </div>
+        </label>
+        <label class="import-mode-option">
+          <input type="radio" name="import-mode" value="new_only">
+          <div>
+            <strong data-i18n="importModeNewOnly">Import new items only</strong>
+            <span data-i18n="importModeNewOnlyHint">Keep existing entries and add only new timestamps or dates.</span>
+          </div>
+        </label>
+      </fieldset>
+      <div id="import-conflicts-section" class="import-conflicts hidden">
+        <h4 data-i18n="importConflictsTitle">Resolve conflicts</h4>
+        <p class="ai-hint" data-i18n="importConflictsHint">These entries share the same timestamp or date but have different details. Choose which version to keep.</p>
+        <div id="import-conflicts-list"></div>
+      </div>
+      <p class="message" id="import-modal-message"></p>
+      <div class="form-actions modal-form-actions">
+        <button type="button" class="btn-primary" id="import-confirm-btn" data-i18n="importConfirmBtn">Import</button>
+        <button type="button" class="btn-secondary" id="import-cancel-btn" data-i18n="cancelEdit">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div id="calorie-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="calorie-modal-title">
     <div class="modal-card">
       <h3 id="calorie-modal-title" data-i18n="caloriePopupTitle">Calories calculated</h3>
@@ -1630,6 +1951,34 @@
         testUserHint: "Test account: username test, password 1234",
         signedInAs: "Signed in as",
         editProfile: "Edit profile",
+        profileMenuLabel: "Account menu",
+        exportJson: "Export JSON",
+        exportCsv: "Export CSV",
+        importJson: "Import JSON",
+        importCsv: "Import CSV",
+        exportSuccess: "Data exported successfully.",
+        importSuccess: "Data imported successfully.",
+        importModalTitle: "Import data",
+        importModeLegend: "Import mode",
+        importModeOverwrite: "Overwrite existing data",
+        importModeOverwriteHint: "Delete all existing meals, workouts, steps, and weights, then import only what is in the file.",
+        importModeNewOnly: "Import new items only",
+        importModeNewOnlyHint: "Keep existing entries and add only new timestamps or dates.",
+        importConflictsTitle: "Resolve conflicts",
+        importConflictsHint: "These entries share the same timestamp or date but have different details. Choose which version to keep.",
+        importConfirmBtn: "Import",
+        importSummaryNew: "{count} new",
+        importSummaryConflict: "{count} conflicts",
+        importSummaryDuplicate: "{count} unchanged",
+        importConflictMeal: "Meal at {when}",
+        importConflictWorkout: "Workout at {when}",
+        importConflictSteps: "Steps on {when}",
+        importConflictWeight: "Weight on {when}",
+        importConflictProfile: "Profile",
+        importKeepExisting: "Keep current",
+        importUseImported: "Use imported",
+        importResolveAll: "Resolve all conflicts before importing.",
+        importNoData: "No importable records found in this file.",
         logout: "Logout",
         saveProfile: "Save profile",
         summaryDate: "Summary date",
@@ -1788,6 +2137,34 @@
         testUserHint: "חשבון בדיקה: שם משתמש test, סיסמה 1234",
         signedInAs: "מחובר בתור",
         editProfile: "עריכת פרופיל",
+        profileMenuLabel: "תפריט חשבון",
+        exportJson: "ייצוא JSON",
+        exportCsv: "ייצוא CSV",
+        importJson: "ייבוא JSON",
+        importCsv: "ייבוא CSV",
+        exportSuccess: "הנתונים יוצאו בהצלחה.",
+        importSuccess: "הנתונים יובאו בהצלחה.",
+        importModalTitle: "ייבוא נתונים",
+        importModeLegend: "מצב ייבוא",
+        importModeOverwrite: "דרוס נתונים קיימים",
+        importModeOverwriteHint: "מחק את כל הארוחות, האימונים, הצעדים והמשקלים הקיימים, וייבא רק מה שבקובץ.",
+        importModeNewOnly: "ייבא רק פריטים חדשים",
+        importModeNewOnlyHint: "שמור רשומות קיימות והוסף רק חותמות זמן או תאריכים חדשים.",
+        importConflictsTitle: "פתרון התנגשויות",
+        importConflictsHint: "לרשומות אלו אותה חותמת זמן או תאריך אך פרטים שונים. בחר איזו גרסה לשמור.",
+        importConfirmBtn: "ייבא",
+        importSummaryNew: "{count} חדשים",
+        importSummaryConflict: "{count} התנגשויות",
+        importSummaryDuplicate: "{count} ללא שינוי",
+        importConflictMeal: "ארוחה ב-{when}",
+        importConflictWorkout: "אימון ב-{when}",
+        importConflictSteps: "צעדים ב-{when}",
+        importConflictWeight: "משקל ב-{when}",
+        importConflictProfile: "פרופיל",
+        importKeepExisting: "שמור נוכחי",
+        importUseImported: "השתמש בייבוא",
+        importResolveAll: "פתור את כל ההתנגשויות לפני הייבוא.",
+        importNoData: "לא נמצאו רשומות לייבוא בקובץ זה.",
         logout: "התנתק",
         saveProfile: "שמור פרופיל",
         summaryDate: "תאריך סיכום",
@@ -2559,11 +2936,13 @@
     function showAuthView() {
       authSection.classList.remove("hidden");
       appSection.classList.add("hidden");
+      closeProfileMenu();
       closeProfileModal();
       closeMealEditModal();
       closeWorkoutEditModal();
       closeStepsEditModal();
       closeWeightEditModal();
+      closeImportModal();
       currentUser = null;
     }
 
@@ -2576,6 +2955,368 @@
 
       authSection.classList.add("hidden");
       appSection.classList.remove("hidden");
+    }
+
+    const profileMenuBtn = document.getElementById("profile-menu-btn");
+    const profileMenu = document.getElementById("profile-menu");
+    const importJsonInput = document.getElementById("import-json-input");
+    const importCsvInput = document.getElementById("import-csv-input");
+    const importModal = document.getElementById("import-modal");
+    const importSummaryEl = document.getElementById("import-summary");
+    const importConflictsSection = document.getElementById("import-conflicts-section");
+    const importConflictsList = document.getElementById("import-conflicts-list");
+    const importModalMessage = document.getElementById("import-modal-message");
+    const importConfirmBtn = document.getElementById("import-confirm-btn");
+    let pendingImport = null;
+
+    function closeProfileMenu() {
+      if (!profileMenu || !profileMenuBtn) {
+        return;
+      }
+      profileMenu.classList.add("hidden");
+      profileMenuBtn.setAttribute("aria-expanded", "false");
+    }
+
+    function toggleProfileMenu(forceOpen = null) {
+      if (!profileMenu || !profileMenuBtn) {
+        return;
+      }
+      const shouldOpen = forceOpen ?? profileMenu.classList.contains("hidden");
+      if (shouldOpen) {
+        profileMenu.classList.remove("hidden");
+        profileMenuBtn.setAttribute("aria-expanded", "true");
+      } else {
+        closeProfileMenu();
+      }
+    }
+
+    function buildExportDownloadUrl(format) {
+      const params = new URLSearchParams({
+        format,
+        token: authToken,
+      });
+      return `/api/user-data/export?${params.toString()}`;
+    }
+
+    function downloadUserExport(format) {
+      closeProfileMenu();
+      if (!authToken) {
+        showToast(t("authRequired"), "error");
+        return;
+      }
+
+      const link = document.createElement("a");
+      link.href = buildExportDownloadUrl(format);
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      showToast(t("exportSuccess"));
+    }
+
+    function formatImportWhen(value) {
+      if (!value) {
+        return "";
+      }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return formatShortDate(value);
+      }
+      try {
+        const parsed = new Date(value);
+        if (Number.isNaN(parsed.getTime())) {
+          return value;
+        }
+        return formatLoggedAtDisplay(parsed);
+      } catch {
+        return value;
+      }
+    }
+
+    function summarizeImportCounts(summary) {
+      const parts = [];
+      const categories = [
+        ["meals", summary.meals_new, summary.meals_conflict, summary.meals_duplicate],
+        ["workouts", summary.workouts_new, summary.workouts_conflict, summary.workouts_duplicate],
+        ["steps", summary.steps_new, summary.steps_conflict, summary.steps_duplicate],
+        ["weights", summary.weights_new, summary.weights_conflict, summary.weights_duplicate],
+      ];
+      const labels = {
+        meals: currentLang === "he" ? "ארוחות" : "Meals",
+        workouts: currentLang === "he" ? "אימונים" : "Workouts",
+        steps: currentLang === "he" ? "צעדים" : "Steps",
+        weights: currentLang === "he" ? "משקל" : "Weight",
+      };
+
+      for (const [key, newCount, conflictCount, duplicateCount] of categories) {
+        const lineParts = [];
+        if (newCount) {
+          lineParts.push(`${labels[key]}: ${tf("importSummaryNew", { count: newCount })}`);
+        }
+        if (conflictCount) {
+          lineParts.push(`${labels[key]}: ${tf("importSummaryConflict", { count: conflictCount })}`);
+        }
+        if (duplicateCount) {
+          lineParts.push(`${labels[key]}: ${tf("importSummaryDuplicate", { count: duplicateCount })}`);
+        }
+        if (lineParts.length) {
+          parts.push(lineParts.join(", "));
+        }
+      }
+      return parts.join(" · ");
+    }
+
+    function describeMeal(item) {
+      return `${item.food_name} — ${Math.round(item.calories)} cal`;
+    }
+
+    function describeWorkout(item) {
+      return `${item.activity_type} — ${Math.round(item.calories_burned)} cal`;
+    }
+
+    function describeSteps(item) {
+      return `${item.steps_count} ${t("stepsUnit")} — ${Math.round(item.calories_burned || 0)} cal`;
+    }
+
+    function describeWeight(item) {
+      return `${item.weight_kg} kg`;
+    }
+
+    function describeProfile(item) {
+      if (!item) {
+        return "";
+      }
+      const parts = [];
+      if (item.name) {
+        parts.push(item.name);
+      }
+      if (item.weight_kg != null) {
+        parts.push(`${item.weight_kg} kg`);
+      }
+      if (item.height_cm != null) {
+        parts.push(`${item.height_cm} cm`);
+      }
+      return parts.join(" · ") || t("importConflictProfile");
+    }
+
+    function buildImportConflictHtml(category, conflict, index) {
+      const key = conflict.key;
+      const fieldName = `${category}-${index}`;
+      let title = "";
+      let existingText = "";
+      let importedText = "";
+
+      if (category === "meals") {
+        title = tf("importConflictMeal", { when: formatImportWhen(key) });
+        existingText = describeMeal(conflict.existing);
+        importedText = describeMeal(conflict.imported);
+      } else if (category === "workouts") {
+        title = tf("importConflictWorkout", { when: formatImportWhen(key) });
+        existingText = describeWorkout(conflict.existing);
+        importedText = describeWorkout(conflict.imported);
+      } else if (category === "steps") {
+        title = tf("importConflictSteps", { when: formatImportWhen(key) });
+        existingText = describeSteps(conflict.existing);
+        importedText = describeSteps(conflict.imported);
+      } else if (category === "weights") {
+        title = tf("importConflictWeight", { when: formatImportWhen(key) });
+        existingText = describeWeight(conflict.existing);
+        importedText = describeWeight(conflict.imported);
+      } else if (category === "profile") {
+        title = t("importConflictProfile");
+        existingText = describeProfile(conflict.existing);
+        importedText = describeProfile(conflict.imported);
+      }
+
+      return `
+        <div class="import-conflict-item" data-conflict-category="${category}" data-conflict-key="${escapeHtml(key)}">
+          <span class="import-conflict-label">${escapeHtml(title)}</span>
+          <div class="import-choice-row">
+            <label class="import-choice-option">
+              <input type="radio" name="${fieldName}" value="existing">
+              <span class="import-choice-text"><strong>${escapeHtml(t("importKeepExisting"))}</strong><br>${escapeHtml(existingText)}</span>
+            </label>
+            <label class="import-choice-option">
+              <input type="radio" name="${fieldName}" value="imported">
+              <span class="import-choice-text"><strong>${escapeHtml(t("importUseImported"))}</strong><br>${escapeHtml(importedText)}</span>
+            </label>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderImportConflicts(preview) {
+      const mode = document.querySelector('input[name="import-mode"]:checked')?.value || "overwrite";
+      const hasConflicts = preview.has_conflicts;
+      if (!hasConflicts || mode === "overwrite") {
+        importConflictsSection.classList.add("hidden");
+        importConflictsList.innerHTML = "";
+        return;
+      }
+
+      const chunks = [];
+      for (const category of ["meals", "workouts", "steps", "weights"]) {
+        (preview.conflicts[category] || []).forEach((conflict, index) => {
+          chunks.push(buildImportConflictHtml(category, conflict, index));
+        });
+      }
+      if (preview.profile?.has_conflict) {
+        chunks.push(
+          buildImportConflictHtml(
+            "profile",
+            {
+              key: "profile",
+              existing: preview.profile.existing,
+              imported: preview.profile.imported,
+            },
+            0,
+          ),
+        );
+      }
+
+      importConflictsList.innerHTML = chunks.join("");
+      importConflictsSection.classList.remove("hidden");
+    }
+
+    function closeImportModal() {
+      if (!importModal) {
+        return;
+      }
+      importModal.classList.add("hidden");
+      importModalMessage.textContent = "";
+      importModalMessage.classList.remove("error");
+      pendingImport = null;
+    }
+
+    function openImportModal(preview) {
+      if (!importModal || !pendingImport) {
+        return;
+      }
+
+      importSummaryEl.textContent = summarizeImportCounts(preview.summary) || t("importNoData");
+      document.querySelector('input[name="import-mode"][value="overwrite"]').checked = true;
+      renderImportConflicts(preview);
+      importModal.classList.remove("hidden");
+    }
+
+    function collectImportResolutions() {
+      const resolutions = {
+        profile: null,
+        meals: {},
+        workouts: {},
+        steps: {},
+        weights: {},
+      };
+
+      importConflictsList.querySelectorAll(".import-conflict-item").forEach((item) => {
+        const category = item.dataset.conflictCategory;
+        const key = item.dataset.conflictKey;
+        const selected = item.querySelector('input[type="radio"]:checked');
+        if (!selected) {
+          return;
+        }
+        if (category === "profile") {
+          resolutions.profile = selected.value;
+        } else {
+          resolutions[category][key] = selected.value;
+        }
+      });
+
+      return resolutions;
+    }
+
+    function importConflictsResolved(mode, preview) {
+      if (mode === "overwrite" || !preview.has_conflicts) {
+        return true;
+      }
+
+      const items = importConflictsList.querySelectorAll(".import-conflict-item");
+      return Array.from(items).every((item) => item.querySelector('input[type="radio"]:checked'));
+    }
+
+    async function applyUserImport(mode, preview) {
+      if (!pendingImport) {
+        return;
+      }
+
+      if (!importConflictsResolved(mode, preview)) {
+        importModalMessage.textContent = t("importResolveAll");
+        importModalMessage.classList.add("error");
+        return;
+      }
+
+      importModalMessage.textContent = "";
+      importModalMessage.classList.remove("error");
+      importConfirmBtn.disabled = true;
+
+      try {
+        const response = await fetch("/api/user-data/import", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+            Accept: "application/json",
+            "Content-Type": "application/json; charset=utf-8",
+          },
+          body: JSON.stringify({
+            mode,
+            format: pendingImport.format,
+            content: pendingImport.content,
+            resolutions: collectImportResolutions(),
+          }),
+        });
+
+        if (response.status === 401) {
+          throw new Error(t("authRequired"));
+        }
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          const detail = data.detail || t("requestFailed");
+          throw new Error(Array.isArray(detail) ? detail.map((item) => item.msg).join(", ") : detail);
+        }
+
+        closeImportModal();
+        await reloadCurrentUserProfile();
+        await refreshCalendarAndSummary();
+        showToast(t("importSuccess"));
+        return data;
+      } finally {
+        importConfirmBtn.disabled = false;
+      }
+    }
+
+    async function uploadUserImport(format, file) {
+      if (!file) {
+        return;
+      }
+
+      closeProfileMenu();
+      if (!authToken) {
+        throw new Error(t("authRequired"));
+      }
+
+      const contentType = format === "csv" ? "text/csv; charset=utf-8" : "application/json; charset=utf-8";
+      const content = await file.text();
+      const previewResponse = await fetch(`/api/user-data/import/preview?format=${format}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": contentType,
+        },
+        body: content,
+      });
+
+      if (previewResponse.status === 401) {
+        throw new Error(t("authRequired"));
+      }
+
+      const preview = await previewResponse.json().catch(() => ({}));
+      if (!previewResponse.ok) {
+        const detail = preview.detail || t("requestFailed");
+        throw new Error(Array.isArray(detail) ? detail.map((item) => item.msg).join(", ") : detail);
+      }
+
+      pendingImport = { format, content, preview };
+      openImportModal(preview);
     }
 
     async function apiFetch(url, options = {}) {
@@ -2708,7 +3449,14 @@
     }
 
     async function checkServerCapabilities() {
-      const required = ["meal_edit", "meal_delete", "workout_edit", "workout_delete"];
+      const required = [
+        "meal_edit",
+        "meal_delete",
+        "workout_edit",
+        "workout_delete",
+        "data_export",
+        "data_import",
+      ];
 
       try {
         const response = await fetch(`/api/capabilities?t=${Date.now()}`, { cache: "no-store" });
@@ -3687,6 +4435,12 @@
         return;
       }
 
+      if (profileMenu && !profileMenu.classList.contains("hidden")) {
+        event.preventDefault();
+        closeProfileMenu();
+        return;
+      }
+
       const openPicker = document.querySelector(".logged-at-picker-panel:not(.hidden)");
       if (openPicker) {
         event.preventDefault();
@@ -3700,6 +4454,7 @@
         { el: stepsEditModal, close: closeStepsEditModal },
         { el: weightEditModal, close: closeWeightEditModal },
         { el: profileModal, close: closeProfileModal },
+        { el: importModal, close: closeImportModal },
         { el: calorieModal, close: hideCalorieModal },
       ];
 
@@ -4290,13 +5045,91 @@
       }
     });
 
-    document.getElementById("logout-btn").addEventListener("click", () => {
+    document.getElementById("menu-logout").addEventListener("click", () => {
+      closeProfileMenu();
       setAuthToken("");
       showAuthView();
       authMessage.textContent = "";
     });
 
-    document.getElementById("edit-profile-btn").addEventListener("click", openProfileModal);
+    document.getElementById("menu-edit-profile").addEventListener("click", () => {
+      closeProfileMenu();
+      openProfileModal();
+    });
+
+    document.getElementById("menu-export-json").addEventListener("click", () => {
+      downloadUserExport("json");
+    });
+
+    document.getElementById("menu-export-csv").addEventListener("click", () => {
+      downloadUserExport("csv");
+    });
+
+    document.getElementById("menu-import-json").addEventListener("click", () => {
+      closeProfileMenu();
+      importJsonInput.value = "";
+      importJsonInput.click();
+    });
+
+    document.getElementById("menu-import-csv").addEventListener("click", () => {
+      closeProfileMenu();
+      importCsvInput.value = "";
+      importCsvInput.click();
+    });
+
+    profileMenuBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleProfileMenu();
+    });
+
+    profileMenu.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+
+    document.addEventListener("click", () => {
+      closeProfileMenu();
+    });
+
+    importJsonInput.addEventListener("change", () => {
+      const file = importJsonInput.files?.[0];
+      uploadUserImport("json", file)
+        .catch((error) => showToast(error.message, "error"))
+        .finally(() => {
+          importJsonInput.value = "";
+        });
+    });
+
+    importCsvInput.addEventListener("change", () => {
+      const file = importCsvInput.files?.[0];
+      uploadUserImport("csv", file)
+        .catch((error) => showToast(error.message, "error"))
+        .finally(() => {
+          importCsvInput.value = "";
+        });
+    });
+
+    document.querySelectorAll('input[name="import-mode"]').forEach((input) => {
+      input.addEventListener("change", () => {
+        if (pendingImport?.preview) {
+          renderImportConflicts(pendingImport.preview);
+          importModalMessage.textContent = "";
+          importModalMessage.classList.remove("error");
+        }
+      });
+    });
+
+    importConfirmBtn.addEventListener("click", () => {
+      if (!pendingImport?.preview) {
+        return;
+      }
+      const mode = document.querySelector('input[name="import-mode"]:checked')?.value || "overwrite";
+      applyUserImport(mode, pendingImport.preview).catch((error) => {
+        importModalMessage.textContent = error.message;
+        importModalMessage.classList.add("error");
+      });
+    });
+
+    setupModalDismiss(importModal, closeImportModal, "import-cancel-btn");
 
     setupModalDismiss(profileModal, closeProfileModal, "profile-modal-cancel");
     setupModalDismiss(mealEditModal, closeMealEditModal, "meal-edit-cancel");

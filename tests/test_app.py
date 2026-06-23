@@ -31,6 +31,8 @@ def test_capabilities_endpoint_lists_features(empty_client: TestClient) -> None:
     assert caps["workout_edit"] is True
     assert caps["workout_delete"] is True
     assert caps["weight"] is True
+    assert caps["data_export"] is True
+    assert caps["data_import"] is True
 
 
 def test_summary_requires_auth(empty_client: TestClient) -> None:
