@@ -17,4 +17,6 @@ Tests and lint:
 - Tests: `./venv/bin/pytest` (uses in-memory SQLite via `tests/conftest.py`; Gemini and the real DB are not touched).
 - No linter or build step is configured for this project.
 
-Gemini AI is optional. Without `GEMINI_API_KEY` (copy `.env.example` to `.env` to set it), calorie estimates and daily insights fall back to local built-in tables, and the full app still works end-to-end. The register endpoint requires a `name` field in addition to `username`/`password`.
+Gemini AI is optional. Without `GEMINI_API_KEY` (set via env var, or copy `.env.example` to `.env`), calorie estimates and daily insights fall back to local built-in tables, and the full app still works end-to-end. The register endpoint requires a `name` field in addition to `username`/`password`.
+
+`GEMINI_API_KEY`/`GEMINI_MODEL` are read once at process startup (and via `load_dotenv()`), so the uvicorn server must be (re)started in an environment where the key is already exported — hot reload alone will not pick up a newly added key. When the key is present, AI responses have `ai_estimated: true` and `model: gemini-2.5-flash`; otherwise `model: local-fallback`.
