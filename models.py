@@ -38,6 +38,9 @@ class User(Base):
     daily_weights: Mapped[list["DailyWeight"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    daily_tips: Mapped[list["DailyTipsCache"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class Meal(Base):
@@ -93,6 +96,22 @@ class DailyWeight(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user: Mapped["User"] = relationship(back_populates="daily_weights")
+
+
+class DailyTipsCache(Base):
+    __tablename__ = "daily_tips_cache"
+    __table_args__ = (UniqueConstraint("user_id", "tip_date", "language", name="uq_user_tips_day_lang"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    tip_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    language: Mapped[str] = mapped_column(String(5), nullable=False, default="en")
+    tips_json: Mapped[str] = mapped_column(String(8000), nullable=False)
+    ai_estimated: Mapped[bool] = mapped_column(default=False)
+    model: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    user: Mapped["User"] = relationship(back_populates="daily_tips")
 
 
 def migrate_db() -> None:

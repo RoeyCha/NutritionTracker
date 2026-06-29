@@ -66,29 +66,122 @@
       flex-wrap: wrap;
     }
 
-    .lang-switch {
-      display: flex;
-      gap: 0.35rem;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 0.25rem;
+    .lang-menu-wrap {
+      position: relative;
+      flex-shrink: 0;
     }
 
-    .lang-switch button {
-      width: auto;
-      padding: 0.45rem 0.85rem;
-      background: transparent;
-      color: var(--muted);
-      font-size: 0.9rem;
-      border: none;
+    .lang-menu-btn {
+      align-items: center;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
       cursor: pointer;
-      border-radius: 999px;
+      display: inline-flex;
+      justify-content: center;
+      min-height: 48px;
+      min-width: 48px;
+      padding: 0.5rem;
+      width: auto;
+    }
+
+    .lang-menu-btn:hover {
+      background: #edf2f7;
+    }
+
+    .lang-menu-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .lang-menu-btn svg {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+
+    .lang-menu {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.14);
+      min-width: 168px;
+      padding: 0.35rem;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 0.35rem);
+      z-index: 1200;
+    }
+
+    .lang-menu.hidden {
+      display: none;
+    }
+
+    [dir="rtl"] .lang-menu {
+      left: 0;
+      right: auto;
+    }
+
+    .lang-menu-item {
+      align-items: center;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      font-family: inherit;
+      font-size: 0.95rem;
+      gap: 0.6rem;
+      min-height: 44px;
+      padding: 0.5rem 0.7rem;
+      text-align: start;
+      width: 100%;
+    }
+
+    .lang-menu-item:hover,
+    .lang-menu-item:focus-visible {
+      background: #edf2f7;
+      outline: none;
+    }
+
+    .lang-menu-item.active {
+      background: rgba(47, 133, 90, 0.1);
+      color: var(--accent);
       font-weight: 600;
     }
 
-    .lang-switch button.active { background: var(--accent); color: white; }
-    .lang-switch button:not(.active):hover { background: #edf2f7; color: var(--text); }
+    .lang-menu-flag {
+      align-items: center;
+      display: inline-flex;
+      flex-shrink: 0;
+      justify-content: center;
+      width: 1.35rem;
+    }
+
+    .lang-menu-flag svg {
+      width: 1.25rem;
+      height: auto;
+      border-radius: 2px;
+      box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.1);
+      display: block;
+    }
+
+    .lang-menu-label {
+      flex: 1;
+    }
+
+    .lang-menu-check {
+      color: var(--accent);
+      flex-shrink: 0;
+      font-size: 0.9rem;
+      opacity: 0;
+      width: 1rem;
+    }
+
+    .lang-menu-item.active .lang-menu-check {
+      opacity: 1;
+    }
 
     .grid {
       display: grid;
@@ -155,7 +248,7 @@
 
     button.btn-danger:hover { background: #fff5f5; }
 
-    .auth-tab, .lang-btn {
+    .auth-tab {
       min-height: 48px;
     }
 
@@ -744,6 +837,18 @@
 
     .hidden { display: none !important; }
 
+    .sr-only {
+      border: 0;
+      clip: rect(0, 0, 0, 0);
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      padding: 0;
+      position: absolute;
+      white-space: nowrap;
+      width: 1px;
+    }
+
     .auth-tabs {
       display: flex;
       gap: 0.5rem;
@@ -777,9 +882,137 @@
       align-items: center;
       gap: 1rem;
       flex-wrap: wrap;
-      margin-bottom: 1rem;
+      margin-bottom: 0.5rem;
       background: var(--card);
       box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+    }
+
+    .daily-tips-bar {
+      display: flex;
+      align-items: stretch;
+      margin-bottom: 1rem;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      min-height: 3.25rem;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    }
+
+    .daily-tips-bar.hidden {
+      display: none;
+    }
+
+    .daily-tips-label {
+      align-items: center;
+      background: rgba(47, 133, 90, 0.08);
+      border-inline-end: 1px solid var(--border);
+      color: var(--accent);
+      display: flex;
+      flex-shrink: 0;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      padding: 0 0.85rem;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .daily-tips-nav {
+      align-items: center;
+      background: transparent;
+      border: none;
+      border-inline-start: 1px solid var(--border);
+      color: var(--muted);
+      cursor: pointer;
+      display: inline-flex;
+      flex-shrink: 0;
+      font-size: 1.35rem;
+      justify-content: center;
+      line-height: 1;
+      min-width: 2rem;
+      padding: 0 0.35rem;
+      width: auto;
+    }
+
+    .daily-tips-nav:hover,
+    .daily-tips-nav:focus-visible {
+      background: #edf2f7;
+      color: var(--text);
+      outline: none;
+    }
+
+    .daily-tips-viewport {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      position: relative;
+      background: var(--card);
+    }
+
+    .daily-tips-track {
+      display: flex;
+      transition: transform 0.45s ease;
+      will-change: transform;
+    }
+
+    .daily-tips-item {
+      background: transparent;
+      border: none;
+      border-inline-end: 1px solid var(--border);
+      color: inherit;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.88rem;
+      line-height: 1.35;
+      min-width: 0;
+      padding: 0.65rem 0.75rem;
+      text-align: start;
+    }
+
+    .daily-tips-item:last-child {
+      border-inline-end: none;
+    }
+
+    .daily-tips-item:hover,
+    .daily-tips-item:focus-visible {
+      background: #edf2f7;
+      outline: none;
+    }
+
+    .daily-tips-item-category {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      margin-bottom: 0.15rem;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    .daily-tips-item-category-info {
+      color: #2b6cb0;
+    }
+
+    .daily-tips-item-text {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    [dir="rtl"] .daily-tips-item {
+      text-align: right;
+    }
+
+    .daily-tip-category-badge {
+      color: var(--accent);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      margin: 0 0 0.75rem;
+      text-transform: uppercase;
     }
 
     .profile-meta {
@@ -1264,10 +1497,58 @@
         <p class="subtitle" data-i18n="appSubtitle">Log meals and workouts, then review your daily calorie balance.</p>
       </div>
       <div class="header-actions">
-        <nav class="lang-switch" aria-label="Language">
-          <button type="button" class="lang-btn" data-lang="en" id="lang-en">English</button>
-          <button type="button" class="lang-btn" data-lang="he" id="lang-he">עברית</button>
-        </nav>
+        <div class="lang-menu-wrap">
+          <button
+            type="button"
+            class="lang-menu-btn"
+            id="lang-menu-btn"
+            aria-haspopup="menu"
+            aria-expanded="false"
+            aria-controls="lang-menu"
+            aria-label="Language"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m5 8 6 6"></path>
+              <path d="m4 14 6-6 2-3"></path>
+              <path d="M2 5h12"></path>
+              <path d="M7 2h1"></path>
+              <path d="m22 22-5-10-5 10"></path>
+              <path d="M14 18h6"></path>
+              <path d="m18 15-3 6"></path>
+            </svg>
+          </button>
+          <div id="lang-menu" class="lang-menu hidden" role="menu" aria-labelledby="lang-menu-btn">
+            <button type="button" role="menuitemradio" class="lang-menu-item" data-lang="en" id="lang-option-en" aria-checked="true">
+              <span class="lang-menu-flag" aria-hidden="true">
+                <svg viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <clipPath id="gb-flag-clip"><rect width="60" height="30" rx="2"></rect></clipPath>
+                  <g clip-path="url(#gb-flag-clip)">
+                    <rect width="60" height="30" fill="#012169"></rect>
+                    <path d="M0 0 60 30M60 0 0 30" stroke="#fff" stroke-width="6"></path>
+                    <path d="M0 0 60 30M60 0 0 30" stroke="#C8102E" stroke-width="3"></path>
+                    <path d="M30 0v30M0 15h60" stroke="#fff" stroke-width="10"></path>
+                    <path d="M30 0v30M0 15h60" stroke="#C8102E" stroke-width="6"></path>
+                  </g>
+                </svg>
+              </span>
+              <span class="lang-menu-label" data-i18n="langOptionEn">English</span>
+              <span class="lang-menu-check" aria-hidden="true">✓</span>
+            </button>
+            <button type="button" role="menuitemradio" class="lang-menu-item" data-lang="he" id="lang-option-he" aria-checked="false">
+              <span class="lang-menu-flag" aria-hidden="true">
+                <svg viewBox="0 0 110 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <rect width="110" height="80" rx="3" fill="#ffffff"></rect>
+                  <rect width="110" height="10" fill="#0038b8"></rect>
+                  <rect y="70" width="110" height="10" fill="#0038b8"></rect>
+                  <path fill="#0038b8" d="M55 22 64.21 37.91H45.79Z"></path>
+                  <path fill="#0038b8" d="M55 58.09 45.79 42.09h18.42Z"></path>
+                </svg>
+              </span>
+              <span class="lang-menu-label" data-i18n="langOptionHe">Hebrew</span>
+              <span class="lang-menu-check" aria-hidden="true">✓</span>
+            </button>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -1434,6 +1715,18 @@
               <span class="profile-menu-text" data-i18n="importCsv">Import CSV</span>
             </button>
             <div class="profile-menu-divider" role="separator"></div>
+            <button type="button" role="menuitem" class="profile-menu-item" id="menu-refresh-daily-tips">
+              <span class="profile-menu-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <polyline points="1 20 1 14 7 14"></polyline>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+                  <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
+                </svg>
+              </span>
+              <span class="profile-menu-text" data-i18n="refreshDailyTips">Reset &amp; get new tips</span>
+            </button>
+            <div class="profile-menu-divider" role="separator"></div>
             <button type="button" role="menuitem" class="profile-menu-item profile-menu-item-danger" id="menu-logout">
               <span class="profile-menu-icon" aria-hidden="true">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1447,6 +1740,16 @@
           </div>
         </div>
       </section>
+
+      <section id="daily-tips-bar" class="daily-tips-bar hidden" aria-live="polite">
+        <div class="daily-tips-label" data-i18n="dailyTipsLabel">AI Daily</div>
+        <button type="button" class="daily-tips-nav daily-tips-prev" id="daily-tips-prev" data-i18n-aria-label="dailyTipsPrev" aria-label="Previous tip">‹</button>
+        <div class="daily-tips-viewport">
+          <div class="daily-tips-track" id="daily-tips-track"></div>
+        </div>
+        <button type="button" class="daily-tips-nav daily-tips-next" id="daily-tips-next" data-i18n-aria-label="dailyTipsNext" aria-label="Next tip">›</button>
+      </section>
+
       <input type="file" id="import-json-input" class="hidden" accept=".json,application/json">
       <input type="file" id="import-csv-input" class="hidden" accept=".csv,text/csv">
 
@@ -1575,16 +1878,6 @@
               </div>
             </div>
 
-            <div class="insight-card">
-              <div class="insight-header">
-                <h3 data-i18n="aiInsightTitle">AI Daily Insight</h3>
-                <button type="button" class="btn-primary" id="get-ai-insight" data-i18n="getAiInsight">Get AI Insight</button>
-              </div>
-              <div class="insight-body empty" id="ai-insight-body">
-                <p data-i18n="aiInsightEmpty">Tap the button to get personalized feedback for this day.</p>
-              </div>
-              <p class="message" id="ai-insight-message"></p>
-            </div>
           </div>
         </div>
       </section>
@@ -1906,6 +2199,17 @@
     </div>
   </div>
 
+  <div id="daily-tip-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="daily-tip-modal-title">
+    <div class="modal-card modal-card-form">
+      <p id="daily-tip-modal-category" class="daily-tip-category-badge"></p>
+      <h3 id="daily-tip-modal-title" class="sr-only" data-i18n="dailyTipModalTitle">Daily tip</h3>
+      <p id="daily-tip-modal-text"></p>
+      <div class="form-actions modal-form-actions">
+        <button type="button" class="btn-primary" id="daily-tip-modal-close" data-i18n="dailyTipModalClose">OK</button>
+      </div>
+    </div>
+  </div>
+
   <div id="ai-loading-overlay" class="ai-loading-overlay hidden" role="status" aria-live="polite" aria-busy="true">
     <div class="ai-loading-panel">
       <div class="ai-spinner" aria-hidden="true"></div>
@@ -2062,6 +2366,8 @@
         authRequired: "Please sign in to continue.",
         calUnit: "cal",
         langGroupLabel: "Language",
+        langOptionEn: "English",
+        langOptionHe: "Hebrew",
         aiMealHint: "Calories will be estimated automatically by AI.",
         aiWorkoutHint: "Calories burned will be estimated automatically by AI.",
         aiCalculating: "Calculating calories...",
@@ -2076,12 +2382,20 @@
         aiPoweredNote: "Estimated by AI based on your entry and profile.",
         localEstimateNote: "Calculated locally from your profile and built-in portion/activity tables — no AI.",
         localInsightNote: "Generated locally from your daily totals and simple rules — not AI-personalized.",
-        aiInsightTitle: "AI Daily Insight",
-        getAiInsight: "Get AI Insight",
-        aiInsightEmpty: "Tap the button to get personalized feedback for this day.",
-        aiInsightLoading: "Generating insight...",
-        aiInsightTipLabel: "Health tip",
-        aiInsightError: "Could not load AI insight.",
+        dailyTipsLabel: "AI Daily",
+        dailyTipsPrev: "Previous tip",
+        dailyTipsNext: "Next tip",
+        dailyTipsLoading: "Generating daily tips...",
+        dailyTipsError: "Could not load daily tips.",
+        dailyTipsCategoryNutrition: "Nutrition",
+        dailyTipsCategorySport: "Sport",
+        dailyTipsCategoryInfo: "Notice",
+        dailyTipsNeedData:
+          "Not enough tracked data yet — showing general tips. Log meals, workouts, and steps over a few days for personalized tips.",
+        dailyTipModalTitle: "Daily tip",
+        dailyTipModalClose: "OK",
+        refreshDailyTips: "Reset & get new tips",
+        refreshDailyTipsSuccess: "Daily tips updated.",
         editBtn: "Edit",
         deleteBtn: "Delete",
         editMeal: "Edit Meal",
@@ -2248,6 +2562,8 @@
         authRequired: "יש להתחבר כדי להמשיך.",
         calUnit: "קל'",
         langGroupLabel: "שפה",
+        langOptionEn: "English",
+        langOptionHe: "עברית",
         aiMealHint: "הקלוריות יחושבו אוטומטית על ידי AI.",
         aiWorkoutHint: "קלוריות שנשרפו יחושבו אוטומטית על ידי AI.",
         aiCalculating: "מחשב קלוריות...",
@@ -2262,12 +2578,20 @@
         aiPoweredNote: "הערכה של AI על בסיס הפריט והפרופיל שלך.",
         localEstimateNote: "חושב מקומית לפי הפרופיל שלך וטבלאות מנות/פעילות מובנות — ללא AI.",
         localInsightNote: "נוצר מקומית מסיכום היום שלך וכללים פשוטים — לא מותאם AI.",
-        aiInsightTitle: "תובנת AI יומית",
-        getAiInsight: "קבל תובנת AI",
-        aiInsightEmpty: "לחץ על הכפתור לקבלת משוב מותאם אישית ליום זה.",
-        aiInsightLoading: "מייצר תובנה...",
-        aiInsightTipLabel: "טיפ לבריאות",
-        aiInsightError: "לא ניתן לטעון תובנת AI.",
+        dailyTipsLabel: "AI יומי",
+        dailyTipsPrev: "טיפ קודם",
+        dailyTipsNext: "טיפ הבא",
+        dailyTipsLoading: "מייצר טיפים יומיים...",
+        dailyTipsError: "לא ניתן לטעון טיפים יומיים.",
+        dailyTipsCategoryNutrition: "תזונה",
+        dailyTipsCategorySport: "ספורט",
+        dailyTipsCategoryInfo: "שימו לב",
+        dailyTipsNeedData:
+          "אין מספיק נתונים — מוצגים טיפים כלליים. רשום/י ארוחות, אימונים וצעדים במשך מספר ימים לטיפים מותאמים.",
+        dailyTipModalTitle: "טיפ יומי",
+        dailyTipModalClose: "אישור",
+        refreshDailyTips: "איפוס וטיפים חדשים",
+        refreshDailyTipsSuccess: "הטיפים היומיים עודכנו.",
         editBtn: "ערוך",
         deleteBtn: "מחק",
         editMeal: "עריכת ארוחה",
@@ -2313,7 +2637,9 @@
       const toast = document.createElement("div");
       const toneClasses = type === "error"
         ? "bg-red-600 text-white"
-        : "bg-emerald-700 text-white";
+        : type === "info"
+          ? "bg-slate-700 text-white"
+          : "bg-emerald-700 text-white";
       toast.className = [
         "pointer-events-auto px-4 py-3 rounded-lg shadow-lg text-sm font-medium",
         "transform transition-all duration-300 translate-y-2 opacity-0",
@@ -2399,12 +2725,26 @@
     const calorieModalValue = document.getElementById("calorie-modal-value");
     const calorieModalNote = document.getElementById("calorie-modal-note");
     const calorieModalClose = document.getElementById("calorie-modal-close");
-    const getAiInsightButton = document.getElementById("get-ai-insight");
-    const aiInsightBody = document.getElementById("ai-insight-body");
-    const aiInsightMessage = document.getElementById("ai-insight-message");
+    const dailyTipsBar = document.getElementById("daily-tips-bar");
+    const dailyTipsTrack = document.getElementById("daily-tips-track");
+    const dailyTipsPrevBtn = document.getElementById("daily-tips-prev");
+    const dailyTipsNextBtn = document.getElementById("daily-tips-next");
+    const dailyTipModal = document.getElementById("daily-tip-modal");
+    const dailyTipModalCategory = document.getElementById("daily-tip-modal-category");
+    const dailyTipModalText = document.getElementById("daily-tip-modal-text");
+    const dailyTipModalClose = document.getElementById("daily-tip-modal-close");
+    const DAILY_TIPS_VISIBLE = 4;
+    const DAILY_TIPS_AUTO_MS = 4500;
+    let dailyTipsItems = [];
+    let dailyTipsIndex = 0;
+    let dailyTipsLoopCount = 0;
+    let dailyTipsTimer = null;
+    let dailyTipsLoadedForLang = null;
     const aiLoadingOverlay = document.getElementById("ai-loading-overlay");
     const aiLoadingText = document.getElementById("ai-loading-text");
-    const langButtons = document.querySelectorAll(".lang-btn");
+    const langMenuBtn = document.getElementById("lang-menu-btn");
+    const langMenu = document.getElementById("lang-menu");
+    const langMenuItems = document.querySelectorAll(".lang-menu-item");
     const authTabs = document.querySelectorAll(".auth-tab");
 
     function t(key) {
@@ -2438,6 +2778,18 @@
       return result;
     }
 
+    function updateLangMenuState() {
+      if (langMenuBtn) {
+        langMenuBtn.setAttribute("aria-label", t("langGroupLabel"));
+      }
+
+      langMenuItems.forEach((item) => {
+        const isActive = item.dataset.lang === currentLang;
+        item.classList.toggle("active", isActive);
+        item.setAttribute("aria-checked", isActive ? "true" : "false");
+      });
+    }
+
     function applyLanguage(lang) {
       currentLang = lang === "he" ? "he" : "en";
       localStorage.setItem(LANG_STORAGE_KEY, currentLang);
@@ -2462,11 +2814,7 @@
         el.textContent = t(el.dataset.i18nOption);
       });
 
-      document.querySelector(".lang-switch").setAttribute("aria-label", t("langGroupLabel"));
-
-      langButtons.forEach((button) => {
-        button.classList.toggle("active", button.dataset.lang === currentLang);
-      });
+      updateLangMenuState();
 
       if (currentUser) {
         document.getElementById("profile-details").textContent = formatProfileDetails(currentUser);
@@ -2481,7 +2829,11 @@
       }
       renderCalendar();
 
-      resetAiInsightDisplay();
+      if (currentUser && dailyTipsLoadedForLang !== currentLang) {
+        loadDailyTips().catch((error) => showToast(error.message, "error"));
+      } else if (dailyTipsItems.length) {
+        renderDailyTipsBar();
+      }
     }
 
     function formatGender(value) {
@@ -2937,12 +3289,19 @@
       authSection.classList.remove("hidden");
       appSection.classList.add("hidden");
       closeProfileMenu();
+      closeLangMenu();
       closeProfileModal();
       closeMealEditModal();
       closeWorkoutEditModal();
       closeStepsEditModal();
       closeWeightEditModal();
       closeImportModal();
+      stopDailyTipsAutoplay();
+      dailyTipsItems = [];
+      dailyTipsLoadedForLang = null;
+      if (dailyTipsBar) {
+        dailyTipsBar.classList.add("hidden");
+      }
       currentUser = null;
     }
 
@@ -2969,6 +3328,28 @@
     const importConfirmBtn = document.getElementById("import-confirm-btn");
     let pendingImport = null;
 
+    function closeLangMenu() {
+      if (!langMenu || !langMenuBtn) {
+        return;
+      }
+      langMenu.classList.add("hidden");
+      langMenuBtn.setAttribute("aria-expanded", "false");
+    }
+
+    function toggleLangMenu(forceOpen = null) {
+      if (!langMenu || !langMenuBtn) {
+        return;
+      }
+      const shouldOpen = forceOpen ?? langMenu.classList.contains("hidden");
+      if (shouldOpen) {
+        closeProfileMenu();
+        langMenu.classList.remove("hidden");
+        langMenuBtn.setAttribute("aria-expanded", "true");
+      } else {
+        closeLangMenu();
+      }
+    }
+
     function closeProfileMenu() {
       if (!profileMenu || !profileMenuBtn) {
         return;
@@ -2983,6 +3364,7 @@
       }
       const shouldOpen = forceOpen ?? profileMenu.classList.contains("hidden");
       if (shouldOpen) {
+        closeLangMenu();
         profileMenu.classList.remove("hidden");
         profileMenuBtn.setAttribute("aria-expanded", "true");
       } else {
@@ -4161,7 +4543,6 @@
       try {
         await reloadCurrentUserProfile();
         await refreshCalendarAndSummary();
-        resetAiInsightDisplay();
         flashDailySummaryCard();
         showRefreshSummaryMessage(t("refreshSummarySuccess"));
       } catch (error) {
@@ -4221,6 +4602,7 @@
       if (summaryDateInput.value) {
         await loadSummary();
       }
+      await loadDailyTips();
     }
 
     function updateNoDatesMessage() {
@@ -4257,7 +4639,6 @@
 
       renderCalendar();
       updateDayNavButtons();
-      resetAiInsightDisplay();
 
       if (reload) {
         loadSummary().catch((error) => alert(error.message));
@@ -4435,6 +4816,12 @@
         return;
       }
 
+      if (langMenu && !langMenu.classList.contains("hidden")) {
+        event.preventDefault();
+        closeLangMenu();
+        return;
+      }
+
       if (profileMenu && !profileMenu.classList.contains("hidden")) {
         event.preventDefault();
         closeProfileMenu();
@@ -4455,6 +4842,7 @@
         { el: weightEditModal, close: closeWeightEditModal },
         { el: profileModal, close: closeProfileModal },
         { el: importModal, close: closeImportModal },
+        { el: dailyTipModal, close: closeDailyTipModal },
         { el: calorieModal, close: hideCalorieModal },
       ];
 
@@ -4671,74 +5059,196 @@
       renderList("workouts-list", data.workouts, t("noWorkouts"), "activity_type", "calories_burned", "workout");
     }
 
-    function resetAiInsightDisplay() {
-      aiInsightBody.className = "insight-body empty";
-      aiInsightBody.innerHTML = `<p data-i18n="aiInsightEmpty">${t("aiInsightEmpty")}</p>`;
-      aiInsightMessage.textContent = "";
-      aiInsightMessage.classList.remove("error");
+    function tipCategoryLabel(category) {
+      if (category === "sport") {
+        return t("dailyTipsCategorySport");
+      }
+      if (category === "info") {
+        return t("dailyTipsCategoryInfo");
+      }
+      return t("dailyTipsCategoryNutrition");
     }
 
-    function renderAiInsight(data) {
-      aiInsightBody.className = "insight-body";
-      aiInsightBody.innerHTML = "";
+    function stopDailyTipsAutoplay() {
+      if (dailyTipsTimer) {
+        clearInterval(dailyTipsTimer);
+        dailyTipsTimer = null;
+      }
+    }
 
-      if (data.ai_estimated === false) {
-        const source = document.createElement("p");
-        source.className = "insight-source";
-        source.textContent = t("localInsightNote");
-        aiInsightBody.appendChild(source);
+    function startDailyTipsAutoplay() {
+      stopDailyTipsAutoplay();
+      if (dailyTipsItems.length <= DAILY_TIPS_VISIBLE) {
+        return;
+      }
+      dailyTipsTimer = setInterval(() => {
+        shiftDailyTips(1);
+      }, DAILY_TIPS_AUTO_MS);
+    }
+
+    function buildDailyTipsLoopItems() {
+      if (dailyTipsItems.length <= DAILY_TIPS_VISIBLE) {
+        return dailyTipsItems;
+      }
+      return [...dailyTipsItems, ...dailyTipsItems.slice(0, DAILY_TIPS_VISIBLE)];
+    }
+
+    function updateDailyTipsTransform(animate = true) {
+      if (!dailyTipsTrack || !dailyTipsLoopCount) {
+        return;
+      }
+      dailyTipsTrack.style.transition = animate ? "transform 0.45s ease" : "none";
+      const shift = (dailyTipsIndex * 100) / dailyTipsLoopCount;
+      const sign = document.documentElement.dir === "rtl" ? "" : "-";
+      dailyTipsTrack.style.transform = `translateX(${sign}${shift}%)`;
+    }
+
+    function shiftDailyTips(delta) {
+      const itemCount = dailyTipsItems.length;
+      if (!itemCount || itemCount <= DAILY_TIPS_VISIBLE) {
+        return;
       }
 
-      const feedback = document.createElement("p");
-      feedback.className = "insight-feedback";
-      feedback.textContent = data.feedback;
+      if (delta < 0 && dailyTipsIndex === 0) {
+        dailyTipsTrack.style.transition = "none";
+        dailyTipsIndex = itemCount;
+        updateDailyTipsTransform(false);
+        void dailyTipsTrack.offsetWidth;
+        dailyTipsIndex = itemCount - 1;
+        updateDailyTipsTransform(true);
+        return;
+      }
 
-      const tipLabel = document.createElement("p");
-      tipLabel.className = "insight-tip-label";
-      tipLabel.textContent = t("aiInsightTipLabel");
+      dailyTipsIndex += delta;
+      updateDailyTipsTransform(true);
 
-      const tip = document.createElement("p");
-      tip.className = "insight-tip";
-      tip.textContent = data.health_tip;
-
-      aiInsightBody.appendChild(feedback);
-      aiInsightBody.appendChild(tipLabel);
-      aiInsightBody.appendChild(tip);
+      if (dailyTipsIndex >= itemCount) {
+        const handleLoopReset = () => {
+          dailyTipsTrack.removeEventListener("transitionend", handleLoopReset);
+          dailyTipsTrack.style.transition = "none";
+          dailyTipsIndex = 0;
+          updateDailyTipsTransform(false);
+        };
+        dailyTipsTrack.addEventListener("transitionend", handleLoopReset);
+      }
     }
 
-    async function loadAiInsight() {
-      aiInsightMessage.textContent = "";
-      aiInsightMessage.classList.remove("error");
-      getAiInsightButton.disabled = true;
-      getAiInsightButton.textContent = t("aiInsightLoading");
-      aiInsightBody.classList.add("loading");
+    function renderDailyTipsBar() {
+      if (!dailyTipsTrack || !dailyTipsBar) {
+        return;
+      }
 
-      const selectedDate = summaryDateInput.value || todayIsoDate();
+      if (!dailyTipsItems.length) {
+        dailyTipsBar.classList.add("hidden");
+        stopDailyTipsAutoplay();
+        return;
+      }
+
+      dailyTipsBar.classList.remove("hidden");
+      const loopItems = buildDailyTipsLoopItems();
+      dailyTipsLoopCount = loopItems.length;
+      dailyTipsTrack.style.width = `${(dailyTipsLoopCount / DAILY_TIPS_VISIBLE) * 100}%`;
+
+      dailyTipsTrack.innerHTML = loopItems
+        .map(
+          (tip, index) => `
+            <button
+              type="button"
+              class="daily-tips-item"
+              data-tip-index="${index % dailyTipsItems.length}"
+              style="flex: 0 0 ${100 / dailyTipsLoopCount}%"
+            >
+              <span class="daily-tips-item-category${tip.category === "info" ? " daily-tips-item-category-info" : ""}">${escapeHtml(tipCategoryLabel(tip.category))}</span>
+              <span class="daily-tips-item-text">${escapeHtml(tip.preview || tip.text)}</span>
+            </button>
+          `,
+        )
+        .join("");
+
+      if (dailyTipsIndex >= dailyTipsItems.length) {
+        dailyTipsIndex = 0;
+      }
+      updateDailyTipsTransform(false);
+      startDailyTipsAutoplay();
+
+      dailyTipsTrack.querySelectorAll(".daily-tips-item").forEach((button) => {
+        button.addEventListener("click", () => {
+          const index = Number(button.dataset.tipIndex);
+          openDailyTipModal(dailyTipsItems[index]);
+        });
+      });
+    }
+
+    function openDailyTipModal(tip) {
+      if (!dailyTipModal || !tip) {
+        return;
+      }
+      dailyTipModalCategory.textContent = tipCategoryLabel(tip.category);
+      dailyTipModalText.textContent = tip.text;
+      dailyTipModal.classList.remove("hidden");
+      stopDailyTipsAutoplay();
+    }
+
+    function closeDailyTipModal() {
+      if (!dailyTipModal) {
+        return;
+      }
+      dailyTipModal.classList.add("hidden");
+      startDailyTipsAutoplay();
+    }
+
+    async function loadDailyTips({ refresh = false } = {}) {
+      if (!authToken) {
+        return;
+      }
+
+      const useLoadingOverlay = refresh || dailyTipsLoadedForLang !== currentLang;
 
       try {
-        const response = await apiFetchWithRetry("/api/ai-insight", {
-          method: "POST",
-          body: JSON.stringify({
-            date: selectedDate,
-            language: currentLang,
-          }),
-        }, { loadingMessage: t("aiInsightLoading") });
+        let response;
+        if (refresh) {
+          response = await apiFetchWithRetry(
+            "/api/daily-tips/refresh",
+            {
+              method: "POST",
+              body: JSON.stringify({ language: currentLang }),
+            },
+            { loadingMessage: t("dailyTipsLoading") },
+          );
+        } else if (useLoadingOverlay) {
+          response = await apiFetchWithRetry(
+            `/api/daily-tips?language=${encodeURIComponent(currentLang)}`,
+            {},
+            { loadingMessage: t("dailyTipsLoading") },
+          );
+        } else {
+          response = await apiFetch(`/api/daily-tips?language=${encodeURIComponent(currentLang)}`);
+        }
 
         if (!response.ok) {
           const error = await response.json().catch(() => ({}));
-          const detail = error.detail || t("aiInsightError");
+          const detail = error.detail || t("dailyTipsError");
           throw new Error(Array.isArray(detail) ? detail.map((item) => item.msg).join(", ") : detail);
         }
 
         const data = await response.json();
-        renderAiInsight(data);
+        dailyTipsItems = Array.isArray(data.tips) ? data.tips : [];
+        dailyTipsIndex = 0;
+        dailyTipsLoadedForLang = currentLang;
+        renderDailyTipsBar();
+
+        if (refresh) {
+          if (data.personalized === false) {
+            showToast(t("dailyTipsNeedData"), "info");
+          } else {
+            showToast(t("refreshDailyTipsSuccess"));
+          }
+        }
       } catch (error) {
-        aiInsightMessage.textContent = error.message;
-        aiInsightMessage.classList.add("error");
-      } finally {
-        aiInsightBody.classList.remove("loading");
-        getAiInsightButton.disabled = false;
-        getAiInsightButton.textContent = t("getAiInsight");
+        if (dailyTipsBar) {
+          dailyTipsBar.classList.add("hidden");
+        }
+        throw error;
       }
     }
 
@@ -4974,9 +5484,24 @@
       });
     });
 
-    langButtons.forEach((button) => {
-      button.addEventListener("click", () => {
-        applyLanguage(button.dataset.lang);
+    langMenuBtn?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleLangMenu();
+    });
+
+    langMenu?.addEventListener("click", (event) => {
+      event.stopPropagation();
+    });
+
+    langMenuItems.forEach((item) => {
+      item.addEventListener("click", () => {
+        const nextLang = item.dataset.lang;
+        if (!nextLang || nextLang === currentLang) {
+          closeLangMenu();
+          return;
+        }
+        applyLanguage(nextLang);
+        closeLangMenu();
         if (currentUser && summaryDateInput.value) {
           loadSummary().catch((error) => alert(error.message));
         }
@@ -5088,6 +5613,7 @@
 
     document.addEventListener("click", () => {
       closeProfileMenu();
+      closeLangMenu();
     });
 
     importJsonInput.addEventListener("change", () => {
@@ -5164,8 +5690,26 @@
     setupBirthDatePicker("register-birth-date");
     setupBirthDatePicker("profile-birth-date");
 
-    getAiInsightButton.addEventListener("click", () => {
-      loadAiInsight().catch((error) => alert(error.message));
+    dailyTipsPrevBtn?.addEventListener("click", () => {
+      shiftDailyTips(-1);
+      startDailyTipsAutoplay();
+    });
+
+    dailyTipsNextBtn?.addEventListener("click", () => {
+      shiftDailyTips(1);
+      startDailyTipsAutoplay();
+    });
+
+    dailyTipModalClose?.addEventListener("click", closeDailyTipModal);
+    dailyTipModal?.addEventListener("click", (event) => {
+      if (event.target === dailyTipModal) {
+        closeDailyTipModal();
+      }
+    });
+
+    document.getElementById("menu-refresh-daily-tips")?.addEventListener("click", () => {
+      closeProfileMenu();
+      loadDailyTips({ refresh: true }).catch((error) => showToast(error.message, "error"));
     });
 
     mealForm.addEventListener("submit", (event) => {

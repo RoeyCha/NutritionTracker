@@ -104,7 +104,9 @@ def client(monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient, None, None]
     with TestClient(app) as test_client:
         test_client.auth_headers = auth_header
         test_client.test_user = user
+        test_client.db_session = db
         yield test_client
 
+    db.close()
     app.dependency_overrides.clear()
     Base.metadata.drop_all(bind=engine)

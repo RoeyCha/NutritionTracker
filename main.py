@@ -28,6 +28,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from gemini_daily_tips import get_or_create_daily_tips
 from gemini_insight import generate_daily_insight
 from profile_utils import validate_birth_date
 from ai_calories import CalorieEstimate, calories_from_macros, estimate_meal_calories, estimate_workout_calories
@@ -238,6 +239,10 @@ class InsightRequest(BaseModel):
     language: str = Field(default="en", pattern=r"^(en|he)$")
 
     model_config = {"populate_by_name": True}
+
+
+class DailyTipsRequest(BaseModel):
+    language: str = Field(default="en", pattern=r"^(en|he)$")
 
 
 class StepsUpsert(BaseModel):
@@ -564,6 +569,7 @@ def get_capabilities():
             "steps": True,
             "weight": True,
             "ai_insight": True,
+            "daily_tips": True,
             "data_export": True,
             "data_import": True,
         }
@@ -941,6 +947,42 @@ def upsert_daily_steps(
         "ai_estimated": estimate.ai_estimated,
         "ai_explanation": estimate.explanation,
     }
+
+
+@app.get("/api/daily-tips")
+def get_daily_tips(
+    language: str = Query(default="en", pattern=r"^(en|he)$"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    result = get_or_create_daily_tips(
+        current_user,
+        db,
+        language=language,
+        force_refresh=False,
+        api_key=GEMINI_API_KEY,
+    )
+    db.commit()
+    return result
+
+
+@app.post("/api/daily-tips/refresh")
+def refresh_daily_tips(
+    payload: DailyTipsRequest | None = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    request = payload or DailyTipsRequest()
+    result = get_or_create_daily_tips(
+        current_user,
+        db,
+        language=request.language,
+        force_refresh=True,
+        api_key=GEMINI_API_KEY,
+    )
+    db.commit()
+    logger.info("Refreshed daily tips for %s (%s)", current_user.username, request.language)
+    return result
 
 
 @app.post("/api/ai-insight")
