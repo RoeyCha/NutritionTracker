@@ -45,6 +45,7 @@ from auth import (
 from models import DailySteps, DailyWeight, Meal, SessionLocal, User, Workout, init_db
 from seed import seed_test_user
 from steps_calories import estimate_steps_calories
+from period_summary import PERIOD_RANGES, build_period_summary
 from user_data_io import (
     export_csv,
     export_json,
@@ -824,6 +825,26 @@ def get_daily_summary(
             for workout in workouts
         ],
     }
+
+
+@app.get("/api/period-summary")
+def get_period_summary(
+    range: str = Query(default="7d", alias="range"),
+    end_date: date = Query(default_factory=date.today, alias="end_date"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if range not in PERIOD_RANGES:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid range. Use one of: {', '.join(sorted(PERIOD_RANGES))}",
+        )
+    if end_date > date.today():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="end_date cannot be in the future",
+        )
+    return build_period_summary(db, current_user, range, end_date)
 
 
 @app.get("/api/dates-with-data")

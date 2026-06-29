@@ -17,6 +17,7 @@
       },
     };
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     :root {
       --bg: #f4f7f6;
@@ -871,6 +872,105 @@
       background: var(--accent);
       color: white;
       border-color: var(--accent);
+    }
+
+    .dashboard-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .dashboard-tabs button {
+      flex: 1;
+      width: auto;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid var(--border);
+      background: #edf2f7;
+      color: var(--text);
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .dashboard-tabs button.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .weekly-panel h2 {
+      margin-top: 0;
+    }
+
+    .weekly-panel h3 {
+      margin: 0 0 0.75rem;
+      font-size: 1.05rem;
+    }
+
+    .chart-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .chart-card canvas {
+      display: block;
+      max-height: 260px;
+      width: 100% !important;
+    }
+
+    .chart-toolbar {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .chart-range-select {
+      min-height: 40px;
+      padding: 0.35rem 0.5rem;
+      width: auto;
+    }
+
+    .chart-toggles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem 1rem;
+    }
+
+    .chart-toggle {
+      align-items: center;
+      cursor: pointer;
+      display: inline-flex;
+      font-size: 0.88rem;
+      gap: 0.35rem;
+      user-select: none;
+    }
+
+    .chart-toggle input {
+      accent-color: var(--accent);
+      height: auto;
+      min-height: 0;
+      width: auto;
+    }
+
+    .weekly-nav {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .weekly-nav-label {
+      color: var(--muted);
+      font-size: 0.92rem;
+      min-width: 10rem;
+      text-align: center;
     }
 
     .profile-bar {
@@ -1741,6 +1841,11 @@
         </div>
       </section>
 
+      <div class="dashboard-tabs" role="tablist" aria-label="Dashboard views">
+        <button type="button" class="dashboard-tab active" data-view="daily" role="tab" aria-selected="true" data-i18n="dailyTab">Daily</button>
+        <button type="button" class="dashboard-tab" data-view="weekly" role="tab" aria-selected="false" data-i18n="weeklyStatusTab">Weekly Status</button>
+      </div>
+
       <section id="daily-tips-bar" class="daily-tips-bar hidden" aria-live="polite">
         <div class="daily-tips-label" data-i18n="dailyTipsLabel">AI Daily</div>
         <button type="button" class="daily-tips-nav daily-tips-prev" id="daily-tips-prev" data-i18n-aria-label="dailyTipsPrev" aria-label="Previous tip">‹</button>
@@ -1753,6 +1858,7 @@
       <input type="file" id="import-json-input" class="hidden" accept=".json,application/json">
       <input type="file" id="import-csv-input" class="hidden" accept=".csv,text/csv">
 
+      <div id="daily-view">
       <section class="card dashboard-panel">
         <div class="date-nav-top">
           <label data-i18n="summaryDate">Summary date</label>
@@ -1959,6 +2065,77 @@
           <p class="message" id="workout-message"></p>
         </section>
       </div>
+      </div>
+
+      <section id="weekly-view" class="card weekly-panel hidden" aria-label="Weekly status">
+        <h2 data-i18n="weeklyStatusTitle">Weekly Status</h2>
+
+        <div class="chart-card">
+          <div class="chart-toolbar">
+            <h3 data-i18n="chartCaloriesTitle">Calories</h3>
+            <div class="weekly-nav">
+              <button type="button" class="btn-secondary" id="calories-week-prev" data-i18n="weekPrev">Previous week</button>
+              <span class="weekly-nav-label" id="calories-week-label">—</span>
+              <button type="button" class="btn-secondary" id="calories-week-next" data-i18n="weekNext">Next week</button>
+            </div>
+          </div>
+          <div class="chart-toggles" id="calories-chart-toggles">
+            <label class="chart-toggle"><input type="checkbox" data-series="consumed" checked> <span data-i18n="chartCaloriesConsumed">Calories consumed</span></label>
+            <label class="chart-toggle"><input type="checkbox" data-series="consumedAvg" checked> <span data-i18n="chartCaloriesConsumedAvg">Consumed avg.</span></label>
+            <label class="chart-toggle"><input type="checkbox" data-series="burned" checked> <span data-i18n="chartCaloriesBurned">Total out (BMR + activity)</span></label>
+            <label class="chart-toggle"><input type="checkbox" data-series="burnedAvg" checked> <span data-i18n="chartCaloriesBurnedAvg">Total out avg.</span></label>
+          </div>
+          <canvas id="chart-calories" role="img" aria-label="Calories chart"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-toolbar">
+            <h3 data-i18n="chartWeightTitle">Weight trend</h3>
+            <select id="weight-range-select" class="chart-range-select" aria-label="Weight range">
+              <option value="5d" data-i18n-option="range5Days">5 days</option>
+              <option value="7d" selected data-i18n-option="range7Days">7 days</option>
+              <option value="30d" data-i18n-option="range1Month">1 month</option>
+              <option value="365d" data-i18n-option="range1Year">1 year</option>
+              <option value="all" data-i18n-option="rangeAllTime">All time</option>
+            </select>
+          </div>
+          <div class="chart-toggles" id="weight-chart-toggles">
+            <label class="chart-toggle"><input type="checkbox" data-series="weight" checked> <span data-i18n="chartWeightLogged">Logged weight</span></label>
+            <label class="chart-toggle"><input type="checkbox" data-series="weightAvg" checked> <span data-i18n="chartWeightAvg">Average</span></label>
+          </div>
+          <canvas id="chart-weight" role="img" aria-label="Weight chart"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-toolbar">
+            <h3 data-i18n="chartStepsTitle">Steps</h3>
+            <select id="steps-range-select" class="chart-range-select" aria-label="Steps range">
+              <option value="5d" data-i18n-option="range5Days">5 days</option>
+              <option value="7d" selected data-i18n-option="range7Days">7 days</option>
+              <option value="30d" data-i18n-option="range1Month">1 month</option>
+              <option value="365d" data-i18n-option="range1Year">1 year</option>
+              <option value="all" data-i18n-option="rangeAllTime">All time</option>
+            </select>
+          </div>
+          <div class="chart-toggles" id="steps-chart-toggles">
+            <label class="chart-toggle"><input type="checkbox" data-series="steps" checked> <span data-i18n="chartStepsLogged">Logged steps</span></label>
+            <label class="chart-toggle"><input type="checkbox" data-series="stepsAvg" checked> <span data-i18n="chartStepsAvg">Average</span></label>
+          </div>
+          <canvas id="chart-steps" role="img" aria-label="Steps chart"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-toolbar">
+            <h3 data-i18n="chartMacrosTitle">Protein / Carbs / Fats</h3>
+            <div class="weekly-nav">
+              <button type="button" class="btn-secondary" id="macros-week-prev" data-i18n="weekPrev">Previous week</button>
+              <span class="weekly-nav-label" id="macros-week-label">—</span>
+              <button type="button" class="btn-secondary" id="macros-week-next" data-i18n="weekNext">Next week</button>
+            </div>
+          </div>
+          <canvas id="chart-macros" role="img" aria-label="Macros chart"></canvas>
+        </div>
+      </section>
     </div>
   </main>
 
@@ -2396,6 +2573,32 @@
         dailyTipModalClose: "OK",
         refreshDailyTips: "Reset & get new tips",
         refreshDailyTipsSuccess: "Daily tips updated.",
+        dailyTab: "Daily",
+        weeklyStatusTab: "Weekly Status",
+        weeklyStatusTitle: "Weekly Status",
+        weekPrev: "Previous week",
+        weekNext: "Next week",
+        range5Days: "5 days",
+        range7Days: "7 days",
+        range1Month: "1 month",
+        range1Year: "1 year",
+        rangeAllTime: "All time",
+        chartCaloriesTitle: "Calories",
+        chartCaloriesConsumed: "Calories consumed",
+        chartCaloriesConsumedAvg: "Consumed avg.",
+        chartCaloriesBurned: "Total out (BMR + activity)",
+        chartCaloriesBurnedAvg: "Total out avg.",
+        chartWeightTitle: "Weight trend",
+        chartWeightLogged: "Logged weight",
+        chartWeightAvg: "Average",
+        chartStepsTitle: "Steps",
+        chartStepsLogged: "Logged steps",
+        chartStepsAvg: "Average",
+        chartMacrosTitle: "Protein / Carbs / Fats",
+        chartProteinGoal: "Protein goal",
+        chartCarbsGoal: "Carbs goal",
+        chartFatsGoal: "Fats goal",
+        weeklyLoadError: "Could not load weekly charts.",
         editBtn: "Edit",
         deleteBtn: "Delete",
         editMeal: "Edit Meal",
@@ -2592,6 +2795,32 @@
         dailyTipModalClose: "אישור",
         refreshDailyTips: "איפוס וטיפים חדשים",
         refreshDailyTipsSuccess: "הטיפים היומיים עודכנו.",
+        dailyTab: "יומי",
+        weeklyStatusTab: "סטטוס שבועי",
+        weeklyStatusTitle: "סטטוס שבועי",
+        weekPrev: "שבוע קודם",
+        weekNext: "שבוע הבא",
+        range5Days: "5 ימים",
+        range7Days: "7 ימים",
+        range1Month: "חודש",
+        range1Year: "שנה",
+        rangeAllTime: "כל הזמן",
+        chartCaloriesTitle: "קלוריות",
+        chartCaloriesConsumed: "קלוריות שנצרכו",
+        chartCaloriesConsumedAvg: "ממוצע צריכה",
+        chartCaloriesBurned: "סה\"כ יציאה (BMR + פעילות)",
+        chartCaloriesBurnedAvg: "ממוצע יציאה",
+        chartWeightTitle: "מגמת משקל",
+        chartWeightLogged: "משקל רשום",
+        chartWeightAvg: "ממוצע",
+        chartStepsTitle: "צעדים",
+        chartStepsLogged: "צעדים רשומים",
+        chartStepsAvg: "ממוצע",
+        chartMacrosTitle: "חלבון / פחמימות / שומנים",
+        chartProteinGoal: "יעד חלבון",
+        chartCarbsGoal: "יעד פחמימות",
+        chartFatsGoal: "יעד שומנים",
+        weeklyLoadError: "לא ניתן לטעון את הגרפים השבועיים.",
         editBtn: "ערוך",
         deleteBtn: "מחק",
         editMeal: "עריכת ארוחה",
@@ -2729,6 +2958,32 @@
     const dailyTipsTrack = document.getElementById("daily-tips-track");
     const dailyTipsPrevBtn = document.getElementById("daily-tips-prev");
     const dailyTipsNextBtn = document.getElementById("daily-tips-next");
+    const dashboardTabs = document.querySelectorAll(".dashboard-tab");
+    const dailyView = document.getElementById("daily-view");
+    const weeklyView = document.getElementById("weekly-view");
+    const caloriesWeekLabel = document.getElementById("calories-week-label");
+    const macrosWeekLabel = document.getElementById("macros-week-label");
+    const weightRangeSelect = document.getElementById("weight-range-select");
+    const stepsRangeSelect = document.getElementById("steps-range-select");
+
+    let currentDashboardView = "daily";
+    let weeklyChartEndDate = null;
+    const weeklyCharts = {
+      calories: null,
+      weight: null,
+      steps: null,
+      macros: null,
+    };
+
+    const CHART_COLORS = {
+      consumed: "#2f855a",
+      burned: "#dd6b20",
+      weight: "#3182ce",
+      steps: "#805ad5",
+      protein: "#276749",
+      carbs: "#3182ce",
+      fats: "#c05621",
+    };
     const dailyTipModal = document.getElementById("daily-tip-modal");
     const dailyTipModalCategory = document.getElementById("daily-tip-modal-category");
     const dailyTipModalText = document.getElementById("daily-tip-modal-text");
@@ -2833,6 +3088,10 @@
         loadDailyTips().catch((error) => showToast(error.message, "error"));
       } else if (dailyTipsItems.length) {
         renderDailyTipsBar();
+      }
+
+      if (currentDashboardView === "weekly") {
+        loadWeeklyDashboard().catch((error) => showToast(error.message, "error"));
       }
     }
 
@@ -4597,6 +4856,7 @@
     }
 
     async function initializeDashboard() {
+      weeklyChartEndDate = todayIsoDate();
       await loadAvailableDates();
       pickInitialDate();
       if (summaryDateInput.value) {
@@ -5057,6 +5317,10 @@
 
       renderList("meals-list", data.meals, t("noMeals"), "food_name", "calories", "meal");
       renderList("workouts-list", data.workouts, t("noWorkouts"), "activity_type", "calories_burned", "workout");
+
+      if (currentDashboardView === "weekly") {
+        loadWeeklyDashboard().catch((error) => showToast(error.message, "error"));
+      }
     }
 
     function tipCategoryLabel(category) {
@@ -5249,6 +5513,390 @@
           dailyTipsBar.classList.add("hidden");
         }
         throw error;
+      }
+    }
+
+    function formatChartAxisDate(iso) {
+      const [year, month, day] = iso.split("-").map(Number);
+      return new Date(year, month - 1, day).toLocaleDateString(localeTag(), {
+        month: "short",
+        day: "numeric",
+      });
+    }
+
+    function formatWeekRangeLabel(startIso, endIso) {
+      return `${formatChartAxisDate(startIso)} – ${formatChartAxisDate(endIso)}`;
+    }
+
+    function shiftIsoDate(iso, deltaDays) {
+      const [year, month, day] = iso.split("-").map(Number);
+      const dateObj = new Date(year, month - 1, day);
+      dateObj.setDate(dateObj.getDate() + deltaDays);
+      const nextIso = isoFromParts(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+      const today = todayIsoDate();
+      return nextIso > today ? today : nextIso;
+    }
+
+    function destroyWeeklyChart(key) {
+      if (weeklyCharts[key]) {
+        weeklyCharts[key].destroy();
+        weeklyCharts[key] = null;
+      }
+    }
+
+    async function fetchPeriodSummary(range, endDate) {
+      const response = await apiFetch(
+        `/api/period-summary?range=${encodeURIComponent(range)}&end_date=${encodeURIComponent(endDate)}`,
+      );
+      if (!response.ok) {
+        throw new Error(t("weeklyLoadError"));
+      }
+      return response.json();
+    }
+
+    function constantSeries(length, value) {
+      return Array.from({ length }, () => value);
+    }
+
+    function bindChartToggles(containerId, chartKey, seriesIndexMap) {
+      const container = document.getElementById(containerId);
+      if (!container) {
+        return;
+      }
+      container.querySelectorAll("input[data-series]").forEach((input) => {
+        input.addEventListener("change", () => {
+          const chart = weeklyCharts[chartKey];
+          const index = seriesIndexMap[input.dataset.series];
+          if (chart && index !== undefined) {
+            chart.setDatasetVisibility(index, input.checked);
+            chart.update();
+          }
+        });
+      });
+    }
+
+    function renderCaloriesChart(data) {
+      destroyWeeklyChart("calories");
+      const canvas = document.getElementById("chart-calories");
+      if (!canvas || typeof Chart === "undefined") {
+        return;
+      }
+
+      const labels = data.days.map((day) => formatChartAxisDate(day.date));
+      const consumed = data.days.map((day) => day.calories_consumed);
+      const burned = data.days.map((day) => day.calories_burned);
+      const consumedAvg = data.averages.calories_consumed;
+      const burnedAvg = data.averages.calories_burned;
+
+      weeklyCharts.calories = new Chart(canvas, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: t("chartCaloriesConsumed"),
+              data: consumed,
+              borderColor: CHART_COLORS.consumed,
+              backgroundColor: "rgba(47, 133, 90, 0.12)",
+              tension: 0.25,
+              fill: false,
+            },
+            {
+              label: t("chartCaloriesConsumedAvg"),
+              data: constantSeries(labels.length, consumedAvg),
+              borderColor: CHART_COLORS.consumed,
+              borderDash: [6, 4],
+              pointRadius: 0,
+              tension: 0,
+              fill: false,
+            },
+            {
+              label: t("chartCaloriesBurned"),
+              data: burned,
+              borderColor: CHART_COLORS.burned,
+              backgroundColor: "rgba(221, 107, 32, 0.12)",
+              tension: 0.25,
+              fill: false,
+            },
+            {
+              label: t("chartCaloriesBurnedAvg"),
+              data: constantSeries(labels.length, burnedAvg),
+              borderColor: CHART_COLORS.burned,
+              borderDash: [6, 4],
+              pointRadius: 0,
+              tension: 0,
+              fill: false,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: { legend: { position: "bottom" } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true, title: { display: true, text: t("calUnit") } },
+          },
+        },
+      });
+
+      if (caloriesWeekLabel) {
+        caloriesWeekLabel.textContent = formatWeekRangeLabel(data.start_date, data.end_date);
+      }
+    }
+
+    function renderWeightChart(data) {
+      destroyWeeklyChart("weight");
+      const canvas = document.getElementById("chart-weight");
+      if (!canvas || typeof Chart === "undefined") {
+        return;
+      }
+
+      const labels = data.days.map((day) => formatChartAxisDate(day.date));
+      const weights = data.days.map((day) => day.weight_kg);
+      const weightAvg = data.averages.weight_kg;
+
+      weeklyCharts.weight = new Chart(canvas, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: t("chartWeightLogged"),
+              data: weights,
+              borderColor: CHART_COLORS.weight,
+              backgroundColor: "rgba(49, 130, 206, 0.12)",
+              spanGaps: true,
+              tension: 0.25,
+              fill: false,
+            },
+            {
+              label: t("chartWeightAvg"),
+              data: constantSeries(labels.length, weightAvg),
+              borderColor: CHART_COLORS.weight,
+              borderDash: [6, 4],
+              pointRadius: 0,
+              tension: 0,
+              fill: false,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: { legend: { position: "bottom" } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { title: { display: true, text: "kg" } },
+          },
+        },
+      });
+    }
+
+    function renderStepsChart(data) {
+      destroyWeeklyChart("steps");
+      const canvas = document.getElementById("chart-steps");
+      if (!canvas || typeof Chart === "undefined") {
+        return;
+      }
+
+      const labels = data.days.map((day) => formatChartAxisDate(day.date));
+      const steps = data.days.map((day) => day.steps_count ?? 0);
+      const stepsAvg = data.averages.steps_count;
+
+      weeklyCharts.steps = new Chart(canvas, {
+        data: {
+          labels,
+          datasets: [
+            {
+              type: "bar",
+              label: t("chartStepsLogged"),
+              data: steps,
+              backgroundColor: "rgba(128, 90, 213, 0.55)",
+              borderColor: CHART_COLORS.steps,
+              borderWidth: 1,
+            },
+            {
+              type: "line",
+              label: t("chartStepsAvg"),
+              data: constantSeries(labels.length, stepsAvg),
+              borderColor: CHART_COLORS.steps,
+              borderDash: [6, 4],
+              pointRadius: 0,
+              tension: 0,
+              fill: false,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: { legend: { position: "bottom" } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true, title: { display: true, text: t("chartStepsTitle") } },
+          },
+        },
+      });
+    }
+
+    function renderMacrosChart(data) {
+      destroyWeeklyChart("macros");
+      const canvas = document.getElementById("chart-macros");
+      if (!canvas || typeof Chart === "undefined") {
+        return;
+      }
+
+      const labels = data.days.map((day) => formatChartAxisDate(day.date));
+      const goals = data.macro_goals;
+      const datasets = [
+        {
+          type: "bar",
+          label: t("proteinLabel"),
+          data: data.days.map((day) => day.total_protein),
+          backgroundColor: "rgba(39, 103, 73, 0.65)",
+          borderColor: CHART_COLORS.protein,
+          borderWidth: 1,
+        },
+        {
+          type: "bar",
+          label: t("carbsLabel"),
+          data: data.days.map((day) => day.total_carbohydrates),
+          backgroundColor: "rgba(49, 130, 206, 0.55)",
+          borderColor: CHART_COLORS.carbs,
+          borderWidth: 1,
+        },
+        {
+          type: "bar",
+          label: t("fatsLabel"),
+          data: data.days.map((day) => day.total_fats),
+          backgroundColor: "rgba(192, 86, 33, 0.55)",
+          borderColor: CHART_COLORS.fats,
+          borderWidth: 1,
+        },
+      ];
+
+      if (goals) {
+        datasets.push(
+          {
+            type: "line",
+            label: t("chartProteinGoal"),
+            data: constantSeries(labels.length, goals.protein_g),
+            borderColor: CHART_COLORS.protein,
+            borderDash: [6, 4],
+            pointRadius: 0,
+            tension: 0,
+            fill: false,
+          },
+          {
+            type: "line",
+            label: t("chartCarbsGoal"),
+            data: constantSeries(labels.length, goals.carbohydrates_g),
+            borderColor: CHART_COLORS.carbs,
+            borderDash: [6, 4],
+            pointRadius: 0,
+            tension: 0,
+            fill: false,
+          },
+          {
+            type: "line",
+            label: t("chartFatsGoal"),
+            data: constantSeries(labels.length, goals.fats_g),
+            borderColor: CHART_COLORS.fats,
+            borderDash: [6, 4],
+            pointRadius: 0,
+            tension: 0,
+            fill: false,
+          },
+        );
+      }
+
+      weeklyCharts.macros = new Chart(canvas, {
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: { legend: { position: "bottom" } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true, title: { display: true, text: "g" } },
+          },
+        },
+      });
+
+      if (macrosWeekLabel) {
+        macrosWeekLabel.textContent = formatWeekRangeLabel(data.start_date, data.end_date);
+      }
+    }
+
+    async function loadCaloriesChart() {
+      if (!authToken) {
+        return;
+      }
+      if (!weeklyChartEndDate) {
+        weeklyChartEndDate = todayIsoDate();
+      }
+      const data = await fetchPeriodSummary("7d", weeklyChartEndDate);
+      renderCaloriesChart(data);
+    }
+
+    async function loadMacrosChart() {
+      if (!authToken) {
+        return;
+      }
+      if (!weeklyChartEndDate) {
+        weeklyChartEndDate = todayIsoDate();
+      }
+      const data = await fetchPeriodSummary("7d", weeklyChartEndDate);
+      renderMacrosChart(data);
+    }
+
+    async function loadWeightChart() {
+      if (!authToken) {
+        return;
+      }
+      const range = weightRangeSelect?.value || "7d";
+      const data = await fetchPeriodSummary(range, todayIsoDate());
+      renderWeightChart(data);
+    }
+
+    async function loadStepsChart() {
+      if (!authToken) {
+        return;
+      }
+      const range = stepsRangeSelect?.value || "7d";
+      const data = await fetchPeriodSummary(range, todayIsoDate());
+      renderStepsChart(data);
+    }
+
+    async function loadWeeklyDashboard() {
+      await Promise.all([
+        loadCaloriesChart(),
+        loadWeightChart(),
+        loadStepsChart(),
+        loadMacrosChart(),
+      ]);
+    }
+
+    async function loadWeeklyCaloriesWeek() {
+      await Promise.all([loadCaloriesChart(), loadMacrosChart()]);
+    }
+
+    function setDashboardView(view) {
+      currentDashboardView = view;
+      dashboardTabs.forEach((tab) => {
+        const active = tab.dataset.view === view;
+        tab.classList.toggle("active", active);
+        tab.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      dailyView?.classList.toggle("hidden", view !== "daily");
+      weeklyView?.classList.toggle("hidden", view !== "weekly");
+      if (view === "weekly") {
+        loadWeeklyDashboard().catch((error) => showToast(error.message, "error"));
       }
     }
 
@@ -5482,6 +6130,65 @@
         authMessage.textContent = "";
         authMessage.classList.remove("error");
       });
+    });
+
+    dashboardTabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        setDashboardView(tab.dataset.view || "daily");
+      });
+    });
+
+    document.getElementById("calories-week-prev")?.addEventListener("click", () => {
+      weeklyChartEndDate = shiftIsoDate(weeklyChartEndDate || todayIsoDate(), -7);
+      loadWeeklyCaloriesWeek().catch((error) => showToast(error.message, "error"));
+    });
+
+    document.getElementById("calories-week-next")?.addEventListener("click", () => {
+      const current = weeklyChartEndDate || todayIsoDate();
+      const next = shiftIsoDate(current, 7);
+      if (next === current) {
+        return;
+      }
+      weeklyChartEndDate = next;
+      loadWeeklyCaloriesWeek().catch((error) => showToast(error.message, "error"));
+    });
+
+    document.getElementById("macros-week-prev")?.addEventListener("click", () => {
+      weeklyChartEndDate = shiftIsoDate(weeklyChartEndDate || todayIsoDate(), -7);
+      loadWeeklyCaloriesWeek().catch((error) => showToast(error.message, "error"));
+    });
+
+    document.getElementById("macros-week-next")?.addEventListener("click", () => {
+      const current = weeklyChartEndDate || todayIsoDate();
+      const next = shiftIsoDate(current, 7);
+      if (next === current) {
+        return;
+      }
+      weeklyChartEndDate = next;
+      loadWeeklyCaloriesWeek().catch((error) => showToast(error.message, "error"));
+    });
+
+    weightRangeSelect?.addEventListener("change", () => {
+      loadWeightChart().catch((error) => showToast(error.message, "error"));
+    });
+
+    stepsRangeSelect?.addEventListener("change", () => {
+      loadStepsChart().catch((error) => showToast(error.message, "error"));
+    });
+
+    bindChartToggles("calories-chart-toggles", "calories", {
+      consumed: 0,
+      consumedAvg: 1,
+      burned: 2,
+      burnedAvg: 3,
+    });
+    bindChartToggles("weight-chart-toggles", "weight", {
+      weight: 0,
+      weightAvg: 1,
+    });
+    bindChartToggles("steps-chart-toggles", "steps", {
+      steps: 0,
+      stepsAvg: 1,
     });
 
     langMenuBtn?.addEventListener("click", (event) => {
