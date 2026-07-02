@@ -28,6 +28,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from daily_tip_feedback import toggle_tip_feedback
 from gemini_daily_tips import get_or_create_daily_tips
 from gemini_insight import generate_daily_insight
 from profile_utils import validate_birth_date
@@ -246,6 +247,13 @@ class DailyTipsRequest(BaseModel):
     language: str = Field(default="en", pattern=r"^(en|he)$")
 
 
+class DailyTipFeedbackRequest(BaseModel):
+    tip_text: str = Field(..., min_length=1, max_length=480)
+    category: str = Field(default="nutrition")
+    language: str = Field(default="en", pattern=r"^(en|he)$")
+    action: Literal["like", "dislike"]
+
+
 class StepsUpsert(BaseModel):
     steps_count: int = Field(..., ge=0, le=100000)
 
@@ -288,6 +296,45 @@ def _normalize_activity_type(activity_type: str) -> str:
     for quote in ('\u05f4', '\u05f3', '\u201c', '\u201d', '\u2018', '\u2019', "'"):
         text = text.replace(quote, '"')
     return " ".join(text.split()).lower()
+
+
+def _normalize_food_name(food_name: str) -> str:
+    return _normalize_activity_type(food_name)
+
+
+def _lookup_prior_meal_estimate(
+    db: Session,
+    user_id: int,
+    food_name: str,
+    exclude_meal_id: int | None = None,
+) -> CalorieEstimate | None:
+    normalized = _normalize_food_name(food_name)
+    query = (
+        db.query(Meal)
+        .filter(Meal.user_id == user_id)
+        .order_by(Meal.logged_at.desc())
+    )
+    if exclude_meal_id is not None:
+        query = query.filter(Meal.id != exclude_meal_id)
+
+    for prior_meal in query:
+        if _normalize_food_name(prior_meal.food_name) != normalized:
+            continue
+        logged_date = prior_meal.logged_at.date().isoformat()
+        return CalorieEstimate(
+            calories=prior_meal.calories,
+            explanation=(
+                f'"{prior_meal.food_name}" was logged before on {logged_date} '
+                f"({prior_meal.calories:g} kcal, {prior_meal.protein:g}g protein, "
+                f"{prior_meal.carbohydrates:g}g carbs, {prior_meal.fats:g}g fat). "
+                f"Reusing that value for consistency — no new estimate."
+            ),
+            ai_estimated=False,
+            protein=prior_meal.protein,
+            carbohydrates=prior_meal.carbohydrates,
+            fats=prior_meal.fats,
+        )
+    return None
 
 
 def _lookup_prior_workout_estimate(
@@ -494,13 +541,17 @@ def _macros_provided(protein: float | None, carbohydrates: float | None, fats: f
     return protein is not None and carbohydrates is not None and fats is not None
 
 
-def _build_meal_nutrition(
-    food_name: str,
+def _estimate_meal_nutrition(
+    db: Session,
     user: User,
+    food_name: str,
+    *,
     protein: float | None = None,
     carbohydrates: float | None = None,
     fats: float | None = None,
-):
+    exclude_meal_id: int | None = None,
+    allow_reuse: bool = True,
+) -> CalorieEstimate:
     if _macros_provided(protein, carbohydrates, fats):
         calories = calories_from_macros(protein, carbohydrates, fats)
         return CalorieEstimate(
@@ -514,6 +565,16 @@ def _build_meal_nutrition(
             carbohydrates=round(carbohydrates, 1),
             fats=round(fats, 1),
         )
+    if allow_reuse:
+        prior = _lookup_prior_meal_estimate(db, user.id, food_name, exclude_meal_id=exclude_meal_id)
+        if prior is not None:
+            logger.info(
+                "Reused meal nutrition for user %s food %r -> %.1f kcal",
+                user.username,
+                food_name,
+                prior.calories,
+            )
+            return prior
     return estimate_meal_calories(food_name, user)
 
 
@@ -1006,6 +1067,27 @@ def refresh_daily_tips(
     return result
 
 
+@app.post("/api/daily-tips/feedback")
+def set_daily_tip_feedback(
+    payload: DailyTipFeedbackRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    try:
+        rating = toggle_tip_feedback(
+            db,
+            current_user,
+            payload.tip_text,
+            payload.category,
+            payload.language,
+            payload.action,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+    db.commit()
+    return {"rating": rating}
+
+
 @app.post("/api/ai-insight")
 def get_ai_insight(
     payload: InsightRequest | None = None,
@@ -1029,12 +1111,13 @@ def add_meal(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    estimate = _build_meal_nutrition(
-        payload.food_name.strip(),
+    estimate = _estimate_meal_nutrition(
+        db,
         current_user,
-        payload.protein,
-        payload.carbohydrates,
-        payload.fats,
+        payload.food_name.strip(),
+        protein=payload.protein,
+        carbohydrates=payload.carbohydrates,
+        fats=payload.fats,
     )
     meal = Meal(
         user_id=current_user.id,
@@ -1098,17 +1181,26 @@ def update_meal(
     ai_estimated = False
     explanation = ""
     if payload.recalculate_calories or name_changed:
-        estimate = _build_meal_nutrition(new_name, current_user)
+        estimate = _estimate_meal_nutrition(
+            db,
+            current_user,
+            new_name,
+            exclude_meal_id=meal.id,
+            allow_reuse=not payload.recalculate_calories,
+        )
         _apply_meal_nutrition(meal, estimate)
         ai_estimated = estimate.ai_estimated
         explanation = estimate.explanation
     elif _macros_provided(payload.protein, payload.carbohydrates, payload.fats):
-        estimate = _build_meal_nutrition(
-            new_name,
+        estimate = _estimate_meal_nutrition(
+            db,
             current_user,
-            payload.protein,
-            payload.carbohydrates,
-            payload.fats,
+            new_name,
+            protein=payload.protein,
+            carbohydrates=payload.carbohydrates,
+            fats=payload.fats,
+            exclude_meal_id=meal.id,
+            allow_reuse=False,
         )
         _apply_meal_nutrition(meal, estimate)
         ai_estimated = estimate.ai_estimated

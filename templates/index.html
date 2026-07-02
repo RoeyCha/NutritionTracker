@@ -1115,6 +1115,47 @@
       text-transform: uppercase;
     }
 
+    .daily-tip-feedback {
+      display: flex;
+      gap: 0.65rem;
+      justify-content: center;
+      margin: 1rem 0 0.25rem;
+    }
+
+    .daily-tip-feedback-btn {
+      align-items: center;
+      background: #edf2f7;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      cursor: pointer;
+      display: inline-flex;
+      height: 42px;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0;
+      width: 42px;
+    }
+
+    .daily-tip-feedback-btn:hover,
+    .daily-tip-feedback-btn:focus-visible {
+      background: #e2e8f0;
+      color: var(--text);
+      outline: none;
+    }
+
+    .daily-tip-feedback-btn.active-like {
+      background: rgba(47, 133, 90, 0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .daily-tip-feedback-btn.active-dislike {
+      background: rgba(197, 48, 48, 0.12);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
     .profile-meta {
       color: var(--muted);
       font-size: 0.95rem;
@@ -2381,8 +2422,19 @@
       <p id="daily-tip-modal-category" class="daily-tip-category-badge"></p>
       <h3 id="daily-tip-modal-title" class="sr-only" data-i18n="dailyTipModalTitle">Daily tip</h3>
       <p id="daily-tip-modal-text"></p>
-      <div class="form-actions modal-form-actions">
-        <button type="button" class="btn-primary" id="daily-tip-modal-close" data-i18n="dailyTipModalClose">OK</button>
+      <div class="daily-tip-feedback">
+        <button type="button" class="daily-tip-feedback-btn" id="daily-tip-like" data-i18n-aria-label="dailyTipLike" aria-label="Like this tip">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M7 10v12"></path>
+            <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"></path>
+          </svg>
+        </button>
+        <button type="button" class="daily-tip-feedback-btn" id="daily-tip-dislike" data-i18n-aria-label="dailyTipDislike" aria-label="Dislike this tip">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17 14V2"></path>
+            <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"></path>
+          </svg>
+        </button>
       </div>
     </div>
   </div>
@@ -2570,7 +2622,8 @@
         dailyTipsNeedData:
           "Not enough tracked data yet — showing general tips. Log meals, workouts, and steps over a few days for personalized tips.",
         dailyTipModalTitle: "Daily tip",
-        dailyTipModalClose: "OK",
+        dailyTipLike: "Like this tip",
+        dailyTipDislike: "Dislike this tip",
         refreshDailyTips: "Reset & get new tips",
         refreshDailyTipsSuccess: "Daily tips updated.",
         dailyTab: "Daily",
@@ -2792,7 +2845,8 @@
         dailyTipsNeedData:
           "אין מספיק נתונים — מוצגים טיפים כלליים. רשום/י ארוחות, אימונים וצעדים במשך מספר ימים לטיפים מותאמים.",
         dailyTipModalTitle: "טיפ יומי",
-        dailyTipModalClose: "אישור",
+        dailyTipLike: "אהבתי את הטיפ",
+        dailyTipDislike: "לא אהבתי את הטיפ",
         refreshDailyTips: "איפוס וטיפים חדשים",
         refreshDailyTipsSuccess: "הטיפים היומיים עודכנו.",
         dailyTab: "יומי",
@@ -2987,7 +3041,9 @@
     const dailyTipModal = document.getElementById("daily-tip-modal");
     const dailyTipModalCategory = document.getElementById("daily-tip-modal-category");
     const dailyTipModalText = document.getElementById("daily-tip-modal-text");
-    const dailyTipModalClose = document.getElementById("daily-tip-modal-close");
+    const dailyTipLikeBtn = document.getElementById("daily-tip-like");
+    const dailyTipDislikeBtn = document.getElementById("daily-tip-dislike");
+    let currentOpenTip = null;
     const DAILY_TIPS_VISIBLE = 4;
     const DAILY_TIPS_AUTO_MS = 4500;
     let dailyTipsItems = [];
@@ -5443,12 +5499,58 @@
       });
     }
 
+    function updateDailyTipFeedbackButtons() {
+      if (!dailyTipLikeBtn || !dailyTipDislikeBtn) {
+        return;
+      }
+      const feedback = currentOpenTip?.feedback || null;
+      dailyTipLikeBtn.classList.toggle("active-like", feedback === "like");
+      dailyTipDislikeBtn.classList.toggle("active-dislike", feedback === "dislike");
+      dailyTipLikeBtn.setAttribute("aria-pressed", feedback === "like" ? "true" : "false");
+      dailyTipDislikeBtn.setAttribute("aria-pressed", feedback === "dislike" ? "true" : "false");
+    }
+
+    async function submitDailyTipFeedback(action) {
+      if (!currentOpenTip || !authToken) {
+        return;
+      }
+
+      const response = await apiFetch("/api/daily-tips/feedback", {
+        method: "POST",
+        body: JSON.stringify({
+          tip_text: currentOpenTip.text,
+          category: currentOpenTip.category,
+          language: currentLang,
+          action,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        const detail = error.detail || t("dailyTipsError");
+        throw new Error(Array.isArray(detail) ? detail.map((item) => item.msg).join(", ") : detail);
+      }
+
+      const data = await response.json();
+      const rating = data.rating || null;
+      currentOpenTip.feedback = rating;
+
+      const match = dailyTipsItems.find((tip) => tip.id === currentOpenTip.id && tip.text === currentOpenTip.text);
+      if (match) {
+        match.feedback = rating;
+      }
+
+      updateDailyTipFeedbackButtons();
+    }
+
     function openDailyTipModal(tip) {
       if (!dailyTipModal || !tip) {
         return;
       }
+      currentOpenTip = tip;
       dailyTipModalCategory.textContent = tipCategoryLabel(tip.category);
       dailyTipModalText.textContent = tip.text;
+      updateDailyTipFeedbackButtons();
       dailyTipModal.classList.remove("hidden");
       stopDailyTipsAutoplay();
     }
@@ -5458,6 +5560,7 @@
         return;
       }
       dailyTipModal.classList.add("hidden");
+      currentOpenTip = null;
       startDailyTipsAutoplay();
     }
 
@@ -6407,7 +6510,12 @@
       startDailyTipsAutoplay();
     });
 
-    dailyTipModalClose?.addEventListener("click", closeDailyTipModal);
+    dailyTipLikeBtn?.addEventListener("click", () => {
+      submitDailyTipFeedback("like").catch((error) => showToast(error.message, "error"));
+    });
+    dailyTipDislikeBtn?.addEventListener("click", () => {
+      submitDailyTipFeedback("dislike").catch((error) => showToast(error.message, "error"));
+    });
     dailyTipModal?.addEventListener("click", (event) => {
       if (event.target === dailyTipModal) {
         closeDailyTipModal();

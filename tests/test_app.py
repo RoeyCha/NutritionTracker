@@ -138,6 +138,44 @@ def test_activity_summary_endpoint_returns_ok(client: TestClient) -> None:
 
 @patch(
     "main.estimate_meal_calories",
+    return_value=CalorieEstimate(
+        calories=400.0,
+        explanation="test",
+        ai_estimated=False,
+        protein=25.0,
+        carbohydrates=40.0,
+        fats=12.0,
+    ),
+)
+def test_log_meal_reuses_prior_food_nutrition(mock_estimate, client: TestClient) -> None:
+    first = client.post(
+        "/api/meals",
+        headers=client.auth_headers,
+        json={"food_name": "Greek yogurt bowl"},
+    )
+    assert first.status_code == 201
+    assert first.json()["calories"] == 400.0
+    assert first.json()["protein"] == 25.0
+    mock_estimate.assert_called_once()
+
+    mock_estimate.reset_mock()
+    second = client.post(
+        "/api/meals",
+        headers=client.auth_headers,
+        json={"food_name": "greek yogurt bowl"},
+    )
+    assert second.status_code == 201
+    assert second.json()["calories"] == 400.0
+    assert second.json()["protein"] == 25.0
+    assert second.json()["carbohydrates"] == 40.0
+    assert second.json()["fats"] == 12.0
+    assert second.json()["ai_estimated"] is False
+    assert "Reusing" in second.json()["ai_explanation"]
+    mock_estimate.assert_not_called()
+
+
+@patch(
+    "main.estimate_meal_calories",
     return_value=CalorieEstimate(calories=400.0, explanation="test", ai_estimated=False),
 )
 def test_log_meal_endpoint_returns_success(mock_estimate, client: TestClient) -> None:

@@ -9,6 +9,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from gemini_insight import GEMINI_MODEL, GEMINI_MODEL_FALLBACKS, _user_profile_text
+from daily_tip_feedback import attach_feedback_to_tips, fetch_feedback_for_prompt
 from models import DailySteps, DailyTipsCache, DailyWeight, Meal, User, Workout
 
 logger = logging.getLogger(__name__)
@@ -184,8 +185,14 @@ def _general_daily_tips(language: str) -> list[dict]:
     return [{"category": category, "text": text} for category, text in templates[:TIP_COUNT]]
 
 
-def _build_tips_prompt(user: User, context: dict, language: str) -> str:
+def _build_tips_prompt(
+    user: User,
+    context: dict,
+    language: str,
+    feedback: dict | None = None,
+) -> str:
     language_instruction = "Respond in Hebrew." if language == "he" else "Respond in English."
+    feedback = feedback or {"liked": [], "disliked": []}
 
     day_blocks = []
     for day in context["days"]:
@@ -219,6 +226,29 @@ def _build_tips_prompt(user: User, context: dict, language: str) -> str:
             f"Workouts:\n{chr(10).join(workout_lines)}"
         )
 
+    feedback_blocks = []
+    if feedback.get("liked"):
+        liked_lines = "\n".join(
+            f"- [{item['category']}] {item['text']}" for item in feedback["liked"]
+        )
+        feedback_blocks.append(
+            "Tips the user LIKED (expand on this style, specificity, and depth — similar tone and data references):\n"
+            f"{liked_lines}"
+        )
+    if feedback.get("disliked"):
+        disliked_lines = "\n".join(
+            f"- [{item['category']}] {item['text']}" for item in feedback["disliked"]
+        )
+        feedback_blocks.append(
+            "Tips the user DISLIKED (avoid similar topics, vagueness, or tone — narrow away from these patterns):\n"
+            f"{disliked_lines}"
+        )
+    feedback_section = (
+        "\n\nUser feedback on past tips:\n" + "\n\n".join(feedback_blocks)
+        if feedback_blocks
+        else ""
+    )
+
     return f"""You are a supportive nutrition and fitness coach who writes highly personalized advice.
 
 Create exactly {TIP_COUNT} practical tips for this specific user based ONLY on their profile and the last 3 complete days of tracked data below (exclude today — it is often incomplete).
@@ -238,6 +268,7 @@ BMR: {user.bmr or "unknown"}
 
 Last 3 complete days of tracked data (excluding today):
 {chr(10).join(day_blocks)}
+{feedback_section}
 
 Return JSON only with this exact shape:
 {{"tips": [{{"category": "nutrition", "text": "..."}}, {{"category": "sport", "text": "..."}}]}}
@@ -540,14 +571,17 @@ def _generate_tips_with_ai(
     context: dict,
     language: str,
     api_key: str | None,
+    db: Session | None = None,
 ) -> tuple[list[dict], str, bool]:
     if not _context_has_tracking_data(context):
         return _general_daily_tips(language), "general-no-data", False
 
+    feedback = fetch_feedback_for_prompt(db, user.id, language) if db else {"liked": [], "disliked": []}
+
     if not api_key:
         return _fallback_daily_tips(context, language), "local-fallback", False
 
-    prompt = _build_tips_prompt(user, context, language)
+    prompt = _build_tips_prompt(user, context, language, feedback)
     preferred_model = os.getenv("GEMINI_MODEL", GEMINI_MODEL)
     model_names = []
     for name in (preferred_model, *GEMINI_MODEL_FALLBACKS):
@@ -627,7 +661,7 @@ def get_or_create_daily_tips(
     cached = get_cached_daily_tips(db, user, tip_date, language)
 
     if cached and not force_refresh:
-        tips = json.loads(cached.tips_json)
+        tips = attach_feedback_to_tips(db, user.id, json.loads(cached.tips_json))
         return {
             "tip_date": tip_date.isoformat(),
             "language": language,
@@ -640,9 +674,10 @@ def get_or_create_daily_tips(
 
     context = fetch_three_day_context(db, user)
     has_tracking_data = _context_has_tracking_data(context)
-    tips_raw, model_name, ai_estimated = _generate_tips_with_ai(user, context, language, api_key)
-    tips = _serialize_tips(tips_raw)
-    payload = json.dumps(tips, ensure_ascii=False)
+    tips_raw, model_name, ai_estimated = _generate_tips_with_ai(user, context, language, api_key, db)
+    serialized = _serialize_tips(tips_raw)
+    payload = json.dumps(serialized, ensure_ascii=False)
+    tips = attach_feedback_to_tips(db, user.id, serialized)
 
     if cached:
         cached.tips_json = payload

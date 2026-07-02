@@ -3,8 +3,10 @@ from datetime import date, timedelta
 
 from fastapi.testclient import TestClient
 
+from daily_tip_feedback import fetch_feedback_for_prompt, toggle_tip_feedback
 from gemini_daily_tips import (
     TIP_COUNT,
+    _build_tips_prompt,
     _context_has_tracking_data,
     _fallback_daily_tips,
     _general_daily_tips,
@@ -126,3 +128,55 @@ def test_get_or_create_daily_tips_persists_json(client: TestClient) -> None:
     stored = json.loads(record.tips_json)
     assert len(stored) == TIP_COUNT
     assert result["tips"][0]["text"] == stored[0]["text"]
+
+
+def test_daily_tips_include_feedback_field(client: TestClient) -> None:
+    response = client.get("/api/daily-tips?language=en", headers=client.auth_headers)
+    assert response.status_code == 200
+    assert "feedback" in response.json()["tips"][0]
+
+
+def test_tip_feedback_toggle(client: TestClient) -> None:
+    tip_text = "On Monday you logged oatmeal — add protein at lunch tomorrow."
+    payload = {
+        "tip_text": tip_text,
+        "category": "nutrition",
+        "language": "en",
+        "action": "like",
+    }
+
+    liked = client.post("/api/daily-tips/feedback", headers=client.auth_headers, json=payload)
+    assert liked.status_code == 200
+    assert liked.json()["rating"] == "like"
+
+    cleared = client.post("/api/daily-tips/feedback", headers=client.auth_headers, json=payload)
+    assert cleared.status_code == 200
+    assert cleared.json()["rating"] is None
+
+    disliked = client.post(
+        "/api/daily-tips/feedback",
+        headers=client.auth_headers,
+        json={**payload, "action": "dislike"},
+    )
+    assert disliked.status_code == 200
+    assert disliked.json()["rating"] == "dislike"
+
+
+def test_build_tips_prompt_includes_user_feedback(client: TestClient) -> None:
+    tip_text = "Your steps dropped on Tuesday — schedule a 25-minute walk."
+    toggle_tip_feedback(
+        client.db_session,
+        client.test_user,
+        tip_text,
+        "sport",
+        "en",
+        "like",
+    )
+    client.db_session.commit()
+
+    context = fetch_three_day_context(client.db_session, client.test_user)
+    feedback = fetch_feedback_for_prompt(client.db_session, client.test_user.id, "en")
+    prompt = _build_tips_prompt(client.test_user, context, "en", feedback)
+
+    assert tip_text in prompt
+    assert "LIKED" in prompt

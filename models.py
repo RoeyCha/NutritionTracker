@@ -41,6 +41,9 @@ class User(Base):
     daily_tips: Mapped[list["DailyTipsCache"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
+    daily_tip_feedback: Mapped[list["DailyTipFeedback"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class Meal(Base):
@@ -112,6 +115,22 @@ class DailyTipsCache(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     user: Mapped["User"] = relationship(back_populates="daily_tips")
+
+
+class DailyTipFeedback(Base):
+    __tablename__ = "daily_tip_feedback"
+    __table_args__ = (UniqueConstraint("user_id", "tip_hash", name="uq_user_tip_feedback"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    tip_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    tip_text: Mapped[str] = mapped_column(String(480), nullable=False)
+    category: Mapped[str] = mapped_column(String(20), nullable=False)
+    language: Mapped[str] = mapped_column(String(5), nullable=False, default="en")
+    rating: Mapped[str] = mapped_column(String(10), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user: Mapped["User"] = relationship(back_populates="daily_tip_feedback")
 
 
 def migrate_db() -> None:
