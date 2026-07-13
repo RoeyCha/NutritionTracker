@@ -503,3 +503,52 @@ def test_latest_weight_uses_registration_baseline_without_daily_log(client: Test
     assert payload["latest_weight"]["source"] == "initial"
     assert payload["latest_weight"]["logged_on_selected_date"] is False
     assert payload["weight_trend"][-1]["weight_kg"] == 68.2
+
+
+def test_logged_at_round_trip_uses_utc_and_local_day_filter(client: TestClient) -> None:
+    logged_at_utc = "2026-07-04T21:30:00.000Z"
+    local_date = "2026-07-05"
+    tz_offset = -180
+
+    create_response = client.post(
+        "/api/meals",
+        headers=client.auth_headers,
+        json={
+            "food_name": "Late-night snack",
+            "calories": 120.0,
+            "logged_at": logged_at_utc,
+        },
+    )
+    assert create_response.status_code == 201
+    created = create_response.json()
+    assert created["logged_at"] == "2026-07-04T21:30:00Z"
+
+    summary_response = client.get(
+        f"/api/summary?date={local_date}&tz_offset={tz_offset}",
+        headers=client.auth_headers,
+    )
+    assert summary_response.status_code == 200
+    summary = summary_response.json()
+    assert any(meal["food_name"] == "Late-night snack" for meal in summary["meals"])
+    assert summary["meals"][0]["logged_at"].endswith("Z")
+
+    dates_response = client.get(
+        f"/api/dates-with-data?tz_offset={tz_offset}",
+        headers=client.auth_headers,
+    )
+    assert dates_response.status_code == 200
+    assert local_date in dates_response.json()["dates"]
+
+
+def test_summary_meals_and_workouts_logged_at_use_utc_suffix(client: TestClient) -> None:
+    response = client.get(
+        f"/api/summary?date={date.today().isoformat()}",
+        headers=client.auth_headers,
+    )
+    assert response.status_code == 200
+    payload = response.json()
+
+    for meal in payload["meals"]:
+        assert meal["logged_at"].endswith("Z")
+    for workout in payload["workouts"]:
+        assert workout["logged_at"].endswith("Z")

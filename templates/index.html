@@ -264,6 +264,50 @@
       font-size: 0.85rem;
     }
 
+    .list-item-icon-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.15rem;
+    }
+
+    .list-icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: auto;
+      min-width: 0;
+      min-height: 0;
+      padding: 0.2rem;
+      margin: 0;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      line-height: 0;
+      border-radius: 4px;
+    }
+
+    .list-icon-btn svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+    }
+
+    .list-icon-btn:hover {
+      color: var(--accent);
+      background: rgba(47, 133, 90, 0.08);
+    }
+
+    .list-icon-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    .list-icon-btn--danger:hover {
+      color: var(--danger, #c53030);
+      background: rgba(197, 48, 48, 0.08);
+    }
+
     .logged-at-input {
       font-variant-numeric: tabular-nums;
     }
@@ -1280,6 +1324,10 @@
       align-items: center;
       gap: 0.65rem;
       flex-shrink: 0;
+    }
+
+    .list-item-value {
+      white-space: nowrap;
     }
 
     .list-edit-btn {
@@ -2362,7 +2410,7 @@
       <p id="weight-modal-date" class="ai-hint"></p>
       <form id="weight-form">
         <label for="weight-value-input" data-i18n="weightKg">Weight (kg)</label>
-        <input id="weight-value-input" name="weight_kg" type="number" min="1" max="500" step="0.1" required>
+        <input id="weight-value-input" name="weight_kg" type="number" min="1" max="500" step="0.1" inputmode="decimal" required>
         <p class="ai-hint" data-i18n="weightHint">Log your weight for this day. Updating today's weight also refreshes your profile and BMR.</p>
       </form>
       <p class="message" id="weight-modal-message"></p>
@@ -2653,6 +2701,8 @@
         chartFatsGoal: "Fats goal",
         weeklyLoadError: "Could not load weekly charts.",
         editBtn: "Edit",
+        copyBtn: "Copy text",
+        copySuccess: "Copied to clipboard.",
         deleteBtn: "Delete",
         editMeal: "Edit Meal",
         deleteMealBtn: "Delete meal",
@@ -2876,6 +2926,8 @@
         chartFatsGoal: "יעד שומנים",
         weeklyLoadError: "לא ניתן לטעון את הגרפים השבועיים.",
         editBtn: "ערוך",
+        copyBtn: "העתק טקסט",
+        copySuccess: "הועתק ללוח.",
         deleteBtn: "מחק",
         editMeal: "עריכת ארוחה",
         deleteMealBtn: "מחק ארוחה",
@@ -3423,6 +3475,75 @@
       renderWeightTrendArrow(data.weight_trend || []);
     }
 
+    const WEIGHT_INPUT_MIN = 1;
+    const WEIGHT_INPUT_MAX = 500;
+    const WEIGHT_INPUT_STEP = 0.1;
+
+    function formatWeightInputValue(value) {
+      if (value === "" || value == null || Number.isNaN(Number(value))) {
+        return "";
+      }
+      return Number(value).toFixed(1);
+    }
+
+    function adjustWeightInput(delta) {
+      const input = document.getElementById("weight-value-input");
+      if (!input) {
+        return;
+      }
+      const current = Number.parseFloat(input.value);
+      const base = Number.isNaN(current) ? WEIGHT_INPUT_MIN : current;
+      const next = Math.min(
+        WEIGHT_INPUT_MAX,
+        Math.max(WEIGHT_INPUT_MIN, Math.round((base + delta) * 10) / 10),
+      );
+      input.value = next.toFixed(1);
+    }
+
+    function setupWeightInputStepping() {
+      const input = document.getElementById("weight-value-input");
+      if (!input || input.dataset.steppingBound === "true") {
+        return;
+      }
+      input.dataset.steppingBound = "true";
+      input.step = String(WEIGHT_INPUT_STEP);
+
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          adjustWeightInput(WEIGHT_INPUT_STEP);
+        } else if (event.key === "ArrowDown") {
+          event.preventDefault();
+          adjustWeightInput(-WEIGHT_INPUT_STEP);
+        }
+      });
+
+      input.addEventListener("mousedown", (event) => {
+        if (event.button !== 0) {
+          return;
+        }
+        const rect = input.getBoundingClientRect();
+        const spinnerWidth = 28;
+        const onSpinner =
+          document.documentElement.dir === "rtl"
+            ? event.clientX - rect.left <= spinnerWidth
+            : rect.right - event.clientX <= spinnerWidth;
+        if (!onSpinner) {
+          return;
+        }
+
+        event.preventDefault();
+        const midpoint = rect.top + rect.height / 2;
+        adjustWeightInput(event.clientY < midpoint ? WEIGHT_INPUT_STEP : -WEIGHT_INPUT_STEP);
+      });
+
+      input.addEventListener("blur", () => {
+        if (input.value !== "") {
+          input.value = formatWeightInputValue(input.value);
+        }
+      });
+    }
+
     function openWeightEditModal() {
       const selectedDate = summaryDateInput.value;
       if (!selectedDate || selectedDate > todayIsoDate()) {
@@ -3433,12 +3554,13 @@
       weightModalMessage.textContent = "";
       weightModalMessage.classList.remove("error");
       document.getElementById("weight-modal-date").textContent = formatDisplayDate(selectedDate);
-      document.getElementById("weight-value-input").value =
+      const initialWeight =
         currentDailyWeight?.weight_kg ??
         currentLatestWeight?.weight_kg ??
         currentUser?.initial_weight_kg ??
         currentUser?.weight_kg ??
         "";
+      document.getElementById("weight-value-input").value = formatWeightInputValue(initialWeight);
       weightEditModal.classList.remove("hidden");
     }
 
@@ -3719,8 +3841,8 @@
         return formatShortDate(value);
       }
       try {
-        const parsed = new Date(value);
-        if (Number.isNaN(parsed.getTime())) {
+        const parsed = parseUtcLoggedAt(value);
+        if (!parsed || Number.isNaN(parsed.getTime())) {
           return value;
         }
         return formatLoggedAtDisplay(parsed);
@@ -4781,8 +4903,31 @@
       return snapToQuarterHour(parsed);
     }
 
+    function clientTzOffsetMinutes() {
+      return new Date().getTimezoneOffset();
+    }
+
+    function summaryQueryParams(dateIso) {
+      return `date=${encodeURIComponent(dateIso)}&tz_offset=${clientTzOffsetMinutes()}`;
+    }
+
+    function parseUtcLoggedAt(isoString) {
+      if (!isoString) {
+        return null;
+      }
+      const value = String(isoString).trim();
+      if (!value) {
+        return null;
+      }
+      if (/[zZ]$/.test(value) || /[+-]\d{2}:\d{2}$/.test(value)) {
+        return new Date(value);
+      }
+      return new Date(`${value}Z`);
+    }
+
     function formatLocalTime(isoString) {
-      return formatLoggedAtDisplay(new Date(isoString));
+      const parsed = parseUtcLoggedAt(isoString);
+      return parsed ? formatLoggedAtDisplay(parsed) : "";
     }
 
     function formatDisplayDate(iso) {
@@ -4869,7 +5014,7 @@
     }
 
     async function loadAvailableDates() {
-      const response = await apiFetch("/api/dates-with-data");
+      const response = await apiFetch(`/api/dates-with-data?tz_offset=${clientTzOffsetMinutes()}`);
       if (response.ok) {
         const data = await response.json();
         availableDates = new Set(data.dates || []);
@@ -4893,7 +5038,7 @@
           continue;
         }
 
-        const response = await apiFetch(`/api/summary?date=${iso}`);
+        const response = await apiFetch(`/api/summary?${summaryQueryParams(iso)}`);
         if (!response.ok) {
           break;
         }
@@ -5079,7 +5224,10 @@
     }
 
     function setLoggedAtField(inputId, isoString) {
-      document.getElementById(inputId).value = formatLoggedAtDisplay(new Date(isoString));
+      const parsed = parseUtcLoggedAt(isoString);
+      document.getElementById(inputId).value = parsed
+        ? formatLoggedAtDisplay(parsed)
+        : formatLoggedAtDisplay(new Date());
       initLoggedAtPickerState(inputId);
       const panel = getLoggedAtPickerPanel(inputId);
       if (panel && !panel.classList.contains("hidden")) {
@@ -5283,6 +5431,44 @@
       initLoggedAtField(loggedAtInputId);
     }
 
+    const LIST_ICON_SVGS = {
+      copy: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`,
+      edit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg>`,
+      delete: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>`,
+    };
+
+    function createListIconButton({ icon, label, variant = "default", onClick }) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `list-icon-btn${variant === "danger" ? " list-icon-btn--danger" : ""}`;
+      button.title = label;
+      button.setAttribute("aria-label", label);
+      button.innerHTML = LIST_ICON_SVGS[icon];
+      button.addEventListener("click", onClick);
+      return button;
+    }
+
+    async function copyListItemText(text) {
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const textarea = document.createElement("textarea");
+          textarea.value = text;
+          textarea.setAttribute("readonly", "");
+          textarea.style.position = "fixed";
+          textarea.style.opacity = "0";
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textarea);
+        }
+        showToast(t("copySuccess"));
+      } catch (error) {
+        showToast(error.message || t("requestFailed"), "error");
+      }
+    }
+
     function renderList(containerId, items, emptyText, nameKey, valueKey, entryType) {
       const list = document.getElementById(containerId);
       list.innerHTML = "";
@@ -5315,30 +5501,46 @@
         valueSpan.className = "list-item-value";
         valueSpan.textContent = `${formatNumber(item[valueKey])} ${t("calUnit")}`;
 
-        const editButton = document.createElement("button");
-        editButton.type = "button";
-        editButton.className = "btn-secondary list-edit-btn";
-        editButton.textContent = t("editBtn");
-        editButton.addEventListener("click", () => {
-          if (entryType === "meal") {
-            openMealEditModal(item);
-          } else {
-            openWorkoutEditModal(item);
-          }
-        });
+        const iconActions = document.createElement("div");
+        iconActions.className = "list-item-icon-actions";
+
+        const itemText = String(item[nameKey] || "");
+        iconActions.appendChild(
+          createListIconButton({
+            icon: "copy",
+            label: t("copyBtn"),
+            onClick: () => {
+              copyListItemText(itemText).catch((error) => showToast(error.message, "error"));
+            },
+          }),
+        );
+        iconActions.appendChild(
+          createListIconButton({
+            icon: "edit",
+            label: t("editBtn"),
+            onClick: () => {
+              if (entryType === "meal") {
+                openMealEditModal(item);
+              } else {
+                openWorkoutEditModal(item);
+              }
+            },
+          }),
+        );
+        iconActions.appendChild(
+          createListIconButton({
+            icon: "delete",
+            label: t("deleteBtn"),
+            variant: "danger",
+            onClick: () => {
+              const deleteFn = entryType === "meal" ? deleteMeal : deleteWorkout;
+              deleteFn(item.id).catch((error) => alert(error.message));
+            },
+          }),
+        );
 
         actions.appendChild(valueSpan);
-        actions.appendChild(editButton);
-
-        const deleteButton = document.createElement("button");
-        deleteButton.type = "button";
-        deleteButton.className = "btn-danger list-delete-btn";
-        deleteButton.textContent = t("deleteBtn");
-        deleteButton.addEventListener("click", () => {
-          const deleteFn = entryType === "meal" ? deleteMeal : deleteWorkout;
-          deleteFn(item.id).catch((error) => alert(error.message));
-        });
-        actions.appendChild(deleteButton);
+        actions.appendChild(iconActions);
 
         li.appendChild(nameSpan);
         li.appendChild(actions);
@@ -5351,7 +5553,7 @@
       if (!selectedDate) {
         return;
       }
-      const response = await apiFetch(`/api/summary?date=${selectedDate}`);
+      const response = await apiFetch(`/api/summary?${summaryQueryParams(selectedDate)}`);
 
       if (!response.ok) {
         throw new Error(t("loadSummaryError"));
@@ -6132,7 +6334,7 @@
               loggedAt.getDate(),
             );
           } else if (data.logged_at) {
-            const entryDate = new Date(data.logged_at);
+            const entryDate = parseUtcLoggedAt(data.logged_at);
             targetDateIso = isoFromParts(
               entryDate.getFullYear(),
               entryDate.getMonth(),
@@ -6475,6 +6677,7 @@
     editStepsButton.addEventListener("click", openStepsEditModal);
     stepsForm.addEventListener("submit", saveDailySteps);
     setupModalDismiss(weightEditModal, closeWeightEditModal, "weight-edit-cancel");
+    setupWeightInputStepping();
     editWeightButton.addEventListener("click", openWeightEditModal);
     weightForm.addEventListener("submit", saveDailyWeight);
 

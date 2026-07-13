@@ -10,11 +10,12 @@ from sqlalchemy.orm import Session
 
 from gemini_insight import GEMINI_MODEL, GEMINI_MODEL_FALLBACKS, _user_profile_text
 from daily_tip_feedback import attach_feedback_to_tips, fetch_feedback_for_prompt
+from default_daily_tips import DEFAULT_TIP_COUNT, build_default_daily_tips
 from models import DailySteps, DailyTipsCache, DailyWeight, Meal, User, Workout
 
 logger = logging.getLogger(__name__)
 
-TIP_COUNT = 12
+TIP_COUNT = DEFAULT_TIP_COUNT
 PREVIEW_WORDS = 10
 MIN_TIP_CHARS = 80
 MAX_TIP_CHARS = 480
@@ -142,47 +143,9 @@ def _context_has_tracking_data(context: dict) -> bool:
     return False
 
 
-def _general_daily_tips(language: str) -> list[dict]:
-    """Short general tips when the user has no recent logged data."""
-    if language == "he":
-        templates = [
-            (
-                "info",
-                "אלה טיפים כלליים בינתיים. רשום/י ארוחות, אימונים, צעדים ומשקל במשך מספר ימים — "
-                "וטיפים מותאמים אישית יופיעו כאן אוטומטית.",
-            ),
-            ("nutrition", "שתה/י מים לאורך היום — זה תומך באנרגיה ובשליטה בתיאבון."),
-            ("sport", "הליכה של 20 דקות ביום היא דרך קלה לבנות הרגל פעילות."),
-            ("nutrition", "שלב/י חלבון וירקות בכל ארוחה עיקרית לשובע טוב יותר."),
-            ("sport", "מתח אחרי ישיבה ארוכה — 5 דקות מספיקות להפחתת נוקשות."),
-            ("nutrition", "תכנן/י את ארוחות מחר בערב כדי לרשום מהר יותר בבוקר."),
-            ("sport", "עלה/י במדרגות כשאפשר — תנועות קצרות מצטברות."),
-            ("nutrition", "השאר/י חטיפים בריאים במקום בולט כדי להימנע מקלוריות ריקות."),
-            ("sport", "ימי מנוחה חשובים — תנועה קלה ביניהם עדיין תומכת בהתאוששות."),
-            ("nutrition", "אכול/י לאט ועצור/י באמצע הארוחה כדי לבדוק אם את/ה שבע/ה."),
-            ("sport", "קבע/י שעה קבועה לאימונים — הרגלים נשמרים טוב יותר בלוח זמנים."),
-            ("nutrition", "מלא/י חצי מהצלחת בירקות בארוחת צהריים וערב כשאפשר."),
-        ]
-    else:
-        templates = [
-            (
-                "info",
-                "These are general tips for now. Log meals, workouts, steps, and weight over a few days — "
-                "personalized tips will appear here automatically.",
-            ),
-            ("nutrition", "Drink water regularly throughout the day — it supports energy and appetite control."),
-            ("sport", "A daily 20-minute walk is an easy way to build an activity habit."),
-            ("nutrition", "Include protein and vegetables at each main meal for better satiety."),
-            ("sport", "Stretch for 5 minutes after long sitting periods to reduce stiffness."),
-            ("nutrition", "Plan tomorrow's meals tonight so logging is faster in the morning."),
-            ("sport", "Take the stairs when you can — small bursts of movement add up."),
-            ("nutrition", "Keep healthy snacks visible at home to avoid grabbing empty calories."),
-            ("sport", "Rest days matter — light movement on off-days still helps recovery."),
-            ("nutrition", "Eat slowly and pause halfway through your meal to check if you're full."),
-            ("sport", "Set a consistent time for workouts — habits stick better on a schedule."),
-            ("nutrition", "Fill half your plate with vegetables at lunch and dinner when possible."),
-        ]
-    return [{"category": category, "text": text} for category, text in templates[:TIP_COUNT]]
+def _default_daily_tips(user: User, language: str) -> list[dict]:
+    """Onboarding plus random starter tips when the user has no recent logged data."""
+    return build_default_daily_tips(user, language)
 
 
 def _build_tips_prompt(
@@ -574,7 +537,7 @@ def _generate_tips_with_ai(
     db: Session | None = None,
 ) -> tuple[list[dict], str, bool]:
     if not _context_has_tracking_data(context):
-        return _general_daily_tips(language), "general-no-data", False
+        return _default_daily_tips(user, language), "general-no-data", False
 
     feedback = fetch_feedback_for_prompt(db, user.id, language) if db else {"liked": [], "disliked": []}
 
@@ -660,7 +623,7 @@ def get_or_create_daily_tips(
     tip_date = date.today()
     cached = get_cached_daily_tips(db, user, tip_date, language)
 
-    if cached and not force_refresh:
+    if cached and not force_refresh and cached.model != "general-no-data":
         tips = attach_feedback_to_tips(db, user.id, json.loads(cached.tips_json))
         return {
             "tip_date": tip_date.isoformat(),
@@ -676,8 +639,20 @@ def get_or_create_daily_tips(
     has_tracking_data = _context_has_tracking_data(context)
     tips_raw, model_name, ai_estimated = _generate_tips_with_ai(user, context, language, api_key, db)
     serialized = _serialize_tips(tips_raw)
-    payload = json.dumps(serialized, ensure_ascii=False)
     tips = attach_feedback_to_tips(db, user.id, serialized)
+
+    if model_name == "general-no-data":
+        return {
+            "tip_date": tip_date.isoformat(),
+            "language": language,
+            "tips": tips,
+            "cached": False,
+            "personalized": False,
+            "ai_estimated": ai_estimated,
+            "model": model_name,
+        }
+
+    payload = json.dumps(serialized, ensure_ascii=False)
 
     if cached:
         cached.tips_json = payload

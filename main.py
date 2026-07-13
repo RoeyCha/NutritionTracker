@@ -29,6 +29,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from daily_tip_feedback import toggle_tip_feedback
+from logged_at_utils import (
+    day_bounds_for_local_date,
+    format_logged_at_iso,
+    local_date_from_logged_at,
+    normalize_logged_at_to_utc_naive,
+)
 from gemini_daily_tips import get_or_create_daily_tips
 from gemini_insight import generate_daily_insight
 from profile_utils import validate_birth_date
@@ -391,9 +397,7 @@ def _estimate_workout_calories(
 
 
 def _ensure_not_future_logged_at(logged_at: datetime | None) -> datetime:
-    resolved = logged_at or datetime.utcnow()
-    if resolved.tzinfo is not None:
-        resolved = resolved.replace(tzinfo=None)
+    resolved = normalize_logged_at_to_utc_naive(logged_at or datetime.utcnow())
     if resolved > datetime.utcnow():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -586,7 +590,7 @@ def _meal_to_dict(meal: Meal) -> dict:
         "protein": meal.protein,
         "carbohydrates": meal.carbohydrates,
         "fats": meal.fats,
-        "logged_at": meal.logged_at.isoformat(),
+        "logged_at": format_logged_at_iso(meal.logged_at),
     }
 
 
@@ -756,11 +760,11 @@ def update_profile(
 @app.get("/api/summary")
 def get_daily_summary(
     target_date: date = Query(default_factory=date.today, alias="date"),
+    tz_offset: int | None = Query(default=None, alias="tz_offset"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    day_start = datetime.combine(target_date, dt_time.min)
-    day_end = datetime.combine(target_date, dt_time.max)
+    day_start, day_end = day_bounds_for_local_date(target_date, tz_offset)
 
     calories_consumed = (
         db.query(func.coalesce(func.sum(Meal.calories), 0.0))
@@ -881,7 +885,7 @@ def get_daily_summary(
                 "id": workout.id,
                 "activity_type": workout.activity_type,
                 "calories_burned": workout.calories_burned,
-                "logged_at": workout.logged_at.isoformat(),
+                "logged_at": format_logged_at_iso(workout.logged_at),
             }
             for workout in workouts
         ],
@@ -910,6 +914,7 @@ def get_period_summary(
 
 @app.get("/api/dates-with-data")
 def get_dates_with_data(
+    tz_offset: int | None = Query(default=None, alias="tz_offset"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -917,12 +922,12 @@ def get_dates_with_data(
     dates: set[date] = set()
 
     for (logged_at,) in db.query(Meal.logged_at).filter(Meal.user_id == current_user.id).all():
-        entry_date = logged_at.date()
+        entry_date = local_date_from_logged_at(logged_at, tz_offset)
         if entry_date <= today:
             dates.add(entry_date)
 
     for (logged_at,) in db.query(Workout.logged_at).filter(Workout.user_id == current_user.id).all():
-        entry_date = logged_at.date()
+        entry_date = local_date_from_logged_at(logged_at, tz_offset)
         if entry_date <= today:
             dates.add(entry_date)
 
@@ -1156,7 +1161,7 @@ def add_workout(
         "id": workout.id,
         "activity_type": workout.activity_type,
         "calories_burned": workout.calories_burned,
-        "logged_at": workout.logged_at.isoformat(),
+        "logged_at": format_logged_at_iso(workout.logged_at),
         "entry_type": "workout",
         "ai_estimated": estimate.ai_estimated,
         "ai_explanation": estimate.explanation,
@@ -1269,7 +1274,7 @@ def update_workout(
         "id": workout.id,
         "activity_type": workout.activity_type,
         "calories_burned": workout.calories_burned,
-        "logged_at": workout.logged_at.isoformat(),
+        "logged_at": format_logged_at_iso(workout.logged_at),
         "entry_type": "workout",
         "ai_estimated": ai_estimated,
         "ai_explanation": explanation,

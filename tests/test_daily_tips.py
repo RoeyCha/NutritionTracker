@@ -8,8 +8,8 @@ from gemini_daily_tips import (
     TIP_COUNT,
     _build_tips_prompt,
     _context_has_tracking_data,
+    _default_daily_tips,
     _fallback_daily_tips,
-    _general_daily_tips,
     fetch_three_day_context,
     get_or_create_daily_tips,
 )
@@ -33,14 +33,15 @@ def test_fallback_daily_tips_returns_twelve_items(client: TestClient) -> None:
     assert any(tip["category"] == "sport" for tip in tips)
 
 
-def test_general_daily_tips_when_no_tracking_data(client: TestClient) -> None:
+def test_default_daily_tips_when_no_tracking_data(client: TestClient) -> None:
     context = fetch_three_day_context(client.db_session, client.test_user)
     assert _context_has_tracking_data(context) is False
 
-    tips = _general_daily_tips("en")
+    tips = _default_daily_tips(client.test_user, "en")
     assert len(tips) == TIP_COUNT
     assert tips[0]["category"] == "info"
-    assert "personalized" in tips[0]["text"].lower()
+    assert "Welcome to Nutrition Tracker" in tips[0]["text"]
+    assert "Add Meal" in tips[1]["text"]
 
     result = get_or_create_daily_tips(
         client.test_user,
@@ -61,11 +62,14 @@ def test_get_daily_tips_caches_for_day(client: TestClient) -> None:
     assert len(body["tips"]) == TIP_COUNT
     assert body["language"] == "en"
     assert "preview" in body["tips"][0]
+    assert body["cached"] is False
 
     second = client.get("/api/daily-tips?language=en", headers=client.auth_headers)
     assert second.status_code == 200
-    assert second.json()["cached"] is True
-    assert second.json()["tips"] == body["tips"]
+    second_body = second.json()
+    assert second_body["cached"] is False
+    assert second_body["tips"][0]["text"] == body["tips"][0]["text"]
+    assert second_body["tips"][1]["text"] == body["tips"][1]["text"]
 
 
 def test_refresh_daily_tips_without_data_shows_general(client: TestClient) -> None:
@@ -79,6 +83,23 @@ def test_refresh_daily_tips_without_data_shows_general(client: TestClient) -> No
     assert payload["personalized"] is False
     assert payload["tips"][0]["category"] == "info"
     assert len(payload["tips"]) == TIP_COUNT
+    assert payload["cached"] is False
+
+
+def test_refresh_default_tips_regenerates_random_portion(client: TestClient) -> None:
+    first = client.post(
+        "/api/daily-tips/refresh",
+        headers=client.auth_headers,
+        json={"language": "en"},
+    ).json()
+    second = client.post(
+        "/api/daily-tips/refresh",
+        headers=client.auth_headers,
+        json={"language": "en"},
+    ).json()
+
+    assert first["tips"][:6] == second["tips"][:6]
+    assert [tip["text"] for tip in first["tips"][6:]] != [tip["text"] for tip in second["tips"][6:]]
 
 
 def test_refresh_daily_tips_replaces_cache(client: TestClient) -> None:
@@ -100,22 +121,32 @@ def test_daily_tips_separate_cache_per_language(client: TestClient) -> None:
 
     assert english["language"] == "en"
     assert hebrew["language"] == "he"
+    assert english["personalized"] is False
+    assert hebrew["personalized"] is False
 
-    cached_en = (
+    cached_count = (
         client.db_session.query(DailyTipsCache)
-        .filter(DailyTipsCache.user_id == client.test_user.id, DailyTipsCache.language == "en")
+        .filter(DailyTipsCache.user_id == client.test_user.id)
         .count()
     )
-    cached_he = (
-        client.db_session.query(DailyTipsCache)
-        .filter(DailyTipsCache.user_id == client.test_user.id, DailyTipsCache.language == "he")
-        .count()
-    )
-    assert cached_en == 1
-    assert cached_he == 1
+    assert cached_count == 0
 
 
 def test_get_or_create_daily_tips_persists_json(client: TestClient) -> None:
+    from datetime import date, datetime, timedelta
+
+    from models import Meal
+
+    client.db_session.add(
+        Meal(
+            user_id=client.test_user.id,
+            food_name="Tracked meal",
+            calories=400,
+            logged_at=datetime.utcnow() - timedelta(days=2),
+        )
+    )
+    client.db_session.commit()
+
     result = get_or_create_daily_tips(client.test_user, client.db_session, language="en", api_key=None)
     client.db_session.commit()
 
