@@ -22,6 +22,8 @@ TIP_COUNT = DEFAULT_TIP_COUNT
 PREVIEW_WORDS = 10
 MIN_TIP_CHARS = 80
 MAX_TIP_CHARS = 480
+TRACKING_WINDOW_DAYS = 5  # recent complete days considered (excluding today)
+MIN_TRACKING_DAYS = 3  # meal/activity required on at least this many of those days
 
 
 def _day_bounds(target_date: date) -> tuple[datetime, datetime]:
@@ -33,9 +35,60 @@ def _default_context_end_date() -> date:
     return date.today() - timedelta(days=1)
 
 
+def check_yesterday_prerequisites(db: Session, user: User) -> dict:
+    """Yesterday must have both steps and weight before generating daily tips."""
+    check_date = _default_context_end_date()
+    steps = (
+        db.query(DailySteps)
+        .filter(DailySteps.user_id == user.id, DailySteps.entry_date == check_date)
+        .first()
+    )
+    weight = (
+        db.query(DailyWeight)
+        .filter(DailyWeight.user_id == user.id, DailyWeight.entry_date == check_date)
+        .first()
+    )
+    missing: list[str] = []
+    if steps is None:
+        missing.append("steps")
+    if weight is None:
+        missing.append("weight")
+    return {
+        "prerequisites_met": not missing,
+        "missing_prerequisites": missing,
+        "prerequisites_date": check_date.isoformat(),
+    }
+
+
+def _blocked_prerequisites_response(tip_date: date, language: str, prerequisites: dict) -> dict:
+    return {
+        "tip_date": tip_date.isoformat(),
+        "language": language,
+        "tips": [],
+        "cached": False,
+        "personalized": False,
+        "ai_estimated": False,
+        "model": "prerequisites-unmet",
+        "prerequisites_met": False,
+        "missing_prerequisites": prerequisites["missing_prerequisites"],
+        "prerequisites_date": prerequisites["prerequisites_date"],
+    }
+
+
+def _attach_prerequisites(payload: dict, prerequisites: dict) -> dict:
+    payload["prerequisites_met"] = prerequisites["prerequisites_met"]
+    payload["missing_prerequisites"] = prerequisites["missing_prerequisites"]
+    payload["prerequisites_date"] = prerequisites["prerequisites_date"]
+    return payload
+
+
 def fetch_three_day_context(db: Session, user: User, end_date: date | None = None) -> dict:
+    """Build recent tracking context for tips (last TRACKING_WINDOW_DAYS complete days)."""
     end_date = end_date or _default_context_end_date()
-    days = [end_date - timedelta(days=offset) for offset in range(2, -1, -1)]
+    days = [
+        end_date - timedelta(days=offset)
+        for offset in range(TRACKING_WINDOW_DAYS - 1, -1, -1)
+    ]
 
     daily_records = []
     for day in days:
@@ -136,14 +189,32 @@ def fetch_three_day_context(db: Session, user: User, end_date: date | None = Non
 
 
 def _context_has_tracking_data(context: dict) -> bool:
+    """Personalized tips need meal/workout logs on at least MIN_TRACKING_DAYS of the window.
+
+    Yesterday's steps and weight are checked separately as hard prerequisites.
+    """
+    days_with_activity = 0
     for day in context.get("days") or []:
         if day.get("meals") or day.get("workouts"):
-            return True
-        if day.get("steps_count") is not None:
-            return True
-        if day.get("weight_kg") is not None:
-            return True
-    return False
+            days_with_activity += 1
+    return days_with_activity >= MIN_TRACKING_DAYS
+
+
+def _hardcoded_tips_response(user: User, db: Session, tip_date: date, language: str) -> dict:
+    tips_raw = _default_daily_tips(user, language)
+    tips = attach_feedback_to_tips(db, user.id, _serialize_tips(tips_raw))
+    return {
+        "tip_date": tip_date.isoformat(),
+        "language": language,
+        "tips": tips,
+        "cached": False,
+        "personalized": False,
+        "ai_estimated": False,
+        "model": "general-no-data",
+        "prerequisites_met": True,
+        "missing_prerequisites": [],
+        "prerequisites_date": (_default_context_end_date()).isoformat(),
+    }
 
 
 def _default_daily_tips(user: User, language: str) -> list[dict]:
@@ -217,12 +288,12 @@ def _build_tips_prompt(
 
     return f"""You are a supportive nutrition and fitness coach who writes highly personalized advice.
 
-Create exactly {TIP_COUNT} practical tips for this specific user based ONLY on their profile and the last 3 complete days of tracked data below (exclude today — it is often incomplete).
+Create exactly {TIP_COUNT} practical tips for this specific user based ONLY on their profile and the last {TRACKING_WINDOW_DAYS} complete days of tracked data below (exclude today — it is often incomplete).
 
 Requirements for EVERY tip:
 - Write 2-3 full sentences ({MIN_TIP_CHARS}-{MAX_TIP_CHARS} characters total).
 - Reference concrete details from the logs: exact food names, workout types, dates, step counts, weights, calories, protein, or BMR.
-- Compare trends across the 3 days when relevant (e.g. protein dropped, steps increased, missing workouts).
+- Compare trends across the {TRACKING_WINDOW_DAYS} days when relevant (e.g. protein dropped, steps increased, missing workouts).
 - Give a specific next action tied to their data — not generic wellness advice.
 - Mix nutrition and sport/activity tips (about half and half).
 - Do NOT repeat the same suggestion twice.
@@ -232,7 +303,7 @@ Requirements for EVERY tip:
 User profile: {_user_profile_text(user)}
 BMR: {user.bmr or "unknown"}
 
-Last 3 complete days of tracked data (excluding today):
+Last {TRACKING_WINDOW_DAYS} complete days of tracked data (excluding today):
 {chr(10).join(day_blocks)}
 {feedback_section}
 
@@ -396,7 +467,7 @@ def _fallback_daily_tips(context: dict, language: str) -> list[dict]:
                 tips,
                 "nutrition",
                 (
-                    f"אין ארוחות רשומות ב-3 הימים האחרונים. התחל/י ב-{name} עם ארוחה אחת פשוטה היום — "
+                    f"אין ארוחות רשומות ב-{TRACKING_WINDOW_DAYS} הימים האחרונים. התחל/י ב-{name} עם ארוחה אחת פשוטה היום — "
                     f"רישום עקבי הוא הבסיס לטיפים מדויקים יותר."
                 ),
             )
@@ -505,7 +576,7 @@ def _fallback_daily_tips(context: dict, language: str) -> list[dict]:
                 tips,
                 "nutrition",
                 (
-                    f"No meals were logged in the last 3 days. Start with one simple meal today — "
+                    f"No meals were logged in the last {TRACKING_WINDOW_DAYS} days. Start with one simple meal today — "
                     f"consistent tracking unlocks much more specific tips for you."
                 ),
             )
@@ -645,22 +716,43 @@ def get_or_create_daily_tips(
 ) -> dict:
     language = "he" if language == "he" else "en"
     tip_date = date.today()
-    cached = get_cached_daily_tips(db, user, tip_date, language)
-
-    if cached and not force_refresh and cached.model != "general-no-data":
-        tips = attach_feedback_to_tips(db, user.id, json.loads(cached.tips_json))
-        return {
-            "tip_date": tip_date.isoformat(),
-            "language": language,
-            "tips": tips,
-            "cached": True,
-            "personalized": cached.model != "general-no-data",
-            "ai_estimated": cached.ai_estimated,
-            "model": cached.model,
-        }
-
     context = fetch_three_day_context(db, user)
     has_tracking_data = _context_has_tracking_data(context)
+
+    # 1) Fewer than MIN_TRACKING_DAYS with meals/workouts in the window → hardcoded tips, no popup.
+    if not has_tracking_data:
+        cached = get_cached_daily_tips(db, user, tip_date, language)
+        if cached is not None:
+            db.delete(cached)
+            db.flush()
+        return _hardcoded_tips_response(user, db, tip_date, language)
+
+    # 2) Enough meal/activity days, but yesterday steps and/or weight missing → popup, no tips.
+    prerequisites = check_yesterday_prerequisites(db, user)
+    if not prerequisites["prerequisites_met"]:
+        cached = get_cached_daily_tips(db, user, tip_date, language)
+        if cached is not None:
+            db.delete(cached)
+            db.flush()
+        return _blocked_prerequisites_response(tip_date, language, prerequisites)
+
+    # 3) All required data present → return today's cache, or generate personalized tips once.
+    cached = get_cached_daily_tips(db, user, tip_date, language)
+    if cached and not force_refresh and cached.model not in {"general-no-data", "prerequisites-unmet"}:
+        tips = attach_feedback_to_tips(db, user.id, json.loads(cached.tips_json))
+        return _attach_prerequisites(
+            {
+                "tip_date": tip_date.isoformat(),
+                "language": language,
+                "tips": tips,
+                "cached": True,
+                "personalized": True,
+                "ai_estimated": cached.ai_estimated,
+                "model": cached.model,
+            },
+            prerequisites,
+        )
+
     effective_api_key = api_key if api_key is not None else get_gemini_api_key()
     tips_raw, model_name, ai_estimated = _generate_tips_with_ai(
         user, context, language, effective_api_key, db
@@ -669,15 +761,7 @@ def get_or_create_daily_tips(
     tips = attach_feedback_to_tips(db, user.id, serialized)
 
     if model_name == "general-no-data":
-        return {
-            "tip_date": tip_date.isoformat(),
-            "language": language,
-            "tips": tips,
-            "cached": False,
-            "personalized": False,
-            "ai_estimated": ai_estimated,
-            "model": model_name,
-        }
+        return _hardcoded_tips_response(user, db, tip_date, language)
 
     payload = json.dumps(serialized, ensure_ascii=False)
 
@@ -699,12 +783,15 @@ def get_or_create_daily_tips(
         )
 
     db.flush()
-    return {
-        "tip_date": tip_date.isoformat(),
-        "language": language,
-        "tips": tips,
-        "cached": False,
-        "personalized": has_tracking_data,
-        "ai_estimated": ai_estimated,
-        "model": model_name,
-    }
+    return _attach_prerequisites(
+        {
+            "tip_date": tip_date.isoformat(),
+            "language": language,
+            "tips": tips,
+            "cached": False,
+            "personalized": True,
+            "ai_estimated": ai_estimated,
+            "model": model_name,
+        },
+        prerequisites,
+    )

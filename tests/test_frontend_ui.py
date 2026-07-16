@@ -82,4 +82,6 @@ class TestTimezoneFrontend:
 class TestDefaultTipsFrontend:
     def test_daily_tips_need_data_message(self, home_html: str) -> None:
         assert "dailyTipsNeedData" in home_html
-        assert "personalized" in home_html
+        assert "dailyTipsPrereqTitle" in home_html
+        assert "showDailyTipsPrereqModal" in home_html
+        assert "prerequisites_met" in home_html

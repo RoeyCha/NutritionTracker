@@ -2465,6 +2465,15 @@
     </div>
   </div>
 
+  <div id="daily-tips-prereq-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="daily-tips-prereq-title">
+    <div class="modal-card">
+      <h3 id="daily-tips-prereq-title" data-i18n="dailyTipsPrereqTitle">Complete yesterday's data</h3>
+      <p class="modal-note" id="daily-tips-prereq-message"></p>
+      <p class="modal-note" id="daily-tips-prereq-hint" data-i18n="dailyTipsPrereqRefreshHint">After logging the missing data, refresh the page to generate today's tips.</p>
+      <button type="button" class="btn-primary" id="daily-tips-prereq-close" data-i18n="caloriePopupOk">OK</button>
+    </div>
+  </div>
+
   <div id="daily-tip-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="daily-tip-modal-title">
     <div class="modal-card modal-card-form">
       <p id="daily-tip-modal-category" class="daily-tip-category-badge"></p>
@@ -2668,7 +2677,14 @@
         dailyTipsCategorySport: "Sport",
         dailyTipsCategoryInfo: "Notice",
         dailyTipsNeedData:
-          "Not enough tracked data yet — showing general tips. Log meals, workouts, and steps over a few days for personalized tips.",
+          "Yesterday's steps and weight must be logged before new tips can be generated. Complete the missing data and refresh.",
+        dailyTipsPrereqTitle: "Complete yesterday's data for daily tips",
+        dailyTipsPrereqMessage:
+          "To generate today's personalized tips, log {items} for {date}, then refresh the page.",
+        dailyTipsPrereqSteps: "total steps",
+        dailyTipsPrereqWeight: "weight",
+        dailyTipsPrereqRefreshHint:
+          "After logging the missing data, refresh the page to generate today's tips.",
         dailyTipModalTitle: "Daily tip",
         dailyTipLike: "Like this tip",
         dailyTipDislike: "Dislike this tip",
@@ -2893,7 +2909,14 @@
         dailyTipsCategorySport: "ספורט",
         dailyTipsCategoryInfo: "שימו לב",
         dailyTipsNeedData:
-          "אין מספיק נתונים — מוצגים טיפים כלליים. רשום/י ארוחות, אימונים וצעדים במשך מספר ימים לטיפים מותאמים.",
+          "יש לרשום את צעדי אתמול ואת המשקל לפני שניתן ליצור טיפים חדשים. השלימ/י את הנתונים החסרים ורענן/י.",
+        dailyTipsPrereqTitle: "השלמת נתוני אתמול לטיפים יומיים",
+        dailyTipsPrereqMessage:
+          "כדי ליצור את הטיפים המותאמים של היום, רשום/י {items} עבור {date}, ואז רענן/י את העמוד.",
+        dailyTipsPrereqSteps: "סך הצעדים",
+        dailyTipsPrereqWeight: "משקל",
+        dailyTipsPrereqRefreshHint:
+          "לאחר רישום הנתונים החסרים, רענן/י את העמוד כדי ליצור את טיפי היום.",
         dailyTipModalTitle: "טיפ יומי",
         dailyTipLike: "אהבתי את הטיפ",
         dailyTipDislike: "לא אהבתי את הטיפ",
@@ -3060,6 +3083,9 @@
     const calorieModalValue = document.getElementById("calorie-modal-value");
     const calorieModalNote = document.getElementById("calorie-modal-note");
     const calorieModalClose = document.getElementById("calorie-modal-close");
+    const dailyTipsPrereqModal = document.getElementById("daily-tips-prereq-modal");
+    const dailyTipsPrereqMessage = document.getElementById("daily-tips-prereq-message");
+    const dailyTipsPrereqClose = document.getElementById("daily-tips-prereq-close");
     const dailyTipsBar = document.getElementById("daily-tips-bar");
     const dailyTipsTrack = document.getElementById("daily-tips-track");
     const dailyTipsPrevBtn = document.getElementById("daily-tips-prev");
@@ -5067,7 +5093,7 @@
       if (summaryDateInput.value) {
         await loadSummary();
       }
-      await loadDailyTips();
+      await loadDailyTips({ showPrereqModal: true });
     }
 
     function updateNoDatesMessage() {
@@ -5311,6 +5337,7 @@
         { el: profileModal, close: closeProfileModal },
         { el: importModal, close: closeImportModal },
         { el: dailyTipModal, close: closeDailyTipModal },
+        { el: dailyTipsPrereqModal, close: closeDailyTipsPrereqModal },
         { el: calorieModal, close: hideCalorieModal },
       ];
 
@@ -5781,7 +5808,34 @@
       startDailyTipsAutoplay();
     }
 
-    async function loadDailyTips({ refresh = false } = {}) {
+    function formatDailyTipsPrereqMessage(data) {
+      const missing = Array.isArray(data.missing_prerequisites) ? data.missing_prerequisites : [];
+      const labels = missing.map((item) =>
+        item === "steps" ? t("dailyTipsPrereqSteps") : t("dailyTipsPrereqWeight"),
+      );
+      const separator = currentLang === "he" ? " ו" : " and ";
+      const items = labels.join(separator);
+      const dateLabel = data.prerequisites_date ? formatDisplayDate(data.prerequisites_date) : "";
+      return t("dailyTipsPrereqMessage").replace("{items}", items).replace("{date}", dateLabel);
+    }
+
+    function showDailyTipsPrereqModal(data) {
+      if (!dailyTipsPrereqModal || !dailyTipsPrereqMessage) {
+        return;
+      }
+      dailyTipsPrereqMessage.textContent = formatDailyTipsPrereqMessage(data);
+      dailyTipsPrereqModal.classList.remove("hidden");
+      dailyTipsPrereqClose?.focus();
+    }
+
+    function closeDailyTipsPrereqModal() {
+      if (!dailyTipsPrereqModal) {
+        return;
+      }
+      dailyTipsPrereqModal.classList.add("hidden");
+    }
+
+    async function loadDailyTips({ refresh = false, showPrereqModal = false } = {}) {
       if (!authToken) {
         return;
       }
@@ -5816,17 +5870,24 @@
         }
 
         const data = await response.json();
+        if (data.prerequisites_met === false || data.model === "prerequisites-unmet") {
+          dailyTipsItems = [];
+          dailyTipsIndex = 0;
+          dailyTipsLoadedForLang = currentLang;
+          renderDailyTipsBar();
+          if (showPrereqModal || refresh) {
+            showDailyTipsPrereqModal(data);
+          }
+          return;
+        }
+
         dailyTipsItems = Array.isArray(data.tips) ? data.tips : [];
         dailyTipsIndex = 0;
         dailyTipsLoadedForLang = currentLang;
         renderDailyTipsBar();
 
         if (refresh) {
-          if (data.personalized === false) {
-            showToast(t("dailyTipsNeedData"), "info");
-          } else {
-            showToast(t("refreshDailyTipsSuccess"));
-          }
+          showToast(t("refreshDailyTipsSuccess"));
         }
       } catch (error) {
         if (dailyTipsBar) {
@@ -6752,7 +6813,7 @@
 
     document.getElementById("menu-refresh-daily-tips")?.addEventListener("click", () => {
       closeProfileMenu();
-      loadDailyTips({ refresh: true }).catch((error) => showToast(error.message, "error"));
+      loadDailyTips({ refresh: true, showPrereqModal: true }).catch((error) => showToast(error.message, "error"));
     });
 
     mealForm.addEventListener("submit", (event) => {
@@ -6817,6 +6878,13 @@
     calorieModal.addEventListener("click", (event) => {
       if (event.target === calorieModal) {
         hideCalorieModal();
+      }
+    });
+
+    dailyTipsPrereqClose?.addEventListener("click", closeDailyTipsPrereqModal);
+    dailyTipsPrereqModal?.addEventListener("click", (event) => {
+      if (event.target === dailyTipsPrereqModal) {
+        closeDailyTipsPrereqModal();
       }
     });
 
