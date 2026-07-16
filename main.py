@@ -40,17 +40,22 @@ from gemini_insight import generate_daily_insight
 from profile_utils import validate_birth_date
 from ai_calories import CalorieEstimate, calories_from_macros, estimate_meal_calories, estimate_workout_calories
 from bmr_calculator import apply_bmr_to_user, recalculate_all_users_bmr
+from admin import router as admin_router
+from admin_activity import log_auth_event
+from app_settings import load_settings_from_db
 from auth import (
     create_access_token,
+    get_current_tracker_user,
+    get_current_tracker_user_for_download,
     get_current_user,
-    get_current_user_for_download,
     get_db,
     hash_password,
+    is_username_reserved,
     user_to_dict,
     verify_password,
 )
 from models import DailySteps, DailyWeight, Meal, SessionLocal, User, Workout, init_db
-from seed import seed_test_user
+from seed import seed_admin_user, seed_test_user
 from steps_calories import estimate_steps_calories
 from period_summary import PERIOD_RANGES, build_period_summary
 from user_data_io import (
@@ -75,6 +80,7 @@ class UTF8JSONResponse(JSONResponse):
 
 app = FastAPI(title="Nutrition Tracker MVP", default_response_class=UTF8JSONResponse)
 templates = Jinja2Templates(directory="templates")
+app.include_router(admin_router)
 
 SEO_META = {
     "page_title": "Nutrition Tracker",
@@ -617,7 +623,9 @@ def on_startup():
     init_db()
     db = SessionLocal()
     try:
+        load_settings_from_db(db)
         seed_test_user(db)
+        seed_admin_user(db)
         recalculate_all_users_bmr(db)
     finally:
         db.close()
@@ -642,6 +650,17 @@ def get_capabilities():
     }
 
 
+@app.get("/admin", response_class=HTMLResponse)
+def serve_admin(request: Request):
+    context = {
+        "request": request,
+        "page_title": "Admin Dashboard — Nutrition Tracker",
+    }
+    response = templates.TemplateResponse("admin.html", context)
+    response.headers["Content-Type"] = "text/html; charset=utf-8"
+    return response
+
+
 @app.get("/", response_class=HTMLResponse)
 def serve_frontend(request: Request):
     context = {
@@ -657,6 +676,8 @@ def serve_frontend(request: Request):
 @app.post("/api/auth/register", status_code=201)
 def register(payload: RegisterRequest, db: Session = Depends(get_db)):
     username = payload.username.strip().lower()
+    if is_username_reserved(username):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This username is reserved")
     existing = db.query(User).filter(User.username == username).first()
     if existing:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already taken")
@@ -700,17 +721,39 @@ def register(payload: RegisterRequest, db: Session = Depends(get_db)):
 
 
 @app.post("/api/auth/login")
-def login(payload: LoginRequest, db: Session = Depends(get_db)):
+def login(payload: LoginRequest, request: Request, db: Session = Depends(get_db)):
     username = payload.username.strip().lower()
     user = db.query(User).filter(User.username == username).first()
     if user is None or not verify_password(payload.password, user.password_hash):
+        log_auth_event(db, "login_failed", username=username, request=request)
+        db.commit()
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
+    if not user.is_active:
+        log_auth_event(db, "login_blocked", user=user, request=request, details="Account deactivated")
+        db.commit()
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account deactivated")
+
+    user.last_login_at = datetime.utcnow()
+    log_auth_event(db, "login", user=user, request=request)
+    db.commit()
+    db.refresh(user)
 
     return {
         "access_token": create_access_token(user),
         "token_type": "bearer",
         "user": user_to_dict(user),
     }
+
+
+@app.post("/api/auth/logout")
+def logout(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    log_auth_event(db, "logout", user=current_user, request=request)
+    db.commit()
+    return {"ok": True}
 
 
 @app.get("/api/auth/me")
@@ -733,7 +776,7 @@ def get_me(
 def update_profile(
     payload: ProfileUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_tracker_user),
 ):
     email = str(payload.email).lower() if payload.email else None
     if email:
@@ -762,7 +805,7 @@ def get_daily_summary(
     target_date: date = Query(default_factory=date.today, alias="date"),
     tz_offset: int | None = Query(default=None, alias="tz_offset"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_tracker_user),
 ):
     day_start, day_end = day_bounds_for_local_date(target_date, tz_offset)
 
@@ -823,7 +866,7 @@ def get_daily_summary(
             Meal.logged_at >= day_start,
             Meal.logged_at <= day_end,
         )
-        .order_by(Meal.logged_at.desc())
+        .order_by(Meal.logged_at.asc(), Meal.id.asc())
         .all()
     )
 
@@ -834,7 +877,7 @@ def get_daily_summary(
             Workout.logged_at >= day_start,
             Workout.logged_at <= day_end,
         )
-        .order_by(Workout.logged_at.desc())
+        .order_by(Workout.logged_at.asc(), Workout.id.asc())
         .all()
     )
 
@@ -897,7 +940,7 @@ def get_period_summary(
     range: str = Query(default="7d", alias="range"),
     end_date: date = Query(default_factory=date.today, alias="end_date"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_tracker_user),
 ):
     if range not in PERIOD_RANGES:
         raise HTTPException(
@@ -916,7 +959,7 @@ def get_period_summary(
 def get_dates_with_data(
     tz_offset: int | None = Query(default=None, alias="tz_offset"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_tracker_user),
 ):
     today = date.today()
     dates: set[date] = set()
@@ -947,7 +990,7 @@ def upsert_daily_weight(
     payload: WeightUpsert,
     target_date: date = Query(alias="date"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_tracker_user),
 ):
     _ensure_not_future_date(target_date)
 
@@ -992,7 +1035,7 @@ def upsert_daily_steps(
     payload: StepsUpsert,
     target_date: date = Query(alias="date"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_tracker_user),
 ):
     _ensure_not_future_date(target_date)
 
@@ -1040,7 +1083,7 @@ def upsert_daily_steps(
 def get_daily_tips(
     language: str = Query(default="en", pattern=r"^(en|he)$"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_tracker_user),
 ):
     result = get_or_create_daily_tips(
         current_user,
@@ -1057,7 +1100,7 @@ def get_daily_tips(
 def refresh_daily_tips(
     payload: DailyTipsRequest | None = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_tracker_user),
 ):
     request = payload or DailyTipsRequest()
     result = get_or_create_daily_tips(
@@ -1076,7 +1119,7 @@ def refresh_daily_tips(
 def set_daily_tip_feedback(
     payload: DailyTipFeedbackRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_tracker_user),
 ):
     try:
         rating = toggle_tip_feedback(
@@ -1097,7 +1140,7 @@ def set_daily_tip_feedback(
 def get_ai_insight(
     payload: InsightRequest | None = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_tracker_user),
 ):
     request = payload or InsightRequest()
     target_date = request.target_date or date.today()
@@ -1114,7 +1157,7 @@ def get_ai_insight(
 def add_meal(
     payload: MealCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_tracker_user),
 ):
     estimate = _estimate_meal_nutrition(
         db,
@@ -1143,7 +1186,7 @@ def add_meal(
 def add_workout(
     payload: WorkoutCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_tracker_user),
 ):
     estimate = _estimate_workout_calories(db, current_user, payload.activity_type.strip())
     workout = Workout(
@@ -1173,7 +1216,7 @@ def update_meal(
     meal_id: int,
     payload: MealUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_tracker_user),
 ):
     meal = _get_user_meal(meal_id, current_user, db)
     new_name = payload.food_name.strip()
@@ -1225,7 +1268,7 @@ def update_meal(
 def delete_meal(
     meal_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_tracker_user),
 ):
     meal = _get_user_meal(meal_id, current_user, db)
     db.delete(meal)
@@ -1239,7 +1282,7 @@ def update_workout(
     workout_id: int,
     payload: WorkoutUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_tracker_user),
 ):
     workout = _get_user_workout(workout_id, current_user, db)
     previous_date = workout.logged_at.date()
@@ -1286,7 +1329,7 @@ def update_workout(
 def delete_workout(
     workout_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_tracker_user),
 ):
     workout = _get_user_workout(workout_id, current_user, db)
     workout_date = workout.logged_at.date()
@@ -1302,7 +1345,7 @@ def delete_workout(
 def export_user_data(
     export_format: Literal["json", "csv"] = Query("json", alias="format"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user_for_download),
+    current_user: User = Depends(get_current_tracker_user_for_download),
 ):
     filename_base = f"nutrition-tracker-{current_user.username}"
     if export_format == "csv":
@@ -1332,7 +1375,7 @@ async def preview_user_data_import(
     request: Request,
     import_format: Literal["json", "csv"] = Query("json", alias="format"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_tracker_user),
 ):
     body = await request.body()
     try:
@@ -1355,7 +1398,7 @@ async def preview_user_data_import(
 async def import_user_data(
     apply_request: ImportApplyRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_tracker_user),
 ):
     resolutions = apply_request.resolutions.model_dump() if apply_request.resolutions else None
     try:

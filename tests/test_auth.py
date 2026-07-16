@@ -2,6 +2,8 @@ from datetime import date, timedelta
 
 from fastapi.testclient import TestClient
 
+from auth import create_access_token, hash_password
+from models import User
 
 def test_register_without_email(empty_client: TestClient) -> None:
     response = empty_client.post(
@@ -136,6 +138,43 @@ def test_login_success(empty_client: TestClient) -> None:
     payload = response.json()
     assert payload["user"]["username"] == "login_user"
     assert payload["access_token"]
+
+
+def test_register_and_me_include_admin_flags(empty_client: TestClient) -> None:
+    register = empty_client.post(
+        "/api/auth/register",
+        json={
+            "username": "flags_user",
+            "password": "testpass",
+            "name": "Flags User",
+        },
+    )
+    assert register.status_code == 201
+    user = register.json()["user"]
+    assert user["is_admin"] is False
+    assert user["is_active"] is True
+
+    headers = {"Authorization": f"Bearer {register.json()['access_token']}"}
+    me = empty_client.get("/api/auth/me", headers=headers)
+    assert me.status_code == 200
+    assert me.json()["is_admin"] is False
+    assert me.json()["is_active"] is True
+
+
+def test_inactive_user_token_rejected_on_protected_route(empty_client: TestClient) -> None:
+    user = User(
+        username="blocked_token_user",
+        password_hash=hash_password("testpass"),
+        name="Blocked",
+        is_active=False,
+    )
+    empty_client.db_session.add(user)
+    empty_client.db_session.commit()
+
+    headers = {"Authorization": f"Bearer {create_access_token(user)}"}
+    response = empty_client.get("/api/auth/me", headers=headers)
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Account deactivated"
 
 
 def test_login_invalid_password_returns_401(empty_client: TestClient) -> None:

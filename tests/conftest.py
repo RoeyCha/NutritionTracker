@@ -36,11 +36,16 @@ def empty_client(monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient, None,
 
     monkeypatch.setattr("main.init_db", lambda: None)
     monkeypatch.setattr("main.seed_test_user", lambda db: None)
+    monkeypatch.setattr("main.seed_admin_user", lambda db: None)
     monkeypatch.setattr("main.recalculate_all_users_bmr", lambda db: None)
+    monkeypatch.setattr("main.load_settings_from_db", lambda db: None)
     app.dependency_overrides[get_db] = override_get_db
 
     with TestClient(app) as test_client:
+        test_client.db_session = testing_session_local()
         yield test_client
+
+    test_client.db_session.close()
 
     app.dependency_overrides.clear()
     Base.metadata.drop_all(bind=engine)
@@ -61,7 +66,9 @@ def client(monkeypatch: pytest.MonkeyPatch) -> Generator[TestClient, None, None]
 
     monkeypatch.setattr("main.init_db", lambda: None)
     monkeypatch.setattr("main.seed_test_user", lambda db: None)
+    monkeypatch.setattr("main.seed_admin_user", lambda db: None)
     monkeypatch.setattr("main.recalculate_all_users_bmr", lambda db: None)
+    monkeypatch.setattr("main.load_settings_from_db", lambda db: None)
     app.dependency_overrides[get_db] = override_get_db
 
     db = testing_session_local()

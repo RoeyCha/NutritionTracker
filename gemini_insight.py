@@ -2,11 +2,14 @@ import json
 import logging
 import os
 import re
+import time
 from datetime import date
 
 import google.generativeai as genai
 from sqlalchemy.orm import Session
 
+from ai_metrics import record_ai_call
+from app_settings import get_gemini_api_key
 from models import Meal, User, Workout
 from profile_utils import user_age_for_calculations
 
@@ -202,7 +205,7 @@ def generate_daily_insight(
     api_key: str | None = None,
 ) -> dict:
     logs = fetch_daily_logs(db, user, target_date)
-    api_key = api_key or os.getenv("GEMINI_API_KEY")
+    api_key = api_key or get_gemini_api_key()
 
     if not api_key:
         logger.info("No GEMINI_API_KEY — returning local daily insight for %s", user.username)
@@ -217,6 +220,7 @@ def generate_daily_insight(
         }
 
     prompt = _build_prompt(user, logs, language)
+    request_bytes = len(prompt.encode("utf-8"))
     preferred_model = os.getenv("GEMINI_MODEL", GEMINI_MODEL)
     model_names = []
     for name in (preferred_model, *GEMINI_MODEL_FALLBACKS):
@@ -224,14 +228,25 @@ def generate_daily_insight(
             model_names.append(name)
 
     last_error = None
+    started = time.perf_counter()
     try:
         genai.configure(api_key=api_key)
         for model_name in model_names:
             try:
                 model = genai.GenerativeModel(model_name)
                 response = model.generate_content(prompt)
-                parsed = _parse_gemini_json(response.text or "")
+                response_text = response.text or ""
+                parsed = _parse_gemini_json(response_text)
                 logger.info("Gemini daily insight succeeded with model %s for %s", model_name, user.username)
+                record_ai_call(
+                    feature="daily_insight",
+                    user_id=user.id,
+                    model=model_name,
+                    success=True,
+                    request_bytes=request_bytes,
+                    response_bytes=len(response_text.encode("utf-8")),
+                    duration_ms=int((time.perf_counter() - started) * 1000),
+                )
                 return {
                     "date": logs["date"],
                     "feedback": parsed["feedback"],
@@ -246,6 +261,15 @@ def generate_daily_insight(
                 continue
         raise last_error or RuntimeError("No Gemini model available")
     except Exception as exc:
+        record_ai_call(
+            feature="daily_insight",
+            user_id=user.id,
+            model=model_names[-1] if model_names else None,
+            success=False,
+            error_message=str(exc),
+            request_bytes=request_bytes,
+            duration_ms=int((time.perf_counter() - started) * 1000),
+        )
         logger.warning(
             "Daily insight AI failed for %s, using local fallback: %s",
             user.username,

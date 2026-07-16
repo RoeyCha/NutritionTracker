@@ -28,6 +28,9 @@ class User(Base):
     initial_weight_kg: Mapped[float | None] = mapped_column(Float, nullable=True)
     bmr: Mapped[float | None] = mapped_column(Float, nullable=True)
     bmr_explanation: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    is_admin: Mapped[bool] = mapped_column(default=False)
+    is_active: Mapped[bool] = mapped_column(default=True)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     meals: Mapped[list["Meal"]] = relationship(back_populates="user", cascade="all, delete-orphan")
@@ -133,6 +136,46 @@ class DailyTipFeedback(Base):
     user: Mapped["User"] = relationship(back_populates="daily_tip_feedback")
 
 
+class AuthActivityLog(Base):
+    __tablename__ = "auth_activity_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
+    username: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
+    event: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
+    ip_address: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    details: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+    user: Mapped["User | None"] = relationship()
+
+
+class AiCallLog(Base):
+    __tablename__ = "ai_call_logs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True, index=True)
+    feature: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    model: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    success: Mapped[bool] = mapped_column(default=False, index=True)
+    error_message: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    request_bytes: Mapped[int] = mapped_column(Integer, default=0)
+    response_bytes: Mapped[int] = mapped_column(Integer, default=0)
+    duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
+
+    user: Mapped["User | None"] = relationship()
+
+
+class AppSetting(Base):
+    __tablename__ = "app_settings"
+
+    key: Mapped[str] = mapped_column(String(100), primary_key=True)
+    value: Mapped[str | None] = mapped_column(String(2000), nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 def migrate_db() -> None:
     inspector = inspect(engine)
     if "users" not in inspector.get_table_names():
@@ -159,6 +202,12 @@ def migrate_db() -> None:
         statements.append("ALTER TABLE users ADD COLUMN bmr FLOAT")
     if "bmr_explanation" not in columns:
         statements.append("ALTER TABLE users ADD COLUMN bmr_explanation VARCHAR(500)")
+    if "is_admin" not in columns:
+        statements.append("ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT 0")
+    if "is_active" not in columns:
+        statements.append("ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT 1")
+    if "last_login_at" not in columns:
+        statements.append("ALTER TABLE users ADD COLUMN last_login_at DATETIME")
 
     if statements:
         with engine.begin() as connection:
@@ -246,6 +295,9 @@ def _rebuild_users_table(connection) -> None:
                 initial_weight_kg FLOAT,
                 bmr FLOAT,
                 bmr_explanation VARCHAR(500),
+                is_admin BOOLEAN DEFAULT 0,
+                is_active BOOLEAN DEFAULT 1,
+                last_login_at DATETIME,
                 created_at DATETIME NOT NULL
             )
             """
@@ -256,7 +308,8 @@ def _rebuild_users_table(connection) -> None:
             """
             INSERT INTO users__new (
                 id, username, password_hash, name, email, gender, birth_date, height_cm,
-                weight_kg, initial_weight_kg, bmr, bmr_explanation, created_at
+                weight_kg, initial_weight_kg, bmr, bmr_explanation, is_admin, is_active,
+                last_login_at, created_at
             )
             SELECT
                 id,
@@ -271,6 +324,9 @@ def _rebuild_users_table(connection) -> None:
                 initial_weight_kg,
                 bmr,
                 bmr_explanation,
+                0,
+                1,
+                NULL,
                 created_at
             FROM users
             """

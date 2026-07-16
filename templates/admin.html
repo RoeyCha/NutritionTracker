@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ page_title }}</title>
+  <style>
+    :root {
+      --bg: #f4f7f6;
+      --card: #ffffff;
+      --text: #1f2933;
+      --muted: #52606d;
+      --accent: #2f855a;
+      --accent-dark: #276749;
+      --danger: #c53030;
+      --border: #d9e2ec;
+      --warn: #b7791f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .container { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+    header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;
+    }
+    h1 { margin: 0 0 0.25rem; font-size: 1.75rem; }
+    .subtitle { color: var(--muted); margin: 0; }
+    .header-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem;
+    }
+    .card h2 { margin: 0 0 0.75rem; font-size: 1.1rem; }
+    .grid { display: grid; gap: 1rem; }
+    .grid-4 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+    .metric { padding: 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: #fafcfd; }
+    .metric-label { color: var(--muted); font-size: 0.85rem; }
+    .metric-value { font-size: 1.4rem; font-weight: 700; margin-top: 0.15rem; }
+    button, .btn {
+      border: 1px solid var(--border); background: white; color: var(--text);
+      border-radius: 8px; padding: 0.45rem 0.85rem; cursor: pointer; font: inherit;
+    }
+    button:hover, .btn:hover { background: #edf2f7; }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent-dark); }
+    .btn-danger { background: #fff5f5; border-color: #feb2b2; color: var(--danger); }
+    .btn-danger:hover { background: #fed7d7; }
+    .btn-sm { padding: 0.25rem 0.55rem; font-size: 0.85rem; }
+    input, select, textarea {
+      width: 100%; border: 1px solid var(--border); border-radius: 8px;
+      padding: 0.5rem 0.65rem; font: inherit; background: white;
+    }
+    label { display: block; font-size: 0.9rem; margin-bottom: 0.25rem; color: var(--muted); }
+    .row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end; }
+    .row > * { flex: 1; min-width: 140px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+    th, td { text-align: left; padding: 0.55rem 0.4rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; }
+    .badge {
+      display: inline-block; padding: 0.1rem 0.45rem; border-radius: 999px;
+      font-size: 0.75rem; border: 1px solid var(--border); background: #f7fafc;
+    }
+    .badge-active { background: #f0fff4; border-color: #9ae6b4; color: #276749; }
+    .badge-inactive { background: #fff5f5; border-color: #feb2b2; color: var(--danger); }
+    .badge-admin { background: #ebf8ff; border-color: #90cdf4; color: #2c5282; }
+    .hidden { display: none !important; }
+    .message { margin: 0.5rem 0; min-height: 1.25rem; }
+    .message.error { color: var(--danger); }
+    .message.ok { color: var(--accent-dark); }
+    .actions { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+    .list-item-icon-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .list-icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: auto;
+      min-width: 2rem;
+      min-height: 2rem;
+      padding: 0.45rem;
+      margin: 0;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      line-height: 0;
+      border-radius: 6px;
+    }
+    .list-icon-btn svg {
+      width: 22px;
+      height: 22px;
+      display: block;
+    }
+    .list-icon-btn:hover {
+      color: var(--accent);
+      background: rgba(47, 133, 90, 0.08);
+    }
+    .list-icon-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+    .list-icon-btn--danger:hover {
+      color: var(--danger);
+      background: rgba(197, 48, 48, 0.08);
+    }
+    .auth-wrap { max-width: 420px; margin: 4rem auto; }
+    .scroll-table { overflow-x: auto; }
+    textarea { min-height: 120px; resize: vertical; font-family: Consolas, monospace; font-size: 0.85rem; }
+    .toolbar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem; z-index: 1000;
+    }
+    .modal {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      width: min(720px, 100%); max-height: min(80vh, 640px);
+      display: flex; flex-direction: column; box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+    }
+    .modal-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+    }
+    .modal-header h2 { margin: 0; font-size: 1.15rem; }
+    .modal-body { padding: 1rem 1.25rem; overflow: auto; }
+    .modal-close {
+      border: none; background: transparent; font-size: 1.5rem; line-height: 1;
+      color: var(--muted); cursor: pointer; padding: 0.15rem 0.35rem;
+    }
+    .modal-close:hover { color: var(--text); background: #edf2f7; border-radius: 6px; }
+    #toast-host {
+      position: fixed;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      pointer-events: none;
+      width: min(100%, 440px);
+      padding: 0 1rem;
+    }
+    .admin-toast {
+      pointer-events: auto;
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      font-weight: 500;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+      opacity: 0;
+      transform: translateY(0.5rem);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .admin-toast.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .admin-toast.success { background: var(--accent-dark); color: white; }
+    .admin-toast.error { background: var(--danger); color: white; }
+    .admin-toast.info { background: #334e68; color: white; }
+  </style>
+</head>
+<body>
+  <div id="toast-host" aria-live="polite" aria-atomic="true"></div>
+  <div id="dashboard-view" class="container hidden">
+    <header>
+      <div>
+        <h1>Admin Dashboard</h1>
+        <p class="subtitle">Manage users, monitor activity, and configure the application.</p>
+      </div>
+      <div class="header-actions">
+        <button type="button" id="logout-btn">Logout</button>
+      </div>
+    </header>
+
+    <section class="card">
+      <h2>Metrics</h2>
+      <div id="metrics-grid" class="grid grid-4"></div>
+      <div id="ai-metrics" style="margin-top:1rem;"></div>
+    </section>
+
+    <div class="grid grid-2">
+      <section class="card">
+        <h2>Gemini API Key</h2>
+        <p id="gemini-status" class="subtitle"></p>
+        <form id="gemini-form">
+          <label for="gemini-key">New API key</label>
+          <input id="gemini-key" type="password" autocomplete="off" placeholder="Enter new key">
+          <p id="gemini-message" class="message"></p>
+          <button type="submit" class="btn-primary">Save API key</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Site backup</h2>
+        <div class="toolbar">
+          <button type="button" id="export-site-btn" class="btn-primary">Export full site</button>
+          <label class="btn" style="cursor:pointer;">
+            Import site JSON
+            <input id="import-site-file" type="file" accept="application/json,.json" hidden>
+          </label>
+        </div>
+        <p id="backup-message" class="message"></p>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>Users</h2>
+      <div class="row">
+        <div>
+          <label for="user-search">Search</label>
+          <input id="user-search" type="search" placeholder="Username, name, or email">
+        </div>
+        <div>
+          <label for="user-active-filter">Status</label>
+          <select id="user-active-filter">
+            <option value="">All</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+        </div>
+        <div style="flex:0;">
+          <button type="button" id="refresh-users-btn" class="btn">Refresh</button>
+        </div>
+      </div>
+      <p id="users-message" class="message"></p>
+      <div class="scroll-table" style="margin-top:0.75rem;">
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Status</th>
+              <th>Last login</th>
+              <th>Activity</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <div id="activity-modal" class="modal-backdrop hidden" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="activity-modal-title">
+      <div class="modal-header">
+        <div>
+          <h2 id="activity-modal-title">Activity log</h2>
+          <p id="activity-modal-subtitle" class="subtitle"></p>
+        </div>
+        <button type="button" class="modal-close" id="activity-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="row" style="margin-bottom:0.75rem;">
+          <div>
+            <label for="activity-modal-event-filter">Event</label>
+            <select id="activity-modal-event-filter">
+              <option value="">All events</option>
+              <option value="login">Login</option>
+              <option value="logout">Logout</option>
+              <option value="login_failed">Login failed</option>
+              <option value="login_blocked">Login blocked</option>
+              <option value="password_reset">Password reset</option>
+              <option value="deactivated">Deactivated</option>
+              <option value="activated">Activated</option>
+              <option value="deleted">Deleted</option>
+            </select>
+          </div>
+        </div>
+        <div class="scroll-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Event</th>
+                <th>IP</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="activity-modal-body"></tbody>
+          </table>
+        </div>
+        <p id="activity-modal-message" class="message"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const TOKEN_STORAGE_KEY = "nutrition-tracker-token";
+    let authToken = localStorage.getItem(TOKEN_STORAGE_KEY) || "";
+
+    const dashboardView = document.getElementById("dashboard-view");
+    const activityModal = document.getElementById("activity-modal");
+    let activityModalUserId = null;
+    let activityModalUsername = "";
+
+    function setAuthToken(token) {
+      authToken = token || "";
+      if (authToken) {
+        localStorage.setItem(TOKEN_STORAGE_KEY, authToken);
+      } else {
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
+      }
+    }
+
+    function authHeaders(extra = {}) {
+      return {
+        Accept: "application/json",
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        ...extra,
+      };
+    }
+
+    async function apiFetch(url, options = {}) {
+      const response = await fetch(url, {
+        ...options,
+        headers: authHeaders(options.headers || {}),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const detail = data.detail || "Request failed";
+        throw new Error(Array.isArray(detail) ? detail.map((item) => item.msg).join(", ") : detail);
+      }
+      return data;
+    }
+
+    function formatBytes(bytes) {
+      const value = Number(bytes) || 0;
+      if (value < 1024) return `${value} B`;
+      if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)} KB`;
+      return `${(value / (1024 * 1024)).toFixed(2)} MB`;
+    }
+
+    function formatUptime(seconds) {
+      const s = Number(seconds) || 0;
+      const days = Math.floor(s / 86400);
+      const hours = Math.floor((s % 86400) / 3600);
+      const mins = Math.floor((s % 3600) / 60);
+      if (days > 0) return `${days}d ${hours}h ${mins}m`;
+      if (hours > 0) return `${hours}h ${mins}m`;
+      return `${mins}m`;
+    }
+
+    function formatDateTime(value) {
+      if (!value) return "—";
+      const date = new Date(value.endsWith("Z") ? value : `${value}Z`);
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleString();
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    const ADMIN_ICON_SVGS = {
+      log: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
+      "reset-password": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11V8a2 2 0 0 1 4 0v3"></path><rect x="9" y="11" width="6" height="5" rx="1"></rect><circle cx="12" cy="13.5" r="0.75"></circle><path d="M20.5 12a8.5 8.5 0 0 0-15-6"></path><polyline points="14.5 3.5 20.5 3.5 20.5 9.5"></polyline><path d="M3.5 12a8.5 8.5 0 0 0 15 6"></path><polyline points="9.5 20.5 3.5 20.5 3.5 14.5"></polyline></svg>`,
+      deactivate: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="17" y1="8" x2="23" y2="14"></line><line x1="23" y1="8" x2="17" y2="14"></line></svg>`,
+      activate: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>`,
+      delete: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>`,
+    };
+
+    function adminIconButtonHtml({ icon, label, variant = "default", action, id, username = "" }) {
+      const dangerClass = variant === "danger" ? " list-icon-btn--danger" : "";
+      const safeLabel = escapeHtml(label);
+      const usernameAttr = username ? ` data-username="${escapeHtml(username)}"` : "";
+      return `<button type="button" class="list-icon-btn${dangerClass}" data-action="${action}" data-id="${id}"${usernameAttr} title="${safeLabel}" aria-label="${safeLabel}">${ADMIN_ICON_SVGS[icon]}</button>`;
+    }
+
+    function showToast(message, type = "success") {
+      const host = document.getElementById("toast-host");
+      if (!host || !message) return;
+
+      const toast = document.createElement("div");
+      toast.className = `admin-toast ${type === "error" ? "error" : type === "info" ? "info" : "success"}`;
+      toast.setAttribute("role", type === "error" ? "alert" : "status");
+      toast.textContent = message;
+      host.appendChild(toast);
+      requestAnimationFrame(() => toast.classList.add("visible"));
+      window.setTimeout(() => {
+        toast.classList.remove("visible");
+        window.setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    function setInlineMessage(elementId, message, type = "") {
+      const element = document.getElementById(elementId);
+      if (!element) return;
+      element.textContent = message || "";
+      element.classList.remove("error", "ok");
+      if (type === "error") element.classList.add("error");
+      if (type === "ok") element.classList.add("ok");
+    }
+
+    function showError(error) {
+      const message = error?.message || String(error);
+      showToast(message, "error");
+    }
+
+    function showActionFeedback(message, type = "success") {
+      setInlineMessage("users-message", message, type === "error" ? "error" : "ok");
+      showToast(message, type);
+    }
+
+    function showDashboardView() {
+      dashboardView.classList.remove("hidden");
+    }
+
+    function redirectToLogin() {
+      window.location.replace("/");
+    }
+
+    async function ensureAdminAccess() {
+      if (!authToken) {
+        redirectToLogin();
+        return false;
+      }
+      try {
+        const user = await apiFetch("/api/auth/me");
+        if (!user.is_admin) {
+          redirectToLogin();
+          return false;
+        }
+        showDashboardView();
+        return true;
+      } catch {
+        setAuthToken("");
+        redirectToLogin();
+        return false;
+      }
+    }
+
+    function renderMetrics(metrics) {
+      const grid = document.getElementById("metrics-grid");
+      const ai = metrics.ai?.totals || {};
+      grid.innerHTML = [
+        ["Total users", metrics.users?.total ?? 0],
+        ["Active users", metrics.users?.active ?? 0],
+        ["Site uptime", formatUptime(metrics.uptime_seconds)],
+        ["Database size", formatBytes(metrics.database_size_bytes)],
+        ["AI calls (7d)", ai.total_calls ?? 0],
+        ["AI failures (7d)", ai.failure_calls ?? 0],
+        ["Data sent (7d)", formatBytes(ai.request_bytes)],
+        ["Data received (7d)", formatBytes(ai.response_bytes)],
+      ].map(([label, value]) => `
+        <div class="metric">
+          <div class="metric-label">${label}</div>
+          <div class="metric-value">${value}</div>
+        </div>
+      `).join("");
+
+      const daily = metrics.ai?.daily || [];
+      const aiEl = document.getElementById("ai-metrics");
+      if (!daily.length) {
+        aiEl.innerHTML = "<p class='subtitle'>No AI calls recorded in the last 7 days.</p>";
+        return;
+      }
+      aiEl.innerHTML = `
+        <h3 style="margin:0 0 0.5rem;font-size:1rem;">AI calls per day (last 7 days)</h3>
+        <div class="scroll-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Total</th>
+                <th>Success</th>
+                <th>Failures</th>
+                <th>Sent</th>
+                <th>Received</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${daily.map((row) => `
+                <tr>
+                  <td>${row.date}</td>
+                  <td>${row.total_calls}</td>
+                  <td>${row.success_calls}</td>
+                  <td>${row.failure_calls}</td>
+                  <td>${formatBytes(row.request_bytes)}</td>
+                  <td>${formatBytes(row.response_bytes)}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    async function loadMetrics() {
+      const metrics = await apiFetch("/api/admin/metrics");
+      renderMetrics(metrics);
+      const gemini = metrics.gemini || {};
+      document.getElementById("gemini-status").textContent =
+        `Status: ${gemini.configured ? "Configured" : "Not configured"} · Source: ${gemini.source || "none"} · Masked: ${gemini.masked_key || "—"}`;
+    }
+
+    function renderUsers(users) {
+      const tbody = document.getElementById("users-table-body");
+      if (!users.length) {
+        tbody.innerHTML = `<tr><td colspan="5">No users found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = users.map((user) => {
+        const badges = [
+          user.is_active ? `<span class="badge badge-active">Active</span>` : `<span class="badge badge-inactive">Inactive</span>`,
+          user.is_admin ? `<span class="badge badge-admin">Admin</span>` : "",
+        ].join(" ");
+        const actionButtons = user.is_admin ? "<span class='subtitle'>Protected</span>" : `
+          <div class="list-item-icon-actions">
+            ${adminIconButtonHtml({ icon: "reset-password", label: "Reset password", action: "reset-password", id: user.id, username: user.username })}
+            ${user.is_active
+              ? adminIconButtonHtml({ icon: "deactivate", label: "Deactivate", variant: "danger", action: "deactivate", id: user.id, username: user.username })
+              : adminIconButtonHtml({ icon: "activate", label: "Activate", action: "activate", id: user.id, username: user.username })}
+            ${adminIconButtonHtml({ icon: "delete", label: "Delete", variant: "danger", action: "delete", id: user.id, username: user.username })}
+          </div>
+        `;
+        return `
+          <tr>
+            <td>
+              <strong>${escapeHtml(user.username)}</strong><br>
+              <span class="subtitle">${escapeHtml(user.name || "")}${user.email ? ` · ${escapeHtml(user.email)}` : ""}</span><br>
+              <span class="subtitle">${user.meal_count || 0} meals · ${user.workout_count || 0} workouts</span>
+            </td>
+            <td>${badges}</td>
+            <td>${formatDateTime(user.last_login_at)}</td>
+            <td>
+              <div class="list-item-icon-actions">
+                ${adminIconButtonHtml({
+                  icon: "log",
+                  label: "View log",
+                  action: "view-activity",
+                  id: user.id,
+                  username: user.username,
+                })}
+              </div>
+            </td>
+            <td>${actionButtons}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    async function loadUsers() {
+      const search = document.getElementById("user-search").value.trim();
+      const active = document.getElementById("user-active-filter").value;
+      const params = new URLSearchParams();
+      if (search) params.set("search", search);
+      if (active) params.set("active", active);
+      const data = await apiFetch(`/api/admin/users?${params.toString()}`);
+      renderUsers(data.users || []);
+    }
+
+    function renderActivityModal(rows) {
+      const tbody = document.getElementById("activity-modal-body");
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="4">No activity recorded.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = rows.map((row) => `
+        <tr>
+          <td>${formatDateTime(row.created_at)}</td>
+          <td>${row.event}</td>
+          <td>${row.ip_address || "—"}</td>
+          <td>${row.details || ""}</td>
+        </tr>
+      `).join("");
+    }
+
+    async function loadUserActivity(userId) {
+      setInlineMessage("activity-modal-message", "");
+      const event = document.getElementById("activity-modal-event-filter").value;
+      const params = new URLSearchParams({ limit: "200", user_id: String(userId) });
+      if (event) params.set("event", event);
+      try {
+        const data = await apiFetch(`/api/admin/activity?${params.toString()}`);
+        renderActivityModal(data.activity || []);
+      } catch (error) {
+        renderActivityModal([]);
+        setInlineMessage("activity-modal-message", error.message, "error");
+        throw error;
+      }
+    }
+
+    function openActivityModal(userId, username) {
+      activityModalUserId = userId;
+      activityModalUsername = username || "";
+      document.getElementById("activity-modal-title").textContent = "Activity log";
+      document.getElementById("activity-modal-subtitle").textContent =
+        activityModalUsername ? `User: ${activityModalUsername}` : "";
+      document.getElementById("activity-modal-event-filter").value = "";
+      setInlineMessage("activity-modal-message", "");
+      activityModal.classList.remove("hidden");
+      activityModal.setAttribute("aria-hidden", "false");
+      loadUserActivity(userId).catch(showError);
+    }
+
+    function closeActivityModal() {
+      activityModal.classList.add("hidden");
+      activityModal.setAttribute("aria-hidden", "true");
+      activityModalUserId = null;
+      activityModalUsername = "";
+    }
+
+    async function refreshDashboard() {
+      await Promise.all([loadMetrics(), loadUsers()]);
+    }
+
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      try {
+        await apiFetch("/api/auth/logout", { method: "POST" });
+      } catch {}
+      setAuthToken("");
+      redirectToLogin();
+    });
+
+    document.getElementById("refresh-users-btn").addEventListener("click", async () => {
+      try {
+        await loadUsers();
+        showActionFeedback("User list refreshed.");
+      } catch (error) {
+        showActionFeedback(error.message, "error");
+      }
+    });
+    document.getElementById("user-search").addEventListener("input", debounce(() => loadUsers().catch(showError), 300));
+    document.getElementById("user-active-filter").addEventListener("change", () => loadUsers().catch(showError));
+    document.getElementById("activity-modal-close").addEventListener("click", closeActivityModal);
+    document.getElementById("activity-modal-event-filter").addEventListener("change", () => {
+      if (activityModalUserId !== null) {
+        loadUserActivity(activityModalUserId).catch(showError);
+      }
+    });
+    activityModal.addEventListener("click", (event) => {
+      if (event.target === activityModal) closeActivityModal();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !activityModal.classList.contains("hidden")) {
+        closeActivityModal();
+      }
+    });
+
+    document.getElementById("users-table-body").addEventListener("click", async (event) => {
+      const button = event.target.closest("button[data-action]");
+      if (!button) return;
+      const userId = Number(button.dataset.id);
+      const username = button.dataset.username || "user";
+      const action = button.dataset.action;
+      try {
+        if (action === "view-activity") {
+          openActivityModal(userId, button.dataset.username || "");
+          return;
+        }
+        if (action === "reset-password") {
+          const password = prompt(`Enter a new password for ${username}:`);
+          if (!password) return;
+          if (password.length < 4) {
+            showActionFeedback("Password must be at least 4 characters.", "error");
+            return;
+          }
+          await apiFetch(`/api/admin/users/${userId}/reset-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password }),
+          });
+          showActionFeedback(`Password reset for ${username}.`);
+        } else if (action === "deactivate") {
+          if (!confirm(`Deactivate ${username}?`)) return;
+          await apiFetch(`/api/admin/users/${userId}/deactivate`, { method: "PATCH" });
+          showActionFeedback(`${username} deactivated.`);
+        } else if (action === "activate") {
+          await apiFetch(`/api/admin/users/${userId}/activate`, { method: "PATCH" });
+          showActionFeedback(`${username} activated.`);
+        } else if (action === "delete") {
+          if (!confirm(`Permanently delete ${username} and all their nutrition data?`)) return;
+          if (!confirm(`Final confirmation: delete ${username}? This cannot be undone.`)) return;
+          await apiFetch(`/api/admin/users/${userId}`, { method: "DELETE" });
+          showActionFeedback(`${username} and all associated data deleted.`);
+        }
+        await loadUsers();
+      } catch (error) {
+        showActionFeedback(error.message, "error");
+      }
+    });
+
+    document.getElementById("gemini-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const message = document.getElementById("gemini-message");
+      message.textContent = "";
+      message.classList.remove("error", "ok");
+      const apiKey = document.getElementById("gemini-key").value.trim();
+      if (!apiKey) {
+        message.textContent = "Enter an API key.";
+        message.classList.add("error");
+        showToast("Enter an API key.", "error");
+        return;
+      }
+      try {
+        await apiFetch("/api/admin/settings/gemini", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ api_key: apiKey }),
+        });
+        document.getElementById("gemini-key").value = "";
+        message.textContent = "API key saved.";
+        message.classList.add("ok");
+        showToast("Gemini API key saved.");
+        await loadMetrics();
+      } catch (error) {
+        message.textContent = error.message;
+        message.classList.add("error");
+        showToast(error.message, "error");
+      }
+    });
+
+    document.getElementById("export-site-btn").addEventListener("click", async () => {
+      const message = document.getElementById("backup-message");
+      message.textContent = "";
+      message.classList.remove("error", "ok");
+      try {
+        const response = await fetch("/api/admin/export/site/download", { headers: authHeaders() });
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.detail || "Export failed");
+        }
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `nutrition-tracker-site-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(url);
+        message.textContent = "Site export downloaded.";
+        message.classList.add("ok");
+        showToast("Site export downloaded.");
+      } catch (error) {
+        message.textContent = error.message;
+        message.classList.add("error");
+        showToast(error.message, "error");
+      }
+    });
+
+    document.getElementById("import-site-file").addEventListener("change", async (event) => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file) return;
+      const message = document.getElementById("backup-message");
+      message.textContent = "";
+      message.classList.remove("error", "ok");
+      if (!confirm("Import site data? Existing users will be merged/overwritten per import rules.")) return;
+      try {
+        const content = await file.text();
+        const summary = await apiFetch("/api/admin/import/site", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content }),
+        });
+        message.textContent = `Import complete: ${summary.imported_users} new users, ${summary.skipped_users} skipped.`;
+        message.classList.add("ok");
+        showToast(`Import complete: ${summary.imported_users} new users, ${summary.skipped_users} skipped.`);
+        await refreshDashboard();
+      } catch (error) {
+        message.textContent = error.message;
+        message.classList.add("error");
+        showToast(error.message, "error");
+      }
+    });
+
+    function debounce(fn, wait) {
+      let timer;
+      return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), wait);
+      };
+    }
+
+    ensureAdminAccess().then((ok) => {
+      if (ok) refreshDashboard().catch(showError);
+    });
+  </script>
+</body>
+</html>

@@ -107,3 +107,29 @@ def seed_test_user(db: Session) -> User:
         db.commit()
     db.refresh(user)
     return user
+
+
+def seed_admin_user(db: Session) -> User:
+    user = db.query(User).filter(User.username == "admin").first()
+    if user is not None:
+        if not user.is_admin:
+            user.is_admin = True
+        if not user.is_active:
+            user.is_active = True
+        user.password_hash = hash_password("Admin1234!")
+        db.commit()
+        db.refresh(user)
+        return user
+
+    user = User(
+        username="admin",
+        password_hash=hash_password("Admin1234!"),
+        name="Administrator",
+        email=None,
+        is_admin=True,
+        is_active=True,
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user

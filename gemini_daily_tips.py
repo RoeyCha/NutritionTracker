@@ -2,12 +2,15 @@ import json
 import logging
 import os
 import re
-from datetime import date, datetime, time, timedelta
+import time
+from datetime import date, datetime, time as dt_time, timedelta
 
 import google.generativeai as genai
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from ai_metrics import record_ai_call
+from app_settings import get_gemini_api_key
 from gemini_insight import GEMINI_MODEL, GEMINI_MODEL_FALLBACKS, _user_profile_text
 from daily_tip_feedback import attach_feedback_to_tips, fetch_feedback_for_prompt
 from default_daily_tips import DEFAULT_TIP_COUNT, build_default_daily_tips
@@ -22,7 +25,7 @@ MAX_TIP_CHARS = 480
 
 
 def _day_bounds(target_date: date) -> tuple[datetime, datetime]:
-    return datetime.combine(target_date, time.min), datetime.combine(target_date, time.max)
+    return datetime.combine(target_date, dt_time.min), datetime.combine(target_date, dt_time.max)
 
 
 def _default_context_end_date() -> date:
@@ -545,6 +548,7 @@ def _generate_tips_with_ai(
         return _fallback_daily_tips(context, language), "local-fallback", False
 
     prompt = _build_tips_prompt(user, context, language, feedback)
+    request_bytes = len(prompt.encode("utf-8"))
     preferred_model = os.getenv("GEMINI_MODEL", GEMINI_MODEL)
     model_names = []
     for name in (preferred_model, *GEMINI_MODEL_FALLBACKS):
@@ -552,14 +556,25 @@ def _generate_tips_with_ai(
             model_names.append(name)
 
     last_error = None
+    started = time.perf_counter()
     try:
         genai.configure(api_key=api_key)
         for model_name in model_names:
             try:
                 model = genai.GenerativeModel(model_name)
                 response = model.generate_content(prompt)
-                tips = _parse_tips_json(response.text or "")
+                response_text = response.text or ""
+                tips = _parse_tips_json(response_text)
                 logger.info("Gemini daily tips succeeded with model %s for %s", model_name, user.username)
+                record_ai_call(
+                    feature="daily_tips",
+                    user_id=user.id,
+                    model=model_name,
+                    success=True,
+                    request_bytes=request_bytes,
+                    response_bytes=len(response_text.encode("utf-8")),
+                    duration_ms=int((time.perf_counter() - started) * 1000),
+                )
                 return tips, model_name, True
             except Exception as exc:
                 logger.warning("Gemini daily tips model %s failed: %s", model_name, exc)
@@ -567,6 +582,15 @@ def _generate_tips_with_ai(
                 continue
         raise last_error or RuntimeError("No Gemini model available")
     except Exception as exc:
+        record_ai_call(
+            feature="daily_tips",
+            user_id=user.id,
+            model=model_names[-1] if model_names else None,
+            success=False,
+            error_message=str(exc),
+            request_bytes=request_bytes,
+            duration_ms=int((time.perf_counter() - started) * 1000),
+        )
         logger.warning(
             "Daily tips AI failed for %s, using local fallback: %s",
             user.username,
@@ -637,7 +661,10 @@ def get_or_create_daily_tips(
 
     context = fetch_three_day_context(db, user)
     has_tracking_data = _context_has_tracking_data(context)
-    tips_raw, model_name, ai_estimated = _generate_tips_with_ai(user, context, language, api_key, db)
+    effective_api_key = api_key if api_key is not None else get_gemini_api_key()
+    tips_raw, model_name, ai_estimated = _generate_tips_with_ai(
+        user, context, language, effective_api_key, db
+    )
     serialized = _serialize_tips(tips_raw)
     tips = attach_feedback_to_tips(db, user.id, serialized)
 

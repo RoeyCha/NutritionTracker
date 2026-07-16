@@ -552,3 +552,56 @@ def test_summary_meals_and_workouts_logged_at_use_utc_suffix(client: TestClient)
         assert meal["logged_at"].endswith("Z")
     for workout in payload["workouts"]:
         assert workout["logged_at"].endswith("Z")
+
+
+def test_summary_orders_meals_and_workouts_oldest_first(client: TestClient) -> None:
+    target_date = date.today().isoformat()
+    headers = client.auth_headers
+
+    client.post(
+        "/api/meals",
+        headers=headers,
+        json={
+            "food_name": "Later meal",
+            "calories": 500,
+            "logged_at": f"{target_date}T18:00:00.000Z",
+        },
+    )
+    client.post(
+        "/api/meals",
+        headers=headers,
+        json={
+            "food_name": "Earlier meal",
+            "calories": 300,
+            "logged_at": f"{target_date}T08:00:00.000Z",
+        },
+    )
+    client.post(
+        "/api/workouts",
+        headers=headers,
+        json={
+            "activity_type": "Later workout",
+            "calories_burned": 200,
+            "logged_at": f"{target_date}T19:00:00.000Z",
+        },
+    )
+    client.post(
+        "/api/workouts",
+        headers=headers,
+        json={
+            "activity_type": "Earlier workout",
+            "calories_burned": 100,
+            "logged_at": f"{target_date}T07:00:00.000Z",
+        },
+    )
+
+    response = client.get(f"/api/summary?date={target_date}", headers=headers)
+    assert response.status_code == 200
+    payload = response.json()
+
+    meal_times = [meal["logged_at"] for meal in payload["meals"]]
+    workout_times = [workout["logged_at"] for workout in payload["workouts"]]
+    assert meal_times == sorted(meal_times)
+    assert workout_times == sorted(workout_times)
+    assert payload["meals"][0]["food_name"] == "Earlier meal"
+    assert payload["workouts"][0]["activity_type"] == "Earlier workout"

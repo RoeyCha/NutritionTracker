@@ -14,7 +14,13 @@ JWT_SECRET = os.getenv("JWT_SECRET", "nutrition-tracker-dev-secret")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_DAYS = 7
 
+RESERVED_USERNAMES = frozenset({"admin"})
+
 security = HTTPBearer(auto_error=False)
+
+
+def is_username_reserved(username: str) -> bool:
+    return username.strip().lower() in RESERVED_USERNAMES
 
 
 def hash_password(password: str) -> str:
@@ -60,6 +66,8 @@ def _user_from_token(raw_token: str, db: Session) -> User:
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    if not user.is_active:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account deactivated")
     return user
 
 
@@ -70,6 +78,38 @@ def get_current_user(
     if credentials is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     return _user_from_token(credentials.credentials, db)
+
+
+def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
+    if not current_user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+    return current_user
+
+
+def get_current_tracker_user(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin accounts use the admin dashboard only",
+        )
+    return current_user
+
+
+def get_current_tracker_user_for_download(
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+    token: str | None = Query(None, description="JWT token for browser file downloads"),
+    db: Session = Depends(get_db),
+) -> User:
+    raw_token = credentials.credentials if credentials else token
+    if not raw_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+    user = _user_from_token(raw_token, db)
+    if user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin accounts use the admin dashboard only",
+        )
+    return user
 
 
 def get_current_user_for_download(
@@ -87,6 +127,9 @@ def user_to_dict(user: User) -> dict:
     return {
         "id": user.id,
         "username": user.username,
+        "is_admin": bool(user.is_admin),
+        "is_active": bool(user.is_active),
+        "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
         "name": user.name,
         "email": user.email,
         "gender": user.gender,

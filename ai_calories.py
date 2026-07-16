@@ -2,10 +2,13 @@ import json
 import logging
 import os
 import re
+import time
 from dataclasses import dataclass
 
 import google.generativeai as genai
 
+from ai_metrics import record_ai_call
+from app_settings import get_gemini_api_key
 from gemini_insight import GEMINI_MODEL, GEMINI_MODEL_FALLBACKS
 from models import User
 from profile_utils import user_age_for_calculations
@@ -57,8 +60,13 @@ def _macros_from_calories(
     )
 
 
-def _gemini_calorie_estimate(prompt: str) -> CalorieEstimate:
-    api_key = os.getenv("GEMINI_API_KEY")
+def _gemini_calorie_estimate(
+    prompt: str,
+    *,
+    user_id: int | None = None,
+    feature: str = "workout_calories",
+) -> CalorieEstimate:
+    api_key = get_gemini_api_key()
     if not api_key:
         raise RuntimeError("GEMINI_API_KEY is not configured")
 
@@ -68,6 +76,7 @@ def _gemini_calorie_estimate(prompt: str) -> CalorieEstimate:
         "Calories must be a positive number with at most one decimal place.\n\n"
         f"{prompt}"
     )
+    request_bytes = len(full_prompt.encode("utf-8"))
 
     preferred_model = os.getenv("GEMINI_MODEL", GEMINI_MODEL)
     model_names = []
@@ -77,15 +86,26 @@ def _gemini_calorie_estimate(prompt: str) -> CalorieEstimate:
 
     genai.configure(api_key=api_key)
     last_error = None
+    started = time.perf_counter()
     for model_name in model_names:
         try:
             model = genai.GenerativeModel(model_name)
             response = model.generate_content(full_prompt)
-            data = _extract_json(response.text or "{}")
+            response_text = response.text or "{}"
+            data = _extract_json(response_text)
             calories = float(data["calories"])
             if calories <= 0:
                 raise ValueError("Calories must be positive")
             logger.info("Gemini calorie estimate succeeded with model %s", model_name)
+            record_ai_call(
+                feature=feature,
+                user_id=user_id,
+                model=model_name,
+                success=True,
+                request_bytes=request_bytes,
+                response_bytes=len(response_text.encode("utf-8")),
+                duration_ms=int((time.perf_counter() - started) * 1000),
+            )
             return CalorieEstimate(
                 calories=round(calories, 1),
                 explanation=str(data.get("explanation", "")).strip(),
@@ -95,11 +115,25 @@ def _gemini_calorie_estimate(prompt: str) -> CalorieEstimate:
             logger.warning("Gemini model %s failed: %s", model_name, exc)
             last_error = exc
             continue
+    record_ai_call(
+        feature=feature,
+        user_id=user_id,
+        model=model_names[-1] if model_names else None,
+        success=False,
+        error_message=str(last_error or "No Gemini model available"),
+        request_bytes=request_bytes,
+        duration_ms=int((time.perf_counter() - started) * 1000),
+    )
     raise last_error or RuntimeError("No Gemini model available")
 
 
-def _gemini_meal_estimate(prompt: str) -> CalorieEstimate:
-    api_key = os.getenv("GEMINI_API_KEY")
+def _gemini_meal_estimate(
+    prompt: str,
+    *,
+    user_id: int | None = None,
+    feature: str = "meal_calories",
+) -> CalorieEstimate:
+    api_key = get_gemini_api_key()
     if not api_key:
         raise RuntimeError("GEMINI_API_KEY is not configured")
 
@@ -111,6 +145,7 @@ def _gemini_meal_estimate(prompt: str) -> CalorieEstimate:
         "Protein, carbohydrates, and fats are in grams.\n\n"
         f"{prompt}"
     )
+    request_bytes = len(full_prompt.encode("utf-8"))
 
     preferred_model = os.getenv("GEMINI_MODEL", GEMINI_MODEL)
     model_names = []
@@ -120,11 +155,13 @@ def _gemini_meal_estimate(prompt: str) -> CalorieEstimate:
 
     genai.configure(api_key=api_key)
     last_error = None
+    started = time.perf_counter()
     for model_name in model_names:
         try:
             model = genai.GenerativeModel(model_name)
             response = model.generate_content(full_prompt)
-            data = _extract_json(response.text or "{}")
+            response_text = response.text or "{}"
+            data = _extract_json(response_text)
             calories = float(data["calories"])
             protein = float(data["protein"])
             carbohydrates = float(data["carbohydrates"])
@@ -132,6 +169,15 @@ def _gemini_meal_estimate(prompt: str) -> CalorieEstimate:
             if calories <= 0 or protein < 0 or carbohydrates < 0 or fats < 0:
                 raise ValueError("Nutrition values must be valid")
             logger.info("Gemini meal estimate succeeded with model %s", model_name)
+            record_ai_call(
+                feature=feature,
+                user_id=user_id,
+                model=model_name,
+                success=True,
+                request_bytes=request_bytes,
+                response_bytes=len(response_text.encode("utf-8")),
+                duration_ms=int((time.perf_counter() - started) * 1000),
+            )
             return CalorieEstimate(
                 calories=round(calories, 1),
                 explanation=str(data.get("explanation", "")).strip(),
@@ -144,6 +190,15 @@ def _gemini_meal_estimate(prompt: str) -> CalorieEstimate:
             logger.warning("Gemini meal model %s failed: %s", model_name, exc)
             last_error = exc
             continue
+    record_ai_call(
+        feature=feature,
+        user_id=user_id,
+        model=model_names[-1] if model_names else None,
+        success=False,
+        error_message=str(last_error or "No Gemini model available"),
+        request_bytes=request_bytes,
+        duration_ms=int((time.perf_counter() - started) * 1000),
+    )
     raise last_error or RuntimeError("No Gemini model available")
 
 
@@ -250,7 +305,7 @@ def estimate_meal_calories(food_name: str, user: User) -> CalorieEstimate:
         "Assume a typical single serving unless the description specifies otherwise."
     )
     try:
-        return _gemini_meal_estimate(prompt)
+        return _gemini_meal_estimate(prompt, user_id=user.id)
     except Exception as exc:
         logger.warning(
             "Meal nutrition AI failed for %r, using local fallback: %s",
@@ -268,7 +323,7 @@ def estimate_workout_calories(activity_type: str, user: User) -> CalorieEstimate
         "If duration is not specified, assume a moderate 30-minute session."
     )
     try:
-        return _gemini_calorie_estimate(prompt)
+        return _gemini_calorie_estimate(prompt, user_id=user.id)
     except Exception as exc:
         logger.warning(
             "Workout calorie AI failed for %r, using local fallback: %s",
