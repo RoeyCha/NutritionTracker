@@ -50,6 +50,7 @@
     button:hover, .btn:hover { background: #edf2f7; }
     .btn-primary { background: var(--accent); border-color: var(--accent); color: white; }
     .btn-primary:hover { background: var(--accent-dark); }
+    .btn-secondary { background: white; }
     .btn-danger { background: #fff5f5; border-color: #feb2b2; color: var(--danger); }
     .btn-danger:hover { background: #fed7d7; }
     .btn-sm { padding: 0.25rem 0.55rem; font-size: 0.85rem; }
@@ -85,9 +86,9 @@
       align-items: center;
       justify-content: center;
       width: auto;
-      min-width: 2rem;
-      min-height: 2rem;
-      padding: 0.45rem;
+      min-width: 48px;
+      min-height: 48px;
+      padding: 0.75rem;
       margin: 0;
       border: none;
       background: transparent;
@@ -138,6 +139,15 @@
       color: var(--muted); cursor: pointer; padding: 0.15rem 0.35rem;
     }
     .modal-close:hover { color: var(--text); background: #edf2f7; border-radius: 6px; }
+    .modal-actions {
+      display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap;
+      padding: 0 1.25rem 1.25rem;
+    }
+    .modal-actions .btn-danger {
+      background: #fff5f5; color: var(--danger); border: 1px solid #feb2b2;
+    }
+    .modal-actions .btn-danger:hover { background: #fed7d7; }
+    .prompt-field { width: 100%; margin-top: 0.75rem; }
     #toast-host {
       position: fixed;
       bottom: 1rem;
@@ -298,6 +308,28 @@
     </div>
   </div>
 
+  <div id="confirm-modal" class="modal-backdrop hidden" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title" style="width:min(440px,100%);max-height:none;">
+      <div class="modal-header">
+        <div>
+          <h2 id="confirm-modal-title">Please confirm</h2>
+        </div>
+        <button type="button" class="modal-close" id="confirm-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirm-modal-message" class="subtitle"></p>
+        <div id="confirm-prompt-wrap" class="hidden">
+          <label for="confirm-prompt-input" id="confirm-prompt-label">New password</label>
+          <input id="confirm-prompt-input" class="prompt-field" type="password" autocomplete="new-password">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-primary" id="confirm-modal-ok">Continue</button>
+        <button type="button" class="btn-secondary" id="confirm-modal-cancel">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const TOKEN_STORAGE_KEY = "nutrition-tracker-token";
     let authToken = localStorage.getItem(TOKEN_STORAGE_KEY) || "";
@@ -417,6 +449,78 @@
     function showActionFeedback(message, type = "success") {
       setInlineMessage("users-message", message, type === "error" ? "error" : "ok");
       showToast(message, type);
+    }
+
+    function setButtonLoading(button, isLoading, loadingLabel = "Working...") {
+      if (!button) {
+        return;
+      }
+      if (!button.dataset.defaultLabel) {
+        button.dataset.defaultLabel = button.textContent;
+      }
+      button.disabled = isLoading;
+      button.textContent = isLoading ? loadingLabel : button.dataset.defaultLabel;
+    }
+
+    const confirmModal = document.getElementById("confirm-modal");
+    const confirmModalTitle = document.getElementById("confirm-modal-title");
+    const confirmModalMessage = document.getElementById("confirm-modal-message");
+    const confirmModalOk = document.getElementById("confirm-modal-ok");
+    const confirmModalCancel = document.getElementById("confirm-modal-cancel");
+    const confirmModalClose = document.getElementById("confirm-modal-close");
+    const confirmPromptWrap = document.getElementById("confirm-prompt-wrap");
+    const confirmPromptInput = document.getElementById("confirm-prompt-input");
+    const confirmPromptLabel = document.getElementById("confirm-prompt-label");
+    let confirmModalResolver = null;
+
+    function closeConfirmModal(confirmed) {
+      if (!confirmModal) return;
+      const promptMode = confirmPromptWrap && !confirmPromptWrap.classList.contains("hidden");
+      let result = false;
+      if (confirmed) {
+        result = promptMode ? confirmPromptInput.value : true;
+      } else {
+        result = promptMode ? null : false;
+      }
+      confirmModal.classList.add("hidden");
+      confirmModal.setAttribute("aria-hidden", "true");
+      const resolve = confirmModalResolver;
+      confirmModalResolver = null;
+      if (resolve) resolve(result);
+    }
+
+    function askConfirm({
+      title = "Please confirm",
+      message = "",
+      confirmLabel = "Continue",
+      danger = false,
+      prompt = false,
+      promptLabel = "Value",
+      promptType = "text",
+    } = {}) {
+      return new Promise((resolve) => {
+        confirmModalResolver = resolve;
+        confirmModalTitle.textContent = title;
+        confirmModalMessage.textContent = message;
+        confirmModalOk.textContent = confirmLabel;
+        confirmModalOk.className = danger ? "btn-danger" : "btn-primary";
+        if (prompt) {
+          confirmPromptWrap.classList.remove("hidden");
+          confirmPromptLabel.textContent = promptLabel;
+          confirmPromptInput.type = promptType;
+          confirmPromptInput.value = "";
+        } else {
+          confirmPromptWrap.classList.add("hidden");
+          confirmPromptInput.value = "";
+        }
+        confirmModal.classList.remove("hidden");
+        confirmModal.setAttribute("aria-hidden", "false");
+        if (prompt) {
+          confirmPromptInput.focus();
+        } else {
+          confirmModalOk.focus();
+        }
+      });
     }
 
     function showDashboardView() {
@@ -667,9 +771,16 @@
           return;
         }
         if (action === "reset-password") {
-          const password = prompt(`Enter a new password for ${username}:`);
+          const password = await askConfirm({
+            title: "Reset password",
+            message: `Enter a new password for ${username}:`,
+            confirmLabel: "Reset password",
+            prompt: true,
+            promptLabel: "New password",
+            promptType: "password",
+          });
           if (!password) return;
-          if (password.length < 4) {
+          if (String(password).length < 4) {
             showActionFeedback("Password must be at least 4 characters.", "error");
             return;
           }
@@ -680,15 +791,33 @@
           });
           showActionFeedback(`Password reset for ${username}.`);
         } else if (action === "deactivate") {
-          if (!confirm(`Deactivate ${username}?`)) return;
+          const ok = await askConfirm({
+            title: "Deactivate user",
+            message: `Deactivate ${username}?`,
+            confirmLabel: "Deactivate",
+            danger: true,
+          });
+          if (!ok) return;
           await apiFetch(`/api/admin/users/${userId}/deactivate`, { method: "PATCH" });
           showActionFeedback(`${username} deactivated.`);
         } else if (action === "activate") {
           await apiFetch(`/api/admin/users/${userId}/activate`, { method: "PATCH" });
           showActionFeedback(`${username} activated.`);
         } else if (action === "delete") {
-          if (!confirm(`Permanently delete ${username} and all their nutrition data?`)) return;
-          if (!confirm(`Final confirmation: delete ${username}? This cannot be undone.`)) return;
+          const first = await askConfirm({
+            title: "Delete user",
+            message: `Permanently delete ${username} and all their nutrition data?`,
+            confirmLabel: "Delete",
+            danger: true,
+          });
+          if (!first) return;
+          const second = await askConfirm({
+            title: "Final confirmation",
+            message: `Final confirmation: delete ${username}? This cannot be undone.`,
+            confirmLabel: "Delete permanently",
+            danger: true,
+          });
+          if (!second) return;
           await apiFetch(`/api/admin/users/${userId}`, { method: "DELETE" });
           showActionFeedback(`${username} and all associated data deleted.`);
         }
@@ -704,12 +833,14 @@
       message.textContent = "";
       message.classList.remove("error", "ok");
       const apiKey = document.getElementById("gemini-key").value.trim();
+      const submitBtn = event.target.querySelector('button[type="submit"]');
       if (!apiKey) {
         message.textContent = "Enter an API key.";
         message.classList.add("error");
         showToast("Enter an API key.", "error");
         return;
       }
+      setButtonLoading(submitBtn, true, "Saving...");
       try {
         await apiFetch("/api/admin/settings/gemini", {
           method: "PUT",
@@ -725,13 +856,17 @@
         message.textContent = error.message;
         message.classList.add("error");
         showToast(error.message, "error");
+      } finally {
+        setButtonLoading(submitBtn, false);
       }
     });
 
     document.getElementById("export-site-btn").addEventListener("click", async () => {
       const message = document.getElementById("backup-message");
+      const exportBtn = document.getElementById("export-site-btn");
       message.textContent = "";
       message.classList.remove("error", "ok");
+      setButtonLoading(exportBtn, true, "Exporting...");
       try {
         const response = await fetch("/api/admin/export/site/download", { headers: authHeaders() });
         if (!response.ok) {
@@ -754,6 +889,8 @@
         message.textContent = error.message;
         message.classList.add("error");
         showToast(error.message, "error");
+      } finally {
+        setButtonLoading(exportBtn, false);
       }
     });
 
@@ -764,7 +901,15 @@
       const message = document.getElementById("backup-message");
       message.textContent = "";
       message.classList.remove("error", "ok");
-      if (!confirm("Import site data? Existing users will be merged/overwritten per import rules.")) return;
+      if (!(await askConfirm({
+        title: "Import site data",
+        message: "Import site data? Existing users will be merged/overwritten per import rules.",
+        confirmLabel: "Import",
+        danger: true,
+      }))) return;
+      const fileInput = document.getElementById("import-site-file");
+      fileInput.disabled = true;
+      message.textContent = "Importing...";
       try {
         const content = await file.text();
         const summary = await apiFetch("/api/admin/import/site", {
@@ -780,6 +925,8 @@
         message.textContent = error.message;
         message.classList.add("error");
         showToast(error.message, "error");
+      } finally {
+        fileInput.disabled = false;
       }
     });
 
@@ -790,6 +937,25 @@
         timer = setTimeout(() => fn(...args), wait);
       };
     }
+
+    confirmModalOk?.addEventListener("click", () => closeConfirmModal(true));
+    confirmModalCancel?.addEventListener("click", () => closeConfirmModal(false));
+    confirmModalClose?.addEventListener("click", () => closeConfirmModal(false));
+    confirmModal?.addEventListener("click", (event) => {
+      if (event.target === confirmModal) closeConfirmModal(false);
+    });
+    confirmPromptInput?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        closeConfirmModal(true);
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && confirmModal && !confirmModal.classList.contains("hidden")) {
+        event.preventDefault();
+        closeConfirmModal(false);
+      }
+    });
 
     ensureAdminAccess().then((ok) => {
       if (ok) refreshDashboard().catch(showError);

@@ -42,7 +42,22 @@ class TestAdminDashboardUi:
         assert '"reset-password"' in admin_html
         assert "function adminIconButtonHtml" in admin_html
         assert ".list-icon-btn" in admin_html
+        assert "min-height: 48px" in admin_html
         assert "Open app" not in admin_html
+
+    def test_admin_uses_in_app_confirm_not_native_dialogs(self, admin_html: str) -> None:
+        assert 'id="confirm-modal"' in admin_html
+        assert "function askConfirm" in admin_html
+        assert "prompt(" not in admin_html
+        assert "confirm(" not in admin_html
+        assert 'prompt: true' in admin_html
+
+    def test_admin_backup_actions_show_loading_states(self, admin_html: str) -> None:
+        assert "function setButtonLoading" in admin_html
+        assert 'setButtonLoading(submitBtn, true, "Saving...")' in admin_html
+        assert 'setButtonLoading(exportBtn, true, "Exporting...")' in admin_html
+        assert 'message.textContent = "Importing..."' in admin_html
+        assert "fileInput.disabled = true" in admin_html
 
     def test_admin_redirects_unauthenticated_users_to_login(self, admin_html: str) -> None:
         assert "redirectToLogin" in admin_html

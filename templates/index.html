@@ -275,21 +275,21 @@
       align-items: center;
       justify-content: center;
       width: auto;
-      min-width: 0;
-      min-height: 0;
-      padding: 0.2rem;
+      min-width: 48px;
+      min-height: 48px;
+      padding: 0.75rem;
       margin: 0;
       border: none;
       background: transparent;
       color: var(--muted);
       cursor: pointer;
       line-height: 0;
-      border-radius: 4px;
+      border-radius: 6px;
     }
 
     .list-icon-btn svg {
-      width: 14px;
-      height: 14px;
+      width: 22px;
+      height: 22px;
       display: block;
     }
 
@@ -580,15 +580,22 @@
       align-items: center;
       justify-content: center;
       width: auto;
-      min-width: 0;
-      padding: 0.15rem;
+      min-width: 48px;
+      min-height: 48px;
+      padding: 0.75rem;
       margin: 0;
       border: none;
       background: transparent;
       color: var(--muted);
       cursor: pointer;
       line-height: 0;
-      border-radius: 4px;
+      border-radius: 6px;
+    }
+
+    .stat-edit-btn svg {
+      width: 20px;
+      height: 20px;
+      display: block;
     }
 
     .stat-edit-btn:hover {
@@ -767,8 +774,8 @@
       background: white;
       font-size: 0.72rem;
       cursor: pointer;
+      min-height: 2rem;
       padding: 0;
-      min-height: 0;
     }
 
     .cal-day.empty-cell {
@@ -777,15 +784,24 @@
       cursor: default;
     }
 
-    .cal-day.has-data:hover { background: #edf2f7; }
+    .cal-day.has-data:hover,
+    .cal-day.no-data:hover {
+      background: #edf2f7;
+    }
 
-    .cal-day.has-data.selected {
+    .cal-day.has-data.selected,
+    .cal-day.no-data.selected {
       background: var(--accent);
       color: white;
       border-color: var(--accent);
     }
 
-    .cal-day.no-data,
+    .cal-day.no-data {
+      background: #f8fafc;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
     .cal-day.future {
       background: #f1f5f9;
       color: #a0aec0;
@@ -846,8 +862,28 @@
       }
 
       .cal-day {
-        font-size: 0.8rem;
+        font-size: 0.85rem;
+        min-height: 2.75rem;
       }
+    }
+
+    .register-optional {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin: 0.75rem 0;
+      padding: 0.35rem 0.75rem;
+    }
+
+    .register-optional summary {
+      align-items: center;
+      cursor: pointer;
+      display: flex;
+      font-weight: 600;
+      min-height: 48px;
+    }
+
+    .register-optional[open] summary {
+      margin-bottom: 0.5rem;
     }
 
     .message {
@@ -995,6 +1031,26 @@
       user-select: none;
     }
 
+    .chart-status {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin: 0.75rem 0;
+      text-align: center;
+    }
+
+    .chart-canvas-hidden {
+      height: 0 !important;
+      max-height: 0 !important;
+      overflow: hidden;
+      visibility: hidden;
+    }
+
+    .btn-primary:disabled,
+    .btn-secondary:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
     .chart-toggle input {
       accent-color: var(--accent);
       height: auto;
@@ -1075,7 +1131,8 @@
       font-size: 1.35rem;
       justify-content: center;
       line-height: 1;
-      min-width: 2rem;
+      min-height: 48px;
+      min-width: 48px;
       padding: 0 0.35rem;
       width: auto;
     }
@@ -1174,11 +1231,12 @@
       color: var(--muted);
       cursor: pointer;
       display: inline-flex;
-      height: 42px;
+      height: 48px;
       justify-content: center;
-      min-height: 42px;
+      min-height: 48px;
+      min-width: 48px;
       padding: 0;
-      width: 42px;
+      width: 48px;
     }
 
     .daily-tip-feedback-btn:hover,
@@ -1767,54 +1825,61 @@
         <label for="register-name" data-i18n="displayName">Display name</label>
         <input id="register-name" name="name" type="text" autocomplete="name" required>
 
-        <label for="register-email" data-i18n="emailOptional">Email (optional)</label>
-        <input id="register-email" name="email" type="email" autocomplete="email">
-
-        <label for="register-gender" data-i18n="gender">Gender</label>
-        <select id="register-gender" name="gender">
-          <option value="" data-i18n-option="genderUnset">Prefer not to say</option>
-          <option value="male" data-i18n-option="genderMale">Male</option>
-          <option value="female" data-i18n-option="genderFemale">Female</option>
-          <option value="other" data-i18n-option="genderOther">Other</option>
-        </select>
-
-        <label for="register-birth-date" data-i18n="birthDate">Birth date</label>
-        <div class="logged-at-combo">
-          <input
-            id="register-birth-date"
-            name="birth_date"
-            class="logged-at-input"
-            type="text"
-            inputmode="numeric"
-            autocomplete="bday"
-            placeholder="dd/mm/yyyy"
-            data-i18n-placeholder="birthDatePlaceholder"
-          >
-          <button
-            type="button"
-            class="logged-at-picker-btn"
-            id="register-birth-date-picker-btn"
-            data-i18n-aria-label="openBirthDatePicker"
-            aria-label="Open birth date picker"
-            aria-expanded="false"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="16" y1="2" x2="16" y2="6"></line>
-              <line x1="8" y1="2" x2="8" y2="6"></line>
-              <line x1="3" y1="10" x2="21" y2="10"></line>
-            </svg>
-          </button>
-        </div>
-
-        <label for="register-height" data-i18n="heightCm">Height (cm)</label>
-        <input id="register-height" name="height_cm" type="number" min="50" max="300" step="1" inputmode="numeric">
-
-        <label for="register-weight" data-i18n="weightKg">Weight (kg)</label>
-        <input id="register-weight" name="weight_kg" type="number" min="1" max="500" step="0.1">
-
         <label for="register-password" data-i18n="password">Password</label>
         <input id="register-password" name="password" type="password" autocomplete="new-password" required>
+
+        <label for="register-password-confirm" data-i18n="passwordConfirm">Confirm password</label>
+        <input id="register-password-confirm" name="password_confirm" type="password" autocomplete="new-password" required>
+
+        <details class="register-optional" id="register-optional-details">
+          <summary data-i18n="registerOptionalDetails">More profile details (optional)</summary>
+
+          <label for="register-email" data-i18n="emailOptional">Email (optional)</label>
+          <input id="register-email" name="email" type="email" autocomplete="email">
+
+          <label for="register-gender" data-i18n="gender">Gender</label>
+          <select id="register-gender" name="gender">
+            <option value="" data-i18n-option="genderUnset">Prefer not to say</option>
+            <option value="male" data-i18n-option="genderMale">Male</option>
+            <option value="female" data-i18n-option="genderFemale">Female</option>
+            <option value="other" data-i18n-option="genderOther">Other</option>
+          </select>
+
+          <label for="register-birth-date" data-i18n="birthDate">Birth date</label>
+          <div class="logged-at-combo">
+            <input
+              id="register-birth-date"
+              name="birth_date"
+              class="logged-at-input"
+              type="text"
+              inputmode="numeric"
+              autocomplete="bday"
+              placeholder="dd/mm/yyyy"
+              data-i18n-placeholder="birthDatePlaceholder"
+            >
+            <button
+              type="button"
+              class="logged-at-picker-btn"
+              id="register-birth-date-picker-btn"
+              data-i18n-aria-label="openBirthDatePicker"
+              aria-label="Open birth date picker"
+              aria-expanded="false"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </button>
+          </div>
+
+          <label for="register-height" data-i18n="heightCm">Height (cm)</label>
+          <input id="register-height" name="height_cm" type="number" min="50" max="300" step="1" inputmode="numeric">
+
+          <label for="register-weight" data-i18n="weightKg">Weight (kg)</label>
+          <input id="register-weight" name="weight_kg" type="number" min="1" max="500" step="0.1">
+        </details>
 
         <button type="submit" class="btn-primary" data-i18n="registerBtn">Create account</button>
       </form>
@@ -1930,9 +1995,9 @@
         </div>
       </section>
 
-      <div class="dashboard-tabs" role="tablist" aria-label="Dashboard views">
-        <button type="button" class="dashboard-tab active" data-view="daily" role="tab" aria-selected="true" data-i18n="dailyTab">Daily</button>
-        <button type="button" class="dashboard-tab" data-view="weekly" role="tab" aria-selected="false" data-i18n="weeklyStatusTab">Weekly Status</button>
+      <div class="dashboard-tabs" role="tablist" data-i18n-aria-label="dashboardViewsLabel" aria-label="Dashboard views" id="dashboard-tablist">
+        <button type="button" class="dashboard-tab active" id="dashboard-tab-daily" data-view="daily" role="tab" aria-selected="true" aria-controls="daily-view" tabindex="0" data-i18n="dailyTab">Daily</button>
+        <button type="button" class="dashboard-tab" id="dashboard-tab-weekly" data-view="weekly" role="tab" aria-selected="false" aria-controls="weekly-view" tabindex="-1" data-i18n="weeklyStatusTab">Weekly Status</button>
       </div>
 
       <section id="daily-tips-bar" class="daily-tips-bar hidden" aria-live="polite">
@@ -1947,7 +2012,7 @@
       <input type="file" id="import-json-input" class="hidden" accept=".json,application/json">
       <input type="file" id="import-csv-input" class="hidden" accept=".csv,text/csv">
 
-      <div id="daily-view">
+      <div id="daily-view" role="tabpanel" aria-labelledby="dashboard-tab-daily" tabindex="0">
       <section class="card dashboard-panel">
         <div class="date-nav-top">
           <label data-i18n="summaryDate">Summary date</label>
@@ -1961,16 +2026,16 @@
         <p class="message" id="refresh-summary-message" aria-live="polite"></p>
 
         <div class="dashboard-layout">
-          <aside class="calendar-pane" aria-label="Calendar">
+          <aside class="calendar-pane" data-i18n-aria-label="calendarLabel" aria-label="Calendar">
             <div class="calendar-header">
-              <button type="button" class="btn-secondary" id="cal-prev-month" aria-label="Previous month">‹</button>
+              <button type="button" class="btn-secondary" id="cal-prev-month" data-i18n-aria-label="calPrevMonth" aria-label="Previous month">‹</button>
               <span class="calendar-month-label" id="calendar-month-label"></span>
-              <button type="button" class="btn-secondary" id="cal-next-month" aria-label="Next month">›</button>
+              <button type="button" class="btn-secondary" id="cal-next-month" data-i18n-aria-label="calNextMonth" aria-label="Next month">›</button>
             </div>
 
             <div class="calendar-weekdays" id="calendar-weekdays"></div>
             <div class="calendar-grid" id="calendar-grid"></div>
-            <p class="calendar-legend" data-i18n="calendarLegend">Only dates with logged meals, workouts, or steps can be selected. Future dates are disabled.</p>
+            <p class="calendar-legend" data-i18n="calendarLegend">Any past or today date can be selected. Days with logged data are highlighted. Future dates are disabled.</p>
             <p class="no-dates-message hidden" id="no-dates-message" data-i18n="noDatesAvailable">No logged data yet. Add a meal or workout to get started.</p>
             <input type="hidden" id="summary-date">
           </aside>
@@ -2001,7 +2066,7 @@
                     data-i18n-aria-label="editWeightLabel"
                     aria-label="Log weight for this day"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <path d="M12 20h9"></path>
                       <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
                     </svg>
@@ -2048,7 +2113,7 @@
                     data-i18n-aria-label="editStepsLabel"
                     aria-label="Log steps for this day"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                       <path d="M12 20h9"></path>
                       <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
                     </svg>
@@ -2110,6 +2175,7 @@
                 </svg>
               </button>
             </div>
+            <p class="ai-hint" data-i18n="dateTimeSnapHint">Picker times snap to 15-minute intervals.</p>
 
             <button type="submit" class="btn-primary" id="meal-submit" data-i18n="addMealBtn">Add meal</button>
           </form>
@@ -2148,6 +2214,7 @@
                 </svg>
               </button>
             </div>
+            <p class="ai-hint" data-i18n="dateTimeSnapHint">Picker times snap to 15-minute intervals.</p>
 
             <button type="submit" class="btn-primary" id="workout-submit" data-i18n="addWorkoutBtn">Add workout</button>
           </form>
@@ -2156,7 +2223,7 @@
       </div>
       </div>
 
-      <section id="weekly-view" class="card weekly-panel hidden" aria-label="Weekly status">
+      <section id="weekly-view" class="card weekly-panel hidden" role="tabpanel" aria-labelledby="dashboard-tab-weekly" tabindex="0" data-i18n-aria-label="weeklyStatusTitle" aria-label="Weekly status">
         <h2 data-i18n="weeklyStatusTitle">Weekly Status</h2>
 
         <div class="chart-card">
@@ -2174,13 +2241,14 @@
             <label class="chart-toggle"><input type="checkbox" data-series="burned" checked> <span data-i18n="chartCaloriesBurned">Total out (BMR + activity)</span></label>
             <label class="chart-toggle"><input type="checkbox" data-series="burnedAvg" checked> <span data-i18n="chartCaloriesBurnedAvg">Total out avg.</span></label>
           </div>
-          <canvas id="chart-calories" role="img" aria-label="Calories chart"></canvas>
+          <p class="chart-status hidden" id="chart-calories-status" aria-live="polite"></p>
+          <canvas id="chart-calories" role="img" data-i18n-aria-label="chartCaloriesAria" aria-label="Calories chart"></canvas>
         </div>
 
         <div class="chart-card">
           <div class="chart-toolbar">
             <h3 data-i18n="chartWeightTitle">Weight trend</h3>
-            <select id="weight-range-select" class="chart-range-select" aria-label="Weight range">
+            <select id="weight-range-select" class="chart-range-select" data-i18n-aria-label="chartWeightRange" aria-label="Weight range">
               <option value="5d" data-i18n-option="range5Days">5 days</option>
               <option value="7d" selected data-i18n-option="range7Days">7 days</option>
               <option value="30d" data-i18n-option="range1Month">1 month</option>
@@ -2192,13 +2260,14 @@
             <label class="chart-toggle"><input type="checkbox" data-series="weight" checked> <span data-i18n="chartWeightLogged">Logged weight</span></label>
             <label class="chart-toggle"><input type="checkbox" data-series="weightAvg" checked> <span data-i18n="chartWeightAvg">Average</span></label>
           </div>
-          <canvas id="chart-weight" role="img" aria-label="Weight chart"></canvas>
+          <p class="chart-status hidden" id="chart-weight-status" aria-live="polite"></p>
+          <canvas id="chart-weight" role="img" data-i18n-aria-label="chartWeightAria" aria-label="Weight chart"></canvas>
         </div>
 
         <div class="chart-card">
           <div class="chart-toolbar">
             <h3 data-i18n="chartStepsTitle">Steps</h3>
-            <select id="steps-range-select" class="chart-range-select" aria-label="Steps range">
+            <select id="steps-range-select" class="chart-range-select" data-i18n-aria-label="chartStepsRange" aria-label="Steps range">
               <option value="5d" data-i18n-option="range5Days">5 days</option>
               <option value="7d" selected data-i18n-option="range7Days">7 days</option>
               <option value="30d" data-i18n-option="range1Month">1 month</option>
@@ -2210,7 +2279,8 @@
             <label class="chart-toggle"><input type="checkbox" data-series="steps" checked> <span data-i18n="chartStepsLogged">Logged steps</span></label>
             <label class="chart-toggle"><input type="checkbox" data-series="stepsAvg" checked> <span data-i18n="chartStepsAvg">Average</span></label>
           </div>
-          <canvas id="chart-steps" role="img" aria-label="Steps chart"></canvas>
+          <p class="chart-status hidden" id="chart-steps-status" aria-live="polite"></p>
+          <canvas id="chart-steps" role="img" data-i18n-aria-label="chartStepsAria" aria-label="Steps chart"></canvas>
         </div>
 
         <div class="chart-card">
@@ -2222,7 +2292,8 @@
               <button type="button" class="btn-secondary" id="macros-week-next" data-i18n="weekNext">Next week</button>
             </div>
           </div>
-          <canvas id="chart-macros" role="img" aria-label="Macros chart"></canvas>
+          <p class="chart-status hidden" id="chart-macros-status" aria-live="polite"></p>
+          <canvas id="chart-macros" role="img" data-i18n-aria-label="chartMacrosAria" aria-label="Macros chart"></canvas>
         </div>
       </section>
     </div>
@@ -2455,6 +2526,17 @@
     </div>
   </div>
 
+  <div id="confirm-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+    <div class="modal-card">
+      <h3 id="confirm-modal-title" data-i18n="confirmTitle">Please confirm</h3>
+      <p class="modal-note" id="confirm-modal-message"></p>
+      <div class="form-actions modal-form-actions">
+        <button type="button" class="btn-primary" id="confirm-modal-ok" data-i18n="confirmContinue">Continue</button>
+        <button type="button" class="btn-secondary" id="confirm-modal-cancel" data-i18n="cancelEdit">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <div id="calorie-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="calorie-modal-title">
     <div class="modal-card">
       <h3 id="calorie-modal-title" data-i18n="caloriePopupTitle">Calories calculated</h3>
@@ -2469,8 +2551,12 @@
     <div class="modal-card">
       <h3 id="daily-tips-prereq-title" data-i18n="dailyTipsPrereqTitle">Complete yesterday's data</h3>
       <p class="modal-note" id="daily-tips-prereq-message"></p>
-      <p class="modal-note" id="daily-tips-prereq-hint" data-i18n="dailyTipsPrereqRefreshHint">After logging the missing data, refresh the page to generate today's tips.</p>
-      <button type="button" class="btn-primary" id="daily-tips-prereq-close" data-i18n="caloriePopupOk">OK</button>
+      <p class="modal-note" id="daily-tips-prereq-hint" data-i18n="dailyTipsPrereqRefreshHint">After logging the missing data, use Account → Reset &amp; get new tips.</p>
+      <div class="form-actions modal-form-actions">
+        <button type="button" class="btn-primary" id="daily-tips-prereq-goto-yesterday" data-i18n="dailyTipsPrereqGoToYesterday">Go to yesterday</button>
+        <button type="button" class="btn-secondary" id="daily-tips-prereq-refresh" data-i18n="refreshDailyTips">Reset &amp; get new tips</button>
+        <button type="button" class="btn-secondary" id="daily-tips-prereq-close" data-i18n="caloriePopupOk">OK</button>
+      </div>
     </div>
   </div>
 
@@ -2492,6 +2578,9 @@
             <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"></path>
           </svg>
         </button>
+      </div>
+      <div class="form-actions modal-form-actions">
+        <button type="button" class="btn-secondary" id="daily-tip-modal-close" data-i18n="dailyTipModalClose">Close</button>
       </div>
     </div>
   </div>
@@ -2516,6 +2605,9 @@
         registerTab: "Register",
         username: "Username",
         password: "Password",
+        passwordConfirm: "Confirm password",
+        passwordMismatch: "Passwords do not match.",
+        registerOptionalDetails: "More profile details (optional)",
         displayName: "Display name",
         emailOptional: "Email (optional)",
         gender: "Gender",
@@ -2557,6 +2649,7 @@
         importConflictsTitle: "Resolve conflicts",
         importConflictsHint: "These entries share the same timestamp or date but have different details. Choose which version to keep.",
         importConfirmBtn: "Import",
+        importingBtn: "Importing...",
         importSummaryNew: "{count} new",
         importSummaryConflict: "{count} conflicts",
         importSummaryDuplicate: "{count} unchanged",
@@ -2577,8 +2670,11 @@
         refreshSummary: "Refresh summary",
         refreshSummaryLoading: "Refreshing...",
         refreshSummarySuccess: "Summary updated.",
-        calendarLegend: "Only dates with logged meals, workouts, or steps can be selected. Future dates are disabled.",
+        calendarLegend: "Any past or today date can be selected. Days with logged data are highlighted. Future dates are disabled.",
         noDatesAvailable: "No logged data yet. Add a meal or workout to get started.",
+        confirmTitle: "Please confirm",
+        confirmContinue: "Continue",
+        confirmDelete: "Delete",
         dailySummary: "Daily Summary",
         caloriesConsumed: "Calories consumed",
         proteinLabel: "Protein (g)",
@@ -2630,6 +2726,7 @@
         calories: "Calories",
         dateTime: "Date & time",
         dateTimePlaceholder: "dd/mm/yyyy hh:mm",
+        dateTimeSnapHint: "Picker times snap to 15-minute intervals.",
         openDateTimePicker: "Open date and time picker",
         invalidDateTimeFormat: "Use format dd/mm/yyyy hh:mm (24-hour).",
         dateLabel: "Date",
@@ -2677,21 +2774,27 @@
         dailyTipsCategorySport: "Sport",
         dailyTipsCategoryInfo: "Notice",
         dailyTipsNeedData:
-          "Yesterday's steps and weight must be logged before new tips can be generated. Complete the missing data and refresh.",
+          "Yesterday's steps and weight must be logged before new tips can be generated. Complete the missing data, then use Reset & get new tips.",
         dailyTipsPrereqTitle: "Complete yesterday's data for daily tips",
         dailyTipsPrereqMessage:
-          "To generate today's personalized tips, log {items} for {date}, then refresh the page.",
+          "To generate today's personalized tips, log {items} for {date}.",
         dailyTipsPrereqSteps: "total steps",
         dailyTipsPrereqWeight: "weight",
+        dailyTipsPrereqGoToYesterday: "Go to yesterday",
         dailyTipsPrereqRefreshHint:
-          "After logging the missing data, refresh the page to generate today's tips.",
+          "After logging the missing data, use Account → Reset & get new tips.",
         dailyTipModalTitle: "Daily tip",
+        dailyTipModalClose: "Close",
         dailyTipLike: "Like this tip",
         dailyTipDislike: "Dislike this tip",
         refreshDailyTips: "Reset & get new tips",
         refreshDailyTipsSuccess: "Daily tips updated.",
         dailyTab: "Daily",
         weeklyStatusTab: "Weekly Status",
+        dashboardViewsLabel: "Dashboard views",
+        calendarLabel: "Calendar",
+        calPrevMonth: "Previous month",
+        calNextMonth: "Next month",
         weeklyStatusTitle: "Weekly Status",
         weekPrev: "Previous week",
         weekNext: "Next week",
@@ -2701,21 +2804,32 @@
         range1Year: "1 year",
         rangeAllTime: "All time",
         chartCaloriesTitle: "Calories",
+        chartCaloriesAria: "Calories chart",
         chartCaloriesConsumed: "Calories consumed",
         chartCaloriesConsumedAvg: "Consumed avg.",
         chartCaloriesBurned: "Total out (BMR + activity)",
         chartCaloriesBurnedAvg: "Total out avg.",
         chartWeightTitle: "Weight trend",
+        chartWeightAria: "Weight chart",
+        chartWeightRange: "Weight range",
         chartWeightLogged: "Logged weight",
         chartWeightAvg: "Average",
         chartStepsTitle: "Steps",
+        chartStepsAria: "Steps chart",
+        chartStepsRange: "Steps range",
         chartStepsLogged: "Logged steps",
         chartStepsAvg: "Average",
         chartMacrosTitle: "Protein / Carbs / Fats",
+        chartMacrosAria: "Macros chart",
         chartProteinGoal: "Protein goal",
         chartCarbsGoal: "Carbs goal",
         chartFatsGoal: "Fats goal",
         weeklyLoadError: "Could not load weekly charts.",
+        weeklyChartLoading: "Loading chart…",
+        weeklyChartEmptyCalories: "No meals or workouts logged for this period.",
+        weeklyChartEmptyWeight: "No weight logged for this period.",
+        weeklyChartEmptySteps: "No steps logged for this period.",
+        weeklyChartEmptyMacros: "No macro data logged for this period.",
         editBtn: "Edit",
         copyBtn: "Copy text",
         copySuccess: "Copied to clipboard.",
@@ -2748,6 +2862,9 @@
         registerTab: "הרשמה",
         username: "שם משתמש",
         password: "סיסמה",
+        passwordConfirm: "אימות סיסמה",
+        passwordMismatch: "הסיסמאות אינן תואמות.",
+        registerOptionalDetails: "פרטי פרופיל נוספים (אופציונלי)",
         displayName: "שם תצוגה",
         emailOptional: "אימייל (אופציונלי)",
         gender: "מגדר",
@@ -2789,6 +2906,7 @@
         importConflictsTitle: "פתרון התנגשויות",
         importConflictsHint: "לרשומות אלו אותה חותמת זמן או תאריך אך פרטים שונים. בחר איזו גרסה לשמור.",
         importConfirmBtn: "ייבא",
+        importingBtn: "מייבא...",
         importSummaryNew: "{count} חדשים",
         importSummaryConflict: "{count} התנגשויות",
         importSummaryDuplicate: "{count} ללא שינוי",
@@ -2809,8 +2927,11 @@
         refreshSummary: "רענן סיכום",
         refreshSummaryLoading: "מרענן...",
         refreshSummarySuccess: "הסיכום עודכן.",
-        calendarLegend: "ניתן לבחור רק תאריכים עם ארוחות, אימונים או צעדים. תאריכים עתידיים חסומים.",
+        calendarLegend: "ניתן לבחור כל תאריך בעבר או היום. ימים עם נתונים מודגשים. תאריכים עתידיים חסומים.",
         noDatesAvailable: "אין נתונים עדיין. הוסף ארוחה או אימון כדי להתחיל.",
+        confirmTitle: "אישור פעולה",
+        confirmContinue: "המשך",
+        confirmDelete: "מחק",
         dailySummary: "סיכום יומי",
         caloriesConsumed: "קלוריות שנצרכו",
         proteinLabel: "חלבון (גרם)",
@@ -2862,6 +2983,7 @@
         calories: "קלוריות",
         dateTime: "תאריך ושעה",
         dateTimePlaceholder: "dd/mm/yyyy hh:mm",
+        dateTimeSnapHint: "זמנים בבוחר מעוגלים למרווחים של 15 דקות.",
         openDateTimePicker: "פתח בוחר תאריך ושעה",
         invalidDateTimeFormat: "השתמש בפורמט dd/mm/yyyy hh:mm (24 שעות).",
         dateLabel: "תאריך",
@@ -2909,21 +3031,27 @@
         dailyTipsCategorySport: "ספורט",
         dailyTipsCategoryInfo: "שימו לב",
         dailyTipsNeedData:
-          "יש לרשום את צעדי אתמול ואת המשקל לפני שניתן ליצור טיפים חדשים. השלימ/י את הנתונים החסרים ורענן/י.",
+          "יש לרשום את צעדי אתמול ואת המשקל לפני שניתן ליצור טיפים חדשים. השלימ/י את הנתונים החסרים ואז השתמש/י באיפוס וטיפים חדשים.",
         dailyTipsPrereqTitle: "השלמת נתוני אתמול לטיפים יומיים",
         dailyTipsPrereqMessage:
-          "כדי ליצור את הטיפים המותאמים של היום, רשום/י {items} עבור {date}, ואז רענן/י את העמוד.",
+          "כדי ליצור את הטיפים המותאמים של היום, רשום/י {items} עבור {date}.",
         dailyTipsPrereqSteps: "סך הצעדים",
         dailyTipsPrereqWeight: "משקל",
+        dailyTipsPrereqGoToYesterday: "עבור/י לאתמול",
         dailyTipsPrereqRefreshHint:
-          "לאחר רישום הנתונים החסרים, רענן/י את העמוד כדי ליצור את טיפי היום.",
+          "לאחר רישום הנתונים החסרים, השתמש/י בחשבון → איפוס וטיפים חדשים.",
         dailyTipModalTitle: "טיפ יומי",
+        dailyTipModalClose: "סגור",
         dailyTipLike: "אהבתי את הטיפ",
         dailyTipDislike: "לא אהבתי את הטיפ",
         refreshDailyTips: "איפוס וטיפים חדשים",
         refreshDailyTipsSuccess: "הטיפים היומיים עודכנו.",
         dailyTab: "יומי",
         weeklyStatusTab: "סטטוס שבועי",
+        dashboardViewsLabel: "תצוגות לוח בקרה",
+        calendarLabel: "לוח שנה",
+        calPrevMonth: "חודש קודם",
+        calNextMonth: "חודש הבא",
         weeklyStatusTitle: "סטטוס שבועי",
         weekPrev: "שבוע קודם",
         weekNext: "שבוע הבא",
@@ -2933,21 +3061,32 @@
         range1Year: "שנה",
         rangeAllTime: "כל הזמן",
         chartCaloriesTitle: "קלוריות",
+        chartCaloriesAria: "גרף קלוריות",
         chartCaloriesConsumed: "קלוריות שנצרכו",
         chartCaloriesConsumedAvg: "ממוצע צריכה",
         chartCaloriesBurned: "סה\"כ יציאה (BMR + פעילות)",
         chartCaloriesBurnedAvg: "ממוצע יציאה",
         chartWeightTitle: "מגמת משקל",
+        chartWeightAria: "גרף משקל",
+        chartWeightRange: "טווח משקל",
         chartWeightLogged: "משקל רשום",
         chartWeightAvg: "ממוצע",
         chartStepsTitle: "צעדים",
+        chartStepsAria: "גרף צעדים",
+        chartStepsRange: "טווח צעדים",
         chartStepsLogged: "צעדים רשומים",
         chartStepsAvg: "ממוצע",
         chartMacrosTitle: "חלבון / פחמימות / שומנים",
+        chartMacrosAria: "גרף מאקרו",
         chartProteinGoal: "יעד חלבון",
         chartCarbsGoal: "יעד פחמימות",
         chartFatsGoal: "יעד שומנים",
         weeklyLoadError: "לא ניתן לטעון את הגרפים השבועיים.",
+        weeklyChartLoading: "טוען גרף…",
+        weeklyChartEmptyCalories: "לא נרשמו ארוחות או אימונים בתקופה זו.",
+        weeklyChartEmptyWeight: "לא נרשם משקל בתקופה זו.",
+        weeklyChartEmptySteps: "לא נרשמו צעדים בתקופה זו.",
+        weeklyChartEmptyMacros: "לא נרשמו נתוני מאקרו בתקופה זו.",
         editBtn: "ערוך",
         copyBtn: "העתק טקסט",
         copySuccess: "הועתק ללוח.",
@@ -3011,6 +3150,45 @@
         toast.classList.remove("toast-visible");
         window.setTimeout(() => toast.remove(), 300);
       }, 4000);
+    }
+
+    function closeConfirmModal(result) {
+      if (!confirmModal) {
+        return;
+      }
+      confirmModal.classList.add("hidden");
+      endModalSession();
+      const resolve = confirmModalResolver;
+      confirmModalResolver = null;
+      if (resolve) {
+        resolve(Boolean(result));
+      }
+    }
+
+    function askConfirm({
+      title = t("confirmTitle"),
+      message = "",
+      confirmLabel = t("confirmContinue"),
+      danger = false,
+    } = {}) {
+      return new Promise((resolve) => {
+        if (!confirmModal || !confirmModalOk || !confirmModalCancel) {
+          resolve(window.confirm(message || title));
+          return;
+        }
+        confirmModalResolver = resolve;
+        if (confirmModalTitle) {
+          confirmModalTitle.textContent = title;
+        }
+        if (confirmModalMessage) {
+          confirmModalMessage.textContent = message;
+        }
+        confirmModalOk.textContent = confirmLabel;
+        confirmModalOk.classList.toggle("btn-danger", Boolean(danger));
+        confirmModalOk.classList.toggle("btn-primary", !danger);
+        confirmModal.classList.remove("hidden");
+        beginModalSession(confirmModal, confirmModalOk);
+      });
     }
 
     let currentLang = localStorage.getItem(LANG_STORAGE_KEY) || "en";
@@ -3083,9 +3261,18 @@
     const calorieModalValue = document.getElementById("calorie-modal-value");
     const calorieModalNote = document.getElementById("calorie-modal-note");
     const calorieModalClose = document.getElementById("calorie-modal-close");
+    const confirmModal = document.getElementById("confirm-modal");
+    const confirmModalTitle = document.getElementById("confirm-modal-title");
+    const confirmModalMessage = document.getElementById("confirm-modal-message");
+    const confirmModalOk = document.getElementById("confirm-modal-ok");
+    const confirmModalCancel = document.getElementById("confirm-modal-cancel");
+    let confirmModalResolver = null;
     const dailyTipsPrereqModal = document.getElementById("daily-tips-prereq-modal");
     const dailyTipsPrereqMessage = document.getElementById("daily-tips-prereq-message");
     const dailyTipsPrereqClose = document.getElementById("daily-tips-prereq-close");
+    const dailyTipsPrereqGotoYesterday = document.getElementById("daily-tips-prereq-goto-yesterday");
+    const dailyTipsPrereqRefresh = document.getElementById("daily-tips-prereq-refresh");
+    let dailyTipsPrereqDate = null;
     const dailyTipsBar = document.getElementById("daily-tips-bar");
     const dailyTipsTrack = document.getElementById("daily-tips-track");
     const dailyTipsPrevBtn = document.getElementById("daily-tips-prev");
@@ -3119,6 +3306,7 @@
     const dailyTipModal = document.getElementById("daily-tip-modal");
     const dailyTipModalCategory = document.getElementById("daily-tip-modal-category");
     const dailyTipModalText = document.getElementById("daily-tip-modal-text");
+    const dailyTipModalClose = document.getElementById("daily-tip-modal-close");
     const dailyTipLikeBtn = document.getElementById("daily-tip-like");
     const dailyTipDislikeBtn = document.getElementById("daily-tip-dislike");
     let currentOpenTip = null;
@@ -3570,10 +3758,129 @@
       });
     }
 
+    function focusModalInput(input, { select = true } = {}) {
+      if (!input) {
+        return;
+      }
+      requestAnimationFrame(() => {
+        input.focus({ preventScroll: true });
+        if (select && typeof input.select === "function" && input.value !== "") {
+          input.select();
+        }
+      });
+    }
+
+    let modalFocusRestore = null;
+    let modalFocusTrapCleanup = null;
+
+    function getFocusableElements(container) {
+      if (!container) {
+        return [];
+      }
+      return Array.from(container.querySelectorAll(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )).filter((el) => !el.disabled && el.getAttribute("aria-hidden") !== "true");
+    }
+
+    function installFocusTrap(container) {
+      function onKeyDown(event) {
+        if (event.key !== "Tab") {
+          return;
+        }
+        const focusable = getFocusableElements(container);
+        if (!focusable.length) {
+          return;
+        }
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+      container.addEventListener("keydown", onKeyDown);
+      return () => container.removeEventListener("keydown", onKeyDown);
+    }
+
+    function beginModalSession(modalEl, focusEl) {
+      if (modalEl?.classList.contains("hidden")) {
+        modalFocusRestore = document.activeElement;
+      }
+      if (modalFocusTrapCleanup) {
+        modalFocusTrapCleanup();
+      }
+      modalFocusTrapCleanup = modalEl ? installFocusTrap(modalEl) : null;
+      if (focusEl) {
+        focusModalInput(focusEl, { select: false });
+      }
+    }
+
+    function endModalSession() {
+      if (modalFocusTrapCleanup) {
+        modalFocusTrapCleanup();
+        modalFocusTrapCleanup = null;
+      }
+      const restore = modalFocusRestore;
+      modalFocusRestore = null;
+      if (restore && typeof restore.focus === "function" && document.contains(restore)) {
+        requestAnimationFrame(() => restore.focus({ preventScroll: true }));
+      }
+    }
+
+    function setChartStatus(chartKey, state, message = "") {
+      const statusEl = document.getElementById(`chart-${chartKey}-status`);
+      const canvas = document.getElementById(`chart-${chartKey}`);
+      if (!statusEl) {
+        return;
+      }
+      if (state === "loading") {
+        statusEl.textContent = t("weeklyChartLoading");
+        statusEl.classList.remove("hidden");
+        canvas?.classList.add("chart-canvas-hidden");
+        return;
+      }
+      if (state === "empty") {
+        statusEl.textContent = message;
+        statusEl.classList.remove("hidden");
+        canvas?.classList.add("chart-canvas-hidden");
+        return;
+      }
+      statusEl.textContent = "";
+      statusEl.classList.add("hidden");
+      canvas?.classList.remove("chart-canvas-hidden");
+    }
+
+    function chartHasCaloriesData(data) {
+      return data.days.some((day) => day.calories_consumed > 0 || day.calories_burned > 0);
+    }
+
+    function chartHasWeightData(data) {
+      return data.days.some((day) => day.weight_kg != null);
+    }
+
+    function chartHasStepsData(data) {
+      return data.days.some((day) => (day.steps_count ?? 0) > 0);
+    }
+
+    function chartHasMacrosData(data) {
+      return data.days.some((day) =>
+        day.total_protein > 0 || day.total_carbohydrates > 0 || day.total_fats > 0,
+      );
+    }
+
+    function updateWeeklyWeekNavButtons() {
+      const atCurrentWeek = (weeklyChartEndDate || todayIsoDate()) >= todayIsoDate();
+      document.getElementById("calories-week-next")?.toggleAttribute("disabled", atCurrentWeek);
+      document.getElementById("macros-week-next")?.toggleAttribute("disabled", atCurrentWeek);
+    }
+
     function openWeightEditModal() {
       const selectedDate = summaryDateInput.value;
       if (!selectedDate || selectedDate > todayIsoDate()) {
-        alert(t("futureDateError"));
+        showToast(t("futureDateError"), "error");
         return;
       }
 
@@ -3588,6 +3895,7 @@
         "";
       document.getElementById("weight-value-input").value = formatWeightInputValue(initialWeight);
       weightEditModal.classList.remove("hidden");
+      beginModalSession(weightEditModal, document.getElementById("weight-value-input"));
     }
 
     function closeWeightEditModal() {
@@ -3595,6 +3903,7 @@
       weightModalMessage.textContent = "";
       weightModalMessage.classList.remove("error");
       weightEditModal.classList.add("hidden");
+      endModalSession();
     }
 
     async function saveDailyWeight(event) {
@@ -3610,7 +3919,7 @@
       const weightKg = Number(formData.get("weight_kg"));
 
       weightSubmitButton.disabled = true;
-      weightSubmitButton.textContent = t("saveWeightBtn");
+      weightSubmitButton.textContent = t("savingBtn");
 
       try {
         const response = await apiFetch(`/api/weight?date=${selectedDate}`, {
@@ -3625,6 +3934,7 @@
         }
 
         closeWeightEditModal();
+        showToast(t("weightSaved"));
         await reloadCurrentUserProfile();
         await refreshCalendarAndSummary(selectedDate);
       } catch (error) {
@@ -3648,6 +3958,7 @@
       document.getElementById("steps-modal-date").textContent = formatDisplayDate(selectedDate);
       document.getElementById("steps-count").value = currentDailySteps?.steps_count ?? "";
       stepsEditModal.classList.remove("hidden");
+      beginModalSession(stepsEditModal, document.getElementById("steps-count"));
     }
 
     function closeStepsEditModal() {
@@ -3655,6 +3966,7 @@
       stepsModalMessage.textContent = "";
       stepsModalMessage.classList.remove("error");
       stepsEditModal.classList.add("hidden");
+      endModalSession();
     }
 
     async function saveDailySteps(event) {
@@ -3766,6 +4078,20 @@
         dailyTipsBar.classList.add("hidden");
       }
       currentUser = null;
+      focusAuthPrimaryField();
+    }
+
+    function getActiveAuthForm() {
+      return registerForm.classList.contains("hidden") ? loginForm : registerForm;
+    }
+
+    function focusAuthPrimaryField() {
+      if (!authSection || authSection.classList.contains("hidden")) {
+        return;
+      }
+      const form = getActiveAuthForm();
+      const input = form?.querySelector("#login-username, #register-username");
+      focusModalInput(input, { select: false });
     }
 
     function showAppView(user) {
@@ -4030,6 +4356,7 @@
       importModalMessage.textContent = "";
       importModalMessage.classList.remove("error");
       pendingImport = null;
+      endModalSession();
     }
 
     function openImportModal(preview) {
@@ -4038,9 +4365,13 @@
       }
 
       importSummaryEl.textContent = summarizeImportCounts(preview.summary) || t("importNoData");
-      document.querySelector('input[name="import-mode"][value="overwrite"]').checked = true;
+      const overwriteRadio = document.querySelector('input[name="import-mode"][value="overwrite"]');
+      if (overwriteRadio) {
+        overwriteRadio.checked = true;
+      }
       renderImportConflicts(preview);
       importModal.classList.remove("hidden");
+      beginModalSession(importModal, overwriteRadio);
     }
 
     function collectImportResolutions() {
@@ -4091,7 +4422,7 @@
 
       importModalMessage.textContent = "";
       importModalMessage.classList.remove("error");
-      importConfirmBtn.disabled = true;
+      setSubmitLoading(importConfirmBtn, true, "importConfirmBtn", "importingBtn");
 
       try {
         const response = await fetch("/api/user-data/import", {
@@ -4125,7 +4456,7 @@
         showToast(t("importSuccess"));
         return data;
       } finally {
-        importConfirmBtn.disabled = false;
+        setSubmitLoading(importConfirmBtn, false, "importConfirmBtn");
       }
     }
 
@@ -4453,9 +4784,9 @@
       panel.setAttribute("role", "dialog");
       panel.innerHTML = `
         <div class="logged-at-picker-nav logged-at-picker-month">
-          <button type="button" class="btn-secondary logged-at-picker-prev-month" aria-label="Previous month">‹</button>
+          <button type="button" class="btn-secondary logged-at-picker-prev-month" aria-label="${t("calPrevMonth")}">‹</button>
           <span class="logged-at-picker-month-label"></span>
-          <button type="button" class="btn-secondary logged-at-picker-next-month" aria-label="Next month">›</button>
+          <button type="button" class="btn-secondary logged-at-picker-next-month" aria-label="${t("calNextMonth")}">›</button>
         </div>
         <div class="logged-at-picker-weekdays"></div>
         <div class="logged-at-picker-days"></div>
@@ -4704,9 +5035,9 @@
       } else {
         monthNav.className = "logged-at-picker-nav logged-at-picker-month";
         monthNav.innerHTML = `
-          <button type="button" class="btn-secondary logged-at-picker-prev-month" aria-label="Previous month">‹</button>
+          <button type="button" class="btn-secondary logged-at-picker-prev-month" aria-label="${t("calPrevMonth")}">‹</button>
           <span class="logged-at-picker-month-label"></span>
-          <button type="button" class="btn-secondary logged-at-picker-next-month" aria-label="Next month">›</button>
+          <button type="button" class="btn-secondary logged-at-picker-next-month" aria-label="${t("calNextMonth")}">›</button>
         `;
         monthNav.querySelector(".logged-at-picker-prev-month").addEventListener("click", (event) => {
           event.stopPropagation();
@@ -5074,7 +5405,7 @@
         }
 
         const summary = await response.json();
-        if (summary.meals.length || summary.workouts.length || summary.daily_steps) {
+        if (summary.meals.length || summary.workouts.length || summary.daily_steps || summary.daily_weight) {
           discovered.add(iso);
         }
       }
@@ -5118,7 +5449,7 @@
     }
 
     function setSelectedDate(iso, reload = true) {
-      if (!availableDates.has(iso) || iso > todayIsoDate()) {
+      if (!iso || iso > todayIsoDate()) {
         return;
       }
 
@@ -5132,16 +5463,15 @@
       updateDayNavButtons();
 
       if (reload) {
-        loadSummary().catch((error) => alert(error.message));
+        loadSummary().catch((error) => showToast(error.message, "error"));
       }
     }
 
     function updateDayNavButtons() {
-      const sorted = getSortedAvailableDates();
-      const current = summaryDateInput.value;
-      const idx = sorted.indexOf(current);
-      datePrevButton.disabled = idx <= 0;
-      dateNextButton.disabled = idx < 0 || idx >= sorted.length - 1;
+      const current = summaryDateInput.value || todayIsoDate();
+      const today = todayIsoDate();
+      datePrevButton.disabled = false;
+      dateNextButton.disabled = current >= today;
     }
 
     function renderCalendar() {
@@ -5164,7 +5494,7 @@
       const now = new Date();
       const isCurrentMonth =
         year === now.getFullYear() && month === now.getMonth();
-      calNextMonthButton.disabled = isCurrentMonth || availableDates.size === 0;
+      calNextMonthButton.disabled = isCurrentMonth;
 
       const firstDay = new Date(year, month, 1).getDay();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -5183,14 +5513,12 @@
 
         const isFuture = iso > today;
         const hasData = availableDates.has(iso);
-        button.disabled = isFuture || !hasData;
+        button.disabled = isFuture;
 
         if (isFuture) {
           button.className = "cal-day future disabled";
-        } else if (!hasData) {
-          button.className = "cal-day no-data disabled";
         } else {
-          button.className = "cal-day has-data";
+          button.className = hasData ? "cal-day has-data" : "cal-day no-data";
           if (iso === summaryDateInput.value) {
             button.classList.add("selected");
           }
@@ -5205,15 +5533,12 @@
     }
 
     function navigateDay(direction) {
-      const sorted = getSortedAvailableDates();
-      const idx = sorted.indexOf(summaryDateInput.value);
-      if (idx < 0) {
+      const current = summaryDateInput.value || todayIsoDate();
+      const next = shiftIsoDate(current, direction);
+      if (next > todayIsoDate()) {
         return;
       }
-      const nextIdx = idx + direction;
-      if (nextIdx >= 0 && nextIdx < sorted.length) {
-        setSelectedDate(sorted[nextIdx]);
-      }
+      setSelectedDate(next);
     }
 
     function changeCalendarMonth(direction) {
@@ -5330,6 +5655,7 @@
       }
 
       const openModals = [
+        { el: confirmModal, close: () => closeConfirmModal(false) },
         { el: mealEditModal, close: closeMealEditModal },
         { el: workoutEditModal, close: closeWorkoutEditModal },
         { el: stepsEditModal, close: closeStepsEditModal },
@@ -5358,6 +5684,7 @@
       profileMessage.textContent = "";
       profileMessage.classList.remove("error");
       profileModal.classList.remove("hidden");
+      beginModalSession(profileModal, document.getElementById("profile-name"));
     }
 
     function closeProfileModal() {
@@ -5367,6 +5694,7 @@
       if (currentUser) {
         fillProfileForm(currentUser);
       }
+      endModalSession();
     }
 
     function openMealEditModal(item) {
@@ -5378,6 +5706,7 @@
       mealEditMessage.textContent = "";
       mealEditMessage.classList.remove("error");
       mealEditModal.classList.remove("hidden");
+      beginModalSession(mealEditModal, document.getElementById("meal-edit-food"));
     }
 
     function closeMealEditModal() {
@@ -5387,10 +5716,17 @@
       mealEditMessage.textContent = "";
       mealEditMessage.classList.remove("error");
       mealEditModal.classList.add("hidden");
+      endModalSession();
     }
 
     async function deleteMeal(mealId) {
-      if (!window.confirm(t("deleteMealConfirm"))) {
+      const confirmed = await askConfirm({
+        title: t("confirmTitle"),
+        message: t("deleteMealConfirm"),
+        confirmLabel: t("confirmDelete"),
+        danger: true,
+      });
+      if (!confirmed) {
         return;
       }
 
@@ -5414,7 +5750,13 @@
     }
 
     async function deleteWorkout(workoutId) {
-      if (!window.confirm(t("deleteWorkoutConfirm"))) {
+      const confirmed = await askConfirm({
+        title: t("confirmTitle"),
+        message: t("deleteWorkoutConfirm"),
+        confirmLabel: t("confirmDelete"),
+        danger: true,
+      });
+      if (!confirmed) {
         return;
       }
 
@@ -5446,6 +5788,7 @@
       workoutEditMessage.textContent = "";
       workoutEditMessage.classList.remove("error");
       workoutEditModal.classList.remove("hidden");
+      beginModalSession(workoutEditModal, document.getElementById("workout-edit-activity"));
     }
 
     function closeWorkoutEditModal() {
@@ -5455,6 +5798,7 @@
       workoutEditMessage.textContent = "";
       workoutEditMessage.classList.remove("error");
       workoutEditModal.classList.add("hidden");
+      endModalSession();
     }
 
     function resetAddForm(form, loggedAtInputId) {
@@ -5576,7 +5920,7 @@
             variant: "danger",
             onClick: () => {
               const deleteFn = entryType === "meal" ? deleteMeal : deleteWorkout;
-              deleteFn(item.id).catch((error) => alert(error.message));
+              deleteFn(item.id).catch((error) => showToast(error.message, "error"));
             },
           }),
         );
@@ -5797,6 +6141,7 @@
       updateDailyTipFeedbackButtons();
       dailyTipModal.classList.remove("hidden");
       stopDailyTipsAutoplay();
+      beginModalSession(dailyTipModal, dailyTipModalClose);
     }
 
     function closeDailyTipModal() {
@@ -5806,6 +6151,7 @@
       dailyTipModal.classList.add("hidden");
       currentOpenTip = null;
       startDailyTipsAutoplay();
+      endModalSession();
     }
 
     function formatDailyTipsPrereqMessage(data) {
@@ -5823,9 +6169,10 @@
       if (!dailyTipsPrereqModal || !dailyTipsPrereqMessage) {
         return;
       }
+      dailyTipsPrereqDate = data.prerequisites_date || shiftIsoDate(todayIsoDate(), -1);
       dailyTipsPrereqMessage.textContent = formatDailyTipsPrereqMessage(data);
       dailyTipsPrereqModal.classList.remove("hidden");
-      dailyTipsPrereqClose?.focus();
+      beginModalSession(dailyTipsPrereqModal, dailyTipsPrereqGotoYesterday || dailyTipsPrereqClose);
     }
 
     function closeDailyTipsPrereqModal() {
@@ -5833,6 +6180,21 @@
         return;
       }
       dailyTipsPrereqModal.classList.add("hidden");
+      endModalSession();
+    }
+
+    function goToDailyTipsPrereqDate() {
+      if (!dailyTipsPrereqDate) {
+        return;
+      }
+      closeDailyTipsPrereqModal();
+      setDashboardView("daily");
+      setSelectedDate(dailyTipsPrereqDate);
+    }
+
+    function refreshDailyTipsFromPrereqModal() {
+      closeDailyTipsPrereqModal();
+      loadDailyTips({ refresh: true, showPrereqModal: true }).catch((error) => showToast(error.message, "error"));
     }
 
     async function loadDailyTips({ refresh = false, showPrereqModal = false } = {}) {
@@ -6218,40 +6580,90 @@
       if (!authToken) {
         return;
       }
-      if (!weeklyChartEndDate) {
-        weeklyChartEndDate = todayIsoDate();
+      setChartStatus("calories", "loading");
+      try {
+        if (!weeklyChartEndDate) {
+          weeklyChartEndDate = todayIsoDate();
+        }
+        const data = await fetchPeriodSummary("7d", weeklyChartEndDate);
+        if (!chartHasCaloriesData(data)) {
+          destroyWeeklyChart("calories");
+          setChartStatus("calories", "empty", t("weeklyChartEmptyCalories"));
+        } else {
+          renderCaloriesChart(data);
+          setChartStatus("calories", "ready");
+        }
+        updateWeeklyWeekNavButtons();
+      } catch (error) {
+        setChartStatus("calories", "ready");
+        throw error;
       }
-      const data = await fetchPeriodSummary("7d", weeklyChartEndDate);
-      renderCaloriesChart(data);
     }
 
     async function loadMacrosChart() {
       if (!authToken) {
         return;
       }
-      if (!weeklyChartEndDate) {
-        weeklyChartEndDate = todayIsoDate();
+      setChartStatus("macros", "loading");
+      try {
+        if (!weeklyChartEndDate) {
+          weeklyChartEndDate = todayIsoDate();
+        }
+        const data = await fetchPeriodSummary("7d", weeklyChartEndDate);
+        if (!chartHasMacrosData(data)) {
+          destroyWeeklyChart("macros");
+          setChartStatus("macros", "empty", t("weeklyChartEmptyMacros"));
+        } else {
+          renderMacrosChart(data);
+          setChartStatus("macros", "ready");
+        }
+        updateWeeklyWeekNavButtons();
+      } catch (error) {
+        setChartStatus("macros", "ready");
+        throw error;
       }
-      const data = await fetchPeriodSummary("7d", weeklyChartEndDate);
-      renderMacrosChart(data);
     }
 
     async function loadWeightChart() {
       if (!authToken) {
         return;
       }
-      const range = weightRangeSelect?.value || "7d";
-      const data = await fetchPeriodSummary(range, todayIsoDate());
-      renderWeightChart(data);
+      setChartStatus("weight", "loading");
+      try {
+        const range = weightRangeSelect?.value || "7d";
+        const data = await fetchPeriodSummary(range, todayIsoDate());
+        if (!chartHasWeightData(data)) {
+          destroyWeeklyChart("weight");
+          setChartStatus("weight", "empty", t("weeklyChartEmptyWeight"));
+        } else {
+          renderWeightChart(data);
+          setChartStatus("weight", "ready");
+        }
+      } catch (error) {
+        setChartStatus("weight", "ready");
+        throw error;
+      }
     }
 
     async function loadStepsChart() {
       if (!authToken) {
         return;
       }
-      const range = stepsRangeSelect?.value || "7d";
-      const data = await fetchPeriodSummary(range, todayIsoDate());
-      renderStepsChart(data);
+      setChartStatus("steps", "loading");
+      try {
+        const range = stepsRangeSelect?.value || "7d";
+        const data = await fetchPeriodSummary(range, todayIsoDate());
+        if (!chartHasStepsData(data)) {
+          destroyWeeklyChart("steps");
+          setChartStatus("steps", "empty", t("weeklyChartEmptySteps"));
+        } else {
+          renderStepsChart(data);
+          setChartStatus("steps", "ready");
+        }
+      } catch (error) {
+        setChartStatus("steps", "ready");
+        throw error;
+      }
     }
 
     async function loadWeeklyDashboard() {
@@ -6273,12 +6685,30 @@
         const active = tab.dataset.view === view;
         tab.classList.toggle("active", active);
         tab.setAttribute("aria-selected", active ? "true" : "false");
+        tab.setAttribute("tabindex", active ? "0" : "-1");
       });
       dailyView?.classList.toggle("hidden", view !== "daily");
       weeklyView?.classList.toggle("hidden", view !== "weekly");
       if (view === "weekly") {
+        updateWeeklyWeekNavButtons();
         loadWeeklyDashboard().catch((error) => showToast(error.message, "error"));
       }
+    }
+
+    function handleDashboardTabKeydown(event) {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+        return;
+      }
+      const tabs = Array.from(dashboardTabs);
+      const currentIndex = tabs.findIndex((tab) => tab.classList.contains("active"));
+      if (currentIndex < 0) {
+        return;
+      }
+      const delta = (event.key === "ArrowRight") !== (currentLang === "he") ? 1 : -1;
+      const nextIndex = (currentIndex + delta + tabs.length) % tabs.length;
+      event.preventDefault();
+      tabs[nextIndex].focus();
+      setDashboardView(tabs[nextIndex].dataset.view || "daily");
     }
 
     function showCalorieModal(data, entryType) {
@@ -6300,11 +6730,12 @@
         calorieModalNote.textContent = data.ai_explanation || t("localEstimateNote");
       }
       calorieModal.classList.remove("hidden");
-      calorieModalClose.focus();
+      beginModalSession(calorieModal, calorieModalClose);
     }
 
     function hideCalorieModal() {
       calorieModal.classList.add("hidden");
+      endModalSession();
     }
 
     function setSubmitLoading(button, isLoading, defaultLabelKey, loadingLabelKey = null) {
@@ -6388,11 +6819,11 @@
         const data = await response.json();
 
         if (isEdit) {
+          showToast(t("updatedSuccess"));
           if (onEditSuccess) {
             onEditSuccess();
           }
         } else {
-          messageEl.textContent = t("savedSuccess");
           showToast(t("savedSuccess"));
           if (entryType === "meal") {
             resetAddForm(form, "meal-logged-at");
@@ -6421,13 +6852,12 @@
 
         await refreshCalendarAndSummary(targetDateIso);
 
-        if (data.calories_recalculated || !isEdit) {
+        if (data.ai_explanation) {
           showCalorieModal(data, entryType);
         }
       } catch (error) {
         messageEl.textContent = error.message;
         messageEl.classList.add("error");
-        showToast(error.message, "error");
       } finally {
         setSubmitLoading(submitButton, false, isEdit ? saveLabelKey : defaultLabelKey);
       }
@@ -6442,10 +6872,15 @@
 
       try {
         if (form.id === "register-form") {
+          const password = String(formData.get("password") || "");
+          const passwordConfirm = String(formData.get("password_confirm") || "");
+          if (password !== passwordConfirm) {
+            throw new Error(t("passwordMismatch"));
+          }
           payload = {
             ...buildProfilePayload(formData),
             username: formData.get("username"),
-            password: formData.get("password"),
+            password,
           };
         } else {
           payload = {
@@ -6456,7 +6891,6 @@
       } catch (error) {
         authMessage.textContent = error.message;
         authMessage.classList.add("error");
-        showToast(error.message, "error");
         return;
       }
 
@@ -6482,7 +6916,6 @@
         }
 
         setAuthToken(data.access_token);
-        authMessage.textContent = successMessage;
         showToast(successMessage);
         if (data.user && data.user.is_admin) {
           window.location.href = "/admin";
@@ -6494,7 +6927,6 @@
       } catch (error) {
         authMessage.textContent = error.message;
         authMessage.classList.add("error");
-        showToast(error.message, "error");
       } finally {
         if (submitButton) {
           setSubmitLoading(
@@ -6514,6 +6946,7 @@
         registerForm.classList.toggle("hidden", isLogin);
         authMessage.textContent = "";
         authMessage.classList.remove("error");
+        focusAuthPrimaryField();
       });
     });
 
@@ -6522,6 +6955,8 @@
         setDashboardView(tab.dataset.view || "daily");
       });
     });
+
+    document.getElementById("dashboard-tablist")?.addEventListener("keydown", handleDashboardTabKeydown);
 
     document.getElementById("calories-week-prev")?.addEventListener("click", () => {
       weeklyChartEndDate = shiftIsoDate(weeklyChartEndDate || todayIsoDate(), -7);
@@ -6595,7 +7030,7 @@
         applyLanguage(nextLang);
         closeLangMenu();
         if (currentUser && summaryDateInput.value) {
-          loadSummary().catch((error) => alert(error.message));
+          loadSummary().catch((error) => showToast(error.message, "error"));
         }
       });
     });
@@ -6648,13 +7083,11 @@
         const user = await response.json();
         showAppView(user);
         closeProfileModal();
-        profileMessage.textContent = t("profileSaved");
         showToast(t("profileSaved"));
         await refreshCalendarAndSummary();
       } catch (error) {
         profileMessage.textContent = error.message;
         profileMessage.classList.add("error");
-        showToast(error.message, "error");
       } finally {
         if (profileSubmitButton) {
           setSubmitLoading(profileSubmitButton, false, "saveProfile");
@@ -6772,7 +7205,7 @@
     applyLanguage(currentLang);
 
     refreshButton.addEventListener("click", () => {
-      refreshDashboard().catch((error) => alert(error.message));
+      refreshDashboard().catch((error) => showToast(error.message, "error"));
     });
 
     datePrevButton.addEventListener("click", () => navigateDay(-1));
@@ -6881,6 +7314,17 @@
       }
     });
 
+    confirmModalOk?.addEventListener("click", () => closeConfirmModal(true));
+    confirmModalCancel?.addEventListener("click", () => closeConfirmModal(false));
+    confirmModal?.addEventListener("click", (event) => {
+      if (event.target === confirmModal) {
+        closeConfirmModal(false);
+      }
+    });
+
+    dailyTipModalClose?.addEventListener("click", closeDailyTipModal);
+    dailyTipsPrereqGotoYesterday?.addEventListener("click", goToDailyTipsPrereqDate);
+    dailyTipsPrereqRefresh?.addEventListener("click", refreshDailyTipsFromPrereqModal);
     dailyTipsPrereqClose?.addEventListener("click", closeDailyTipsPrereqModal);
     dailyTipsPrereqModal?.addEventListener("click", (event) => {
       if (event.target === dailyTipsPrereqModal) {
